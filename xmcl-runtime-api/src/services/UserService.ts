@@ -203,7 +203,7 @@ FbN2oDHyPaO5j1tTaBNyVt8CAwEAAQ==
     const value = {
       ...profile,
       profiles: profile.profiles
-        .map(p => ({ ...p, textures: { SKIN: { url: '' } } }))
+        .map(p => ({ ...p, textures: 'textures' in p ? p.textures : { SKIN: { url: '' } } }))
         .reduce(toObjectReducer<GameProfileAndTexture, 'id'>('id'), {}),
       selectedProfile: profile.selectedProfile,
     }
