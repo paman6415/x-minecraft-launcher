@@ -1,13 +1,152 @@
-import { InstanceUpdateService as IInstanceUpdateService, InstanceUpdateServiceKey, UpdateInstanceOptions } from '@xmcl/runtime-api'
+import { EditInstanceOptions, Instance, InstanceData, InstanceFile, InstanceFileOperation, InstanceFileUpdate, InstanceLockSchema, InstanceManifest, InstanceUpdateService as IInstanceUpdateService, InstanceUpdateServiceKey, LockKey, UpdateInstanceOptions, UpgradeModpackOptions } from '@xmcl/runtime-api'
+import { existsSync } from 'fs'
+import { join } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { Inject } from '../util/objectRegistry'
+import { createSafeIO } from '../util/persistance'
+import { InstanceManifestService } from './InstanceManifestService'
+import { InstanceService } from './InstanceService'
+import { ModpackService } from './ModpackService'
+import { ModrinthService } from './ModrinthService'
+import { ResourceService } from './ResourceService'
 import { ExposeServiceKey, AbstractService } from './Service'
+
+type Upstream = Required<Instance>['upstream']
+
+type UpstreamResolver = (upstream: Upstream) => Promise<{
+  files: InstanceFile[]
+} | undefined>
 
 @ExposeServiceKey(InstanceUpdateServiceKey)
 export class InstanceUpdateService extends AbstractService implements IInstanceUpdateService {
-  constructor(@Inject(LauncherAppKey) app: LauncherApp) {
+  protected readonly instanceFile = createSafeIO(InstanceLockSchema, this)
+
+  protected resolvers: UpstreamResolver[] = []
+
+  constructor(@Inject(LauncherAppKey) app: LauncherApp,
+    @Inject(InstanceService) private instanceService: InstanceService,
+    @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(InstanceManifestService) private instanceManifestService: InstanceManifestService,
+    @Inject(ModpackService) private modpackService: ModpackService,
+  ) {
     super(app)
+
+    this.registerUpstreamResolver(async (upstream) => {
+      if (upstream.type === 'modrinth-modpack') {
+        const res = upstream.sha1 ? resourceService.getResourceByKey(upstream.sha1) : resourceService.getResourceByKey(`modrinth:${upstream.projectId}:${upstream.versionId}`)
+        if (res) {
+          if (res.metadata.instance) {
+            return res.metadata.instance
+          }
+          return await this.modpackService.getInstallModpackProfile(res.storedPath).catch(() => undefined)
+        }
+      }
+      return undefined
+    })
+
+    this.registerUpstreamResolver(async (upstream) => {
+      if (upstream.type === 'curseforge-modpack') {
+        const res = upstream.sha1 ? resourceService.getResourceByKey(upstream.sha1) : resourceService.getResourceByKey(`curseforge:${upstream.modId}:${upstream.fileId}`)
+        if (res) {
+          if (res.metadata.instance) {
+            return res.metadata.instance
+          }
+          return await this.modpackService.getInstallModpackProfile(res.storedPath).catch(() => undefined)
+        }
+      }
+      return undefined
+    })
+  }
+
+  registerUpstreamResolver(resolver: UpstreamResolver) {
+    this.resolvers.push(resolver)
+  }
+
+  private async resolveOldFiles(instance: InstanceData, oldModpack?: string): Promise<InstanceFile[]> {
+    if (oldModpack) {
+      const profile = await this.modpackService.getInstallModpackProfile(oldModpack)
+      return profile.files
+    }
+    if (!instance.upstream) {
+      throw new Error()
+    }
+    const upstream = instance.upstream
+
+    for (const resolver of this.resolvers) {
+      const result = await resolver(upstream)
+      if (result) {
+        return result.files
+      }
+    }
+
+    throw new Error()
+  }
+
+  async getInstanceUpdateProfile(options: UpgradeModpackOptions) {
+    const instancePath = options.instancePath || this.instanceService.state.path
+    const instance = this.instanceService.state.all[instancePath]
+    if (!instance) {
+      throw new Error()
+    }
+
+    const oldFiles = await this.resolveOldFiles(instance, options.oldModpack)
+
+    const { files: newFiles, instance: instanceOptions } = await this.modpackService.getInstallModpackProfile(options.newModpack)
+
+    const manifest = await this.instanceManifestService.getInstanceManifest({ path: instancePath, hashes: ['sha1'] })
+
+    const toRemove = [] as InstanceFile[]
+    const toAdd: Record<string, InstanceFile> = {}
+
+    const oldMapping: Record<string, InstanceFile> = {}
+    for (const f of oldFiles) oldMapping[f.path] = f
+    for (const f of newFiles) {
+      if (!oldMapping[f.path]) {
+        toAdd[f.path] = f
+      } else {
+        delete oldMapping[f.path]
+      }
+    }
+    toRemove.push(...Object.values(oldMapping))
+
+    const result: InstanceFileUpdate[] = []
+    for (const f of manifest.files) {
+      let index = -1
+      if ((index = toRemove.findIndex(r => r.path === f.path)) !== -1) {
+        const r = toRemove[index]
+        if (r.hashes.sha1 === f.hashes.sha1) {
+          result.push({ file: f, operation: 'remove' })
+        } else {
+          // disable this file
+          result.push({ currentFile: f, file: r, operation: 'backup-remove' })
+        }
+      } else if (toAdd[f.path]) {
+        const a = toAdd[f.path]
+        if (a.hashes.sha1 !== f.hashes.sha1) {
+          // backup this file
+          result.push({ currentFile: f, file: f, operation: 'backup-add' })
+        } else {
+          result.push({ file: f, operation: 'keep' })
+        }
+
+        delete toAdd[f.path]
+      } else {
+        result.push({ file: f, operation: 'keep' })
+      }
+    }
+
+    for (const a of Object.values(toAdd)) {
+      result.push({
+        file: a,
+        operation: 'add',
+      })
+    }
+
+    return {
+      instance: instanceOptions,
+      files: result.filter(r => !r.file.path.endsWith('/')),
+    }
   }
 
   updateInstance(options: UpdateInstanceOptions): Promise<void> {

@@ -73,7 +73,7 @@ export class InstanceModsService extends StatefulService<InstanceModsState> impl
   private async scanMods(dir: string) {
     const files = await readdirIfPresent(dir)
 
-    const fileArgs = files.filter((file) => !file.startsWith('.') && !file.endsWith('.pending')).map((file) => join(dir, file))
+    const fileArgs = files.filter((file) => !file.startsWith('.') && !file.endsWith('.pending') && !file.endsWith('.backup')).map((file) => join(dir, file))
     const resources = await this.resourceService.resolveResource(fileArgs.map(f => ({ path: f, domain: ResourceDomain.Mods })))
     const persisted = await Promise.all(resources
       .filter((res) => res.fileType !== 'directory') // not show dictionary
@@ -110,6 +110,7 @@ export class InstanceModsService extends StatefulService<InstanceModsState> impl
     this.modsWatcher = watch(basePath, (event, name) => {
       if (name.startsWith('.')) return
       if (name.endsWith('.pending')) return
+      if (name.endsWith('.backup')) return
       const filePath = name
       if (event === 'update') {
         this.resourceService.resolveResource([{ path: filePath, domain: ResourceDomain.Mods }]).then(([resource]) => {

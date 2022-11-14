@@ -224,10 +224,10 @@ errors:
   BodyTimeoutError: HTTP Body timeout
   ChecksumNotMatchError: Checksum not matched! Expect {expect}. Actual {actual}.
   ConnectTimeoutError: Connection timeout to server.
+  DNSNotFoundError: DNS lookup error
   DownloadAggregateError: Fail to download file.
   HeadersTimeoutError: HTTP Header timeout
   SocketError: Server socket error
-  DNSNotFoundError: DNS lookup error
 exception:
   http: >-
     HTTP request to {url} failed. Status code {statusCode}. {code}. Please retry
@@ -364,6 +364,12 @@ instanceAge:
   older: Older
   threeDay: In Three Days
   today: Today
+instanceFileOperation:
+  add: Add
+  backup-add: Replace (Backup)
+  backup-remove: Remove (Backup)
+  keep: Keep
+  remove: Remove
 instanceSetting:
   fastLaunch: Turbo Launch
   fastLaunchHint: Ignore the user status and existed unfixed problems
@@ -381,6 +387,11 @@ instanceTemplate:
   profile: This is a existed profile configuration
   server: This is a existed server configuration
   title: Template Setting
+instanceUpdate:
+  basic: Setting Update
+  files: File Updates
+  title: Update Instance
+  update: Start Update
 instances:
   add: Add Local Game
   importFolder: Import from Folder
@@ -705,6 +716,14 @@ modrinth:
     updated: Recently updated
   updateAt: Updated
   versions: Versions
+modrinthCard:
+  currentVersion: Current Version
+  projectHint: >
+    This instance is created by Modrinth modpack from <code class="rounded p-1"
+    style="background: rgba(123,123,123,0.2)">{title}</code> (project id:
+          <code class="rounded p-1" style="background: rgba(123,123,123,0.2)">{id}</code>)
+  projectLastUpdateDate: 'Project Last Updated At:'
+  projectLastUpdateVersion: Latest Version
 multiplayer:
   complete: Complete
   confirm: Confirm

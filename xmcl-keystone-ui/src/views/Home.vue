@@ -2,62 +2,57 @@
   <div
     class="flex flex-col home-page flex-1 min-h-0 overflow-auto max-h-full"
   >
-    <home-header
+    <HomeHeader
       class="pt-10 pb-5 px-10"
     />
     <v-divider class="mx-4" />
     <!-- This is to fix strange hover color issue... -->
     <v-divider class="border-transparent" />
     <span class="flex flex-wrap p-10 flex-grow-0 gap-3 items-start">
-      <home-mod-card />
-      <home-resource-packs-card />
-      <home-shader-pack-card />
-      <home-saves-card />
-      <server-status-bar v-if="isServer" />
-      <!-- <HomeModrinthCard
+      <HomeModCard />
+      <HomeResourcePacksCard />
+      <HomeShaderPackCard />
+      <HomeSavesCard />
+      <ServerStatusBar v-if="isServer" />
+      <HomeUpstreamCard
         v-if="instance.upstream && instance.upstream.type === 'modrinth-modpack'"
-        :path="instance.path"
+        :instance="instance"
         :upstream="instance.upstream"
-      /> -->
+      />
     </span>
 
-    <div class="flex absolute left-0 bottom-0 px-8 pb-[20px] gap-6">
-      <!-- <home-sync-button /> -->
-    </div>
+    <!-- <div class="flex absolute left-0 bottom-0 px-8 pb-[20px] gap-6"> -->
+    <!-- <home-sync-button /> -->
+    <!-- </div> -->
 
-    <log-dialog />
-    <game-exit-dialog />
-    <app-launch-blocked-dialog />
-    <home-launch-multi-instance-dialog />
-    <launch-status-dialog />
-    <java-fixer-dialog />
+    <HomeLogDialog />
+    <AppGameExitDialog />
+    <AppLaunchBlockedDialog />
+    <HomeLaunchMultiInstanceDialog />
+    <HomeLaunchStatusDialog />
+    <HomeJavaIssueDialog />
+    <HomeInstanceUpgradeDialog />
     <!-- <home-sync-dialog /> -->
-    <HomeInstallInstanceDialog />
   </div>
 </template>
 
 <script lang=ts setup>
-import { BaseServiceKey } from '@xmcl/runtime-api'
 import { useInstance, useInstanceIsServer } from '../composables/instance'
 import { useInstanceServerStatus } from '../composables/serverStatus'
-import GameExitDialog from './AppGameExitDialog.vue'
+import AppGameExitDialog from './AppGameExitDialog.vue'
 import AppLaunchBlockedDialog from './AppLaunchBlockedDialog.vue'
 import HomeHeader from './HomeHeader.vue'
-import JavaFixerDialog from './HomeJavaIssueDialog.vue'
+import HomeInstanceUpgradeDialog from './HomeInstanceUpgradeDialog.vue'
+import HomeJavaIssueDialog from './HomeJavaIssueDialog.vue'
 import HomeLaunchMultiInstanceDialog from './HomeLaunchMultiInstanceDialog.vue'
-import LaunchStatusDialog from './HomeLaunchStatusDialog.vue'
-import LogDialog from './HomeLogDialog.vue'
+import HomeLaunchStatusDialog from './HomeLaunchStatusDialog.vue'
+import HomeLogDialog from './HomeLogDialog.vue'
 import HomeModCard from './HomeModCard.vue'
-import HomeProblemCard from './HomeProblemCard.vue'
+import HomeUpstreamCard from './HomeUpstreamCard.vue'
 import HomeResourcePacksCard from './HomeResourcePacksCard.vue'
 import HomeSavesCard from './HomeSavesCard.vue'
 import ServerStatusBar from './HomeServerStatusBar.vue'
 import HomeShaderPackCard from './HomeShaderPackCard.vue'
-import HomeSyncButton from './HomeSyncButton.vue'
-import HomeSyncDialog from './HomeSyncDialog.vue'
-import { useService } from '@/composables'
-import HomeModrinthCard from './HomeModrinthCard.vue'
-import HomeInstallInstanceDialog from './HomeInstallInstanceDialog.vue'
 
 const router = useRouter()
 

@@ -10,7 +10,7 @@ import watch from 'node-watch'
 import { basename, dirname, extname, join } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
-import { getResourceFileName, persistResource, ResourceCache } from '../entities/resource'
+import { getResourceFileName, ResourceCache } from '../entities/resource'
 import { migrateToDatabase, upgradeResourceToV2 } from '../util/dataFix'
 import { checksum, copyPassively, linkOrCopy, readdirEnsured } from '../util/fs'
 import { ImageStorage } from '../util/imageStore'
@@ -261,7 +261,7 @@ export class ResourceService extends StatefulService<ResourceState> implements I
 
     this.watchers[domain] = watch(path, async (event, name) => {
       if (event === 'remove') {
-        if (name.endsWith('.json') || name.endsWith('.png') || name.endsWith('.pending')) {
+        if (name.endsWith('.json') || name.endsWith('.png') || name.endsWith('.pending') || name.endsWith('.backup')) {
           // json removed means the resource is totally removed
         } else {
           // this will remove
@@ -274,7 +274,7 @@ export class ResourceService extends StatefulService<ResourceState> implements I
           }
         }
       } else {
-        if (name.endsWith('.png') || name.endsWith('.pending')) {
+        if (name.endsWith('.png') || name.endsWith('.pending') || name.endsWith('.backup')) {
           return
         }
         // new file found, try to resolve & import it
@@ -346,7 +346,7 @@ export class ResourceService extends StatefulService<ResourceState> implements I
       dirty = true
     }
     if (options.metadata && Object.values(options.metadata).some(v => !!v)) {
-      assignIfPresent(newResource.metadata, options.metadata, ['curseforge', 'github', 'modrinth'])
+      assignIfPresent(newResource.metadata, options.metadata, ['curseforge', 'github', 'modrinth', 'instance'])
       dirty = true
     }
     if (options.icons) {

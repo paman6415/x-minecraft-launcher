@@ -33,11 +33,16 @@ export class InstanceManifestService extends AbstractService implements IInstanc
 
     const instance = this.instanceService.state.all[instancePath]
 
-    const resolveHashes = async (file: string, sha1: string) => {
-      const result: Record<string, string> = { sha1 }
+    const resolveHashes = async (file: string, sha1?: string) => {
+      const result: Record<string, string> = { }
       if (options?.hashes) {
         for (const hash of options.hashes) {
           if (hash === 'sha1') {
+            if (sha1) {
+              result.sha1 = sha1
+            } else {
+              result[hash] = await this.worker().checksum(file, hash)
+            }
             continue
           } else {
             result[hash] = await this.worker().checksum(file, hash)
@@ -116,6 +121,8 @@ export class InstanceManifestService extends AbstractService implements IInstanc
               undecoratedResources.set(localFile, resource)
             }
           }
+        } else {
+          localFile.hashes = await resolveHashes(p)
         }
 
         files.push(localFile)

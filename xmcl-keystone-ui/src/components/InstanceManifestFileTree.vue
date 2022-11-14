@@ -36,7 +36,7 @@
       <div style="padding: 5px 0px;">
         <span
           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;"
-          :style="{ color: item.disabled ? 'grey' : darkTheme ? 'white' : 'black' }"
+          :style="{ color: item.disabled ? 'grey' : darkTheme ? 'white' : 'black', ...(item.style || {}) }"
         >{{ item.name }}</span>
         <div
           style="color: grey; font-size: 12px; font-style: italic; max-width: 300px;"

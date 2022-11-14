@@ -19,7 +19,7 @@
       />
     </div>
     <div
-      class="flex align-end gap-3 flex-grow-0 flex-1 mt-4 "
+      class="flex gap-3 flex-grow-0 flex-1 mt-4 lg:flex-row flex-col "
     >
       <div
         class="flex flex-row items-start gap-3 flex-wrap flex-grow-0"
@@ -71,7 +71,7 @@
       </div>
       <div class="flex-grow" />
 
-      <div class="flex align-end gap-3 flex-1 flex-grow-0">
+      <div class="flex align-end justify-end gap-3 flex-1 flex-grow-0">
         <v-tooltip
           :close-delay="0"
           top

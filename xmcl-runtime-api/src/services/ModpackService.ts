@@ -1,8 +1,10 @@
-import { ResourceMetadata } from '../entities/resource'
+import { CurseforgeModpackResource, ModrinthModpackResource, Persisted, ResourceMetadata } from '../entities/resource'
 import { Exception } from '../entities/exception'
 import { EditInstanceOptions } from './InstanceService'
 import { ServiceKey } from './Service'
 import { InstanceFile } from '../entities/instanceManifest.schema'
+import { ProjectVersion } from '@xmcl/modrinth'
+import { InstanceFileOperation, UpgradeModpackOptions } from './InstanceUpdateService'
 
 export interface ExportFileDirective {
   path: string

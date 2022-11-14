@@ -1,5 +1,8 @@
 import type { FabricModMetadata, LiteloaderModMetadata, QuiltModMetadata } from '@xmcl/mod-parser'
 import type { PackMeta } from '@xmcl/resourcepack'
+import { EditInstanceOptions } from 'src/services/InstanceService'
+import { InstanceData } from './instance.schema'
+import { InstanceFile, InstanceManifest } from './instanceManifest.schema'
 import { ForgeModCommonMetadata } from './mod'
 import { CurseforgeModpackManifest, McbbsModpackManifest, Modpack, ModrinthModpackManifest } from './modpack'
 import { ResourceSaveMetadata } from './save'
@@ -77,6 +80,12 @@ export interface ResourceMetadata {
   [ResourceType.Modpack]?: Modpack
   [ResourceType.Save]?: ResourceSaveMetadata
   [ResourceType.ShaderPack]?: {}
+  /**
+   * The data to create instance from this resource.
+   *
+   * This should only existed in modpack resource
+   */
+  instance?: { instance: EditInstanceOptions; files: InstanceFile[] }
   /**
    * The github info for this source. If this is imported from github release, it will present.
    */

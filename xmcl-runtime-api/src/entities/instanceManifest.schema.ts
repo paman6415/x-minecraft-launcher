@@ -46,7 +46,7 @@ export interface InstanceManifestSchema extends Partial<InstanceDataFields> {
   files: Array<InstanceFile>
 }
 
-export interface InstanceManifest extends Partial<InstanceDataFields> {
+export interface InstanceManifest extends Partial<InstanceData> {
   runtime: RuntimeVersions
   files: Array<InstanceFile>
 }

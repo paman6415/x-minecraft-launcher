@@ -1,10 +1,10 @@
 import { checksum } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { InstallInstanceOptions, InstanceFile, InstanceInstallService as IInstanceInstallService, InstanceInstallServiceKey, InstanceIOException, LockKey, Persisted, Resource, ResourceDomain, ResourceMetadata } from '@xmcl/runtime-api'
+import { InstallInstanceOptions, InstanceFile, InstanceFileWithOperation, InstanceInstallService as IInstanceInstallService, InstanceInstallServiceKey, InstanceIOException, LockKey, Persisted, Resource, ResourceDomain, ResourceMetadata } from '@xmcl/runtime-api'
 import { AbortableTask, Task, task } from '@xmcl/task'
 import { open, openEntryReadStream, readAllEntries } from '@xmcl/unzip'
 import { createWriteStream, existsSync } from 'fs'
-import { readFile, rename, stat, unlink, writeFile } from 'fs-extra'
+import { move, readFile, rename, stat, unlink, writeFile } from 'fs-extra'
 import { join, relative } from 'path'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
@@ -241,7 +241,7 @@ export class InstanceInstallService extends AbstractService implements IInstance
     await unlink(filePath)
   }
 
-  private async getDownloadFile(file: InstanceFile, instancePath: string, getEntry: (zipFile: string, entry: string) => Promise<readonly [ZipFile, Entry]>) {
+  private async getDownloadFile(file: InstanceFileWithOperation, instancePath: string, getEntry: (zipFile: string, entry: string) => Promise<readonly [ZipFile, Entry]>) {
     const createFileLinkTask = (dest: string, res: Persisted<Resource>) => task('file', async () => {
       const fstat = await stat(dest).catch(() => undefined)
       if (fstat && fstat.ino === res.ino) {
@@ -276,10 +276,17 @@ export class InstanceInstallService extends AbstractService implements IInstance
           })
         } else if (zip) {
           // Unzip
-          const url = zip.substring('zip:'.length)
-          const zipPath = url.substring(0, url.length - file.path.length)
-          const promise = getEntry(zipPath, file.path)
-          return new UnzipFileTask(promise, destination)
+          const url = new URL(zip)
+          if (!url.host) {
+            const zipPath = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname
+            return new UnzipFileTask(getEntry(zipPath, file.path), destination)
+          } else {
+            const res = this.resourceService.getResourceByKey(url.host)
+            if (res) {
+              return new UnzipFileTask(getEntry(res.storedPath, file.path), destination)
+            }
+            throw new Error(`Cannot resolve file! ${file.path}`)
+          }
         } else {
           throw new Error(`Cannot resolve file! ${file.path}`)
         }
@@ -297,8 +304,20 @@ export class InstanceInstallService extends AbstractService implements IInstance
     }
 
     if (actualSha1 === sha1) {
+      if (file.operation === 'remove') {
+        await unlink(file.path).catch(() => undefined)
+      }
       // skip same file
       return undefined
+    }
+
+    if (file.operation === 'remove') {
+      await unlink(file.path).catch(() => undefined)
+      return
+    }
+    if (file.operation === 'backup-remove') {
+      await rename(file.path, file.path + '.backup')
+      return
     }
 
     const metadata: ResourceMetadata = {}
@@ -360,6 +379,12 @@ export class InstanceInstallService extends AbstractService implements IInstance
           }
         })
         try {
+          if (file.operation === 'backup-add') {
+            // backup legacy file
+            await rename(file.path, file.path + '.backup')
+          }
+
+          // Rename to actual file location
           await rename(destination, destination.substring(0, destination.length - '.pending'.length))
         } catch (e) {
           this.error(`Fail to rename ${destination} -> ${destination.substring(0, destination.length - '.pending'.length)} \n%o`, e)
