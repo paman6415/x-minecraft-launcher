@@ -223,10 +223,10 @@ export class InstanceVersionService extends StatefulService<InstanceVersionState
     if (!current) {
       return undefined
     }
-    const header = getResolvedVersion(version.local, current.runtime, current.version)
-    if (header) {
-      return header
-    }
+    // const header = getResolvedVersion(version.local, current.runtime, current.version)
+    // if (header) {
+    //   return header
+    // }
     return undefined
   }
 

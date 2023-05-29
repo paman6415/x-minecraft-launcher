@@ -1,5 +1,5 @@
 /* eslint-disable no-dupe-class-members */
-import { ExportResourceOptions, ImportResourceOptions, PartialResourceHash, ResolveResourceOptions, Resource, ResourceDomain, ResourceMetadata, ResourceService as IResourceService, ResourceServiceKey, ResourceType } from '@xmcl/runtime-api'
+import { ExportResourceOptions, ResourceService as IResourceService, ImportResourceOptions, PartialResourceHash, ResolveResourceOptions, Resource, ResourceDomain, ResourceMetadata, ResourceServiceKey } from '@xmcl/runtime-api'
 import { ClassicLevel } from 'classic-level'
 import { FSWatcher } from 'fs'
 import { ensureDir } from 'fs-extra/esm'
@@ -7,20 +7,22 @@ import { unlink } from 'fs/promises'
 import { join } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
-import { kResourceWorker, ResourceWorker } from '../entities/resourceWorker'
+import { ResourceWorker, kResourceWorker } from '../entities/resourceWorker'
 import {
+  ResourceContext,
   createResourceContext,
   generateResource, getResourceEntry,
   loadResources,
   migrateResources,
-  parseMetadata, resolveDomain, ResourceContext, tryPersistResource, upsertMetadata,
+  parseMetadata, resolveDomain,
+  tryPersistResource, upsertMetadata,
   watchResources,
 } from '../resourceCore'
 import { copyPassively, readdirEnsured } from '../util/fs'
 import { ImageStorage } from '../util/imageStore'
 import { isArrayEqual } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { createPromiseSignal, PromiseSignal } from '../util/promiseSignal'
+import { PromiseSignal, createPromiseSignal } from '../util/promiseSignal'
 import { AbstractService, ExposeServiceKey } from './Service'
 
 const EMPTY_RESOURCE_SHA1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'

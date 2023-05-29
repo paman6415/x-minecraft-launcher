@@ -26,15 +26,15 @@
       <div class="flex flex-col overflow-x-auto gap-1 px-3">
         <text-component
           v-once
-          v-shared-tooltip="pack.name"
+          v-shared-tooltip="name"
           class="whitespace-nowrap w-full text-lg mt-2 font-semibold overflow-x-auto"
-          :source="pack.name"
+          :source="name"
           editable
           @edit="onEditPackName(pack, $event)"
         />
         <text-component
           class="whitespace-normal break-words text-sm"
-          :source="pack.description"
+          :source="description"
         />
       </div>
     </div>
@@ -75,25 +75,28 @@ import { BaseServiceKey, InstanceServiceKey } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
 import { useRangeCompatible } from '../composables/compatible'
 import { ContextMenuItem } from '../composables/contextMenu'
-import { ResourcePackItem } from '../composables/resourcePack'
 import { kMarketRoute } from '../composables/useMarketRoute'
 import { vContextMenu } from '../directives/contextMenu'
 import { vDraggableCard } from '../directives/draggableCard'
 import { vFallbackImg } from '../directives/fallbackImage'
+import { ResourcePackItem } from '@/composables/instanceResourcePackItem'
 
 const props = defineProps<{
   pack: ResourcePackItem
   isSelected: boolean
+  minecraft: string
 }>()
 
 const emit = defineEmits(['tags', 'dragstart', 'dragend', 'delete'])
 const { darkTheme } = useTheme()
 
-const iconImage: Ref<any> = ref(null)
-const { state } = useService(InstanceServiceKey)
-const runtime = computed(() => state.instance.runtime)
-const { compatible } = useRangeCompatible(computed(() => props.pack.acceptingRange ?? ''), computed(() => runtime.value.minecraft))
 const { t } = useI18n()
+const name = computed(() => props.pack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.name)
+const description = computed(() => props.pack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.description)
+
+const iconImage: Ref<any> = ref(null)
+
+const { compatible } = useRangeCompatible(computed(() => props.pack.acceptingRange ?? ''), computed(() => props.minecraft))
 const { searchInCurseforge, goCurseforgeProject, searchInModrinth, goModrinthProject } = injection(kMarketRoute)
 const { showItemInDirectory } = useService(BaseServiceKey)
 const card: Ref<any> = ref(null)
@@ -111,11 +114,11 @@ const tags = ref([...props.pack.tags])
 const tooltip = computed(() => compatible.value
   ? t('resourcepack.compatible', {
     format: props.pack.pack_format,
-    version: runtime.value.minecraft,
+    version: props.minecraft,
   })
   : t('resourcepack.incompatible', {
     accept: props.pack.acceptingRange,
-    actual: runtime.value.minecraft,
+    actual: props.minecraft,
     format: props.pack.pack_format,
   }))
 

@@ -1,8 +1,7 @@
-import { useSemaphore, useServiceBusy } from '@/composables/semaphore'
 import { useService } from '@/composables/service'
-import { Frame as GameSetting } from '@xmcl/gamesetting'
-import { DEFAULT_PROFILE, EMPTY_VERSION, Instance, InstanceData, InstanceOptionsServiceKey, InstanceServiceKey, InstanceVersionServiceKey } from '@xmcl/runtime-api'
-import { computed, Ref } from 'vue'
+import { Instance, InstanceData, InstanceServiceKey } from '@xmcl/runtime-api'
+import { Ref, computed } from 'vue'
+import { useLocalStorageCacheStringValue } from './cache'
 
 export function useInstanceBase() {
   const { state } = useService(InstanceServiceKey)
@@ -20,12 +19,17 @@ export function useInstanceIsServer(i: Ref<Instance>) {
 export function useInstance() {
   const { state } = useService(InstanceServiceKey)
 
-  const instance = computed(() => state.instances.find(i => i.path === state.path) ?? DEFAULT_PROFILE)
-  const path = computed(() => state.path)
+  const instance = computed(() => state.all[state.path])
+  const path = useLocalStorageCacheStringValue('selectedInstancePath', state.instances[0].path)
+  const select = (p: string) => {
+    path.value = p
+  }
+
   return {
     path,
+    select,
     instance,
-    refreshing: computed(() => useSemaphore('instance').value !== 0),
+    refreshing: computed(() => false),
   }
 }
 

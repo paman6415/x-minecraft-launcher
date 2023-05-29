@@ -13,7 +13,6 @@ import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
 import { isSystemError } from '../util/error'
 import { toRecord } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { BaseService } from './BaseService'
 import { AbstractService, ExposeServiceKey } from './Service'
 import { UserService } from './UserService'
 
@@ -22,7 +21,6 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   private mojangApi: MojangClient
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(BaseService) baseService: BaseService,
     @Inject(kUserTokenStorage) private userTokenStorage: UserTokenStorage,
     @Inject(UserService) private userService: UserService) {
     super(app)
@@ -90,7 +88,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
           username: options.username,
           password: options.password ?? '',
           requestUser: true,
-          clientToken: userService.state.clientToken,
+          clientToken: userService.getClientToken(),
         })
           .catch((e) => {
             if (e.message && e.message.startsWith('getaddrinfo ENOTFOUND')) {
@@ -131,7 +129,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
           // TODO: error
           return user
         }
-        const valid = await legacyClient.validate(token, userService.state.clientToken)
+        const valid = await legacyClient.validate(token, userService.getClientToken())
 
         this.log(`Validate ${user.authService} user access token: ${valid ? 'valid' : 'invalid'}`)
 
@@ -142,7 +140,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
           const result = await legacyClient.refresh({
             accessToken: token,
             requestUser: true,
-            clientToken: userService.state.clientToken,
+            clientToken: userService.getClientToken(),
           })
           this.log(`Refreshed user access token for user: ${user.id}`)
 
@@ -174,11 +172,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     })
   }
 
-  async setName(name: string) {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async setName(user: UserProfile, name: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -186,11 +180,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     await this.mojangApi.setName(name, token)
   }
 
-  async getNameChangeInformation() {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async getNameChangeInformation(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -199,11 +189,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     return result
   }
 
-  async checkNameAvailability(name: string) {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async checkNameAvailability(user: UserProfile, name: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -212,11 +198,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     return result
   }
 
-  async hideCape() {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async hideCape(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -224,11 +206,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     await this.mojangApi.hideCape(token)
   }
 
-  async showCape(capeId: string) {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async showCape(user: UserProfile, capeId: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -236,11 +214,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     await this.mojangApi.showCape(capeId, token)
   }
 
-  async verifySecurityLocation() {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async verifySecurityLocation(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -248,11 +222,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     return await this.mojangApi.verifySecurityLocation(token)
   }
 
-  async getSecurityChallenges() {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async getSecurityChallenges(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()
@@ -260,11 +230,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     return await this.mojangApi.getSecurityChallenges(token)
   }
 
-  async submitSecurityChallenges(answers: MojangChallengeResponse[]) {
-    const { user } = this.userService.state
-    if (!user) {
-      throw new Error()
-    }
+  async submitSecurityChallenges(user: UserProfile, answers: MojangChallengeResponse[]) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
       throw new Error()

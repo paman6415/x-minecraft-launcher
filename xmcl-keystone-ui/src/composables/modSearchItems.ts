@@ -3,6 +3,7 @@ import { Mod, Pagination } from '@xmcl/curseforge'
 import { SearchResult, SearchResultHit } from '@xmcl/modrinth'
 import { Resource } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
+import { InstanceMod } from './instanceMods'
 
 /**
  * Each search item represent a project of a mod
@@ -31,7 +32,7 @@ export interface ModListSearchItem {
 export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResult | undefined>, curseforge: Ref<{
   data: Mod[]
   pagination: Pagination
-} | undefined>, mods: Ref<Resource[]>, existedMods: Ref<Resource[]>) {
+} | undefined>, mods: Ref<Resource[]>, instanceMods: Ref<InstanceMod[]>) {
   const tab = ref(0)
   const disableModrinth = computed(() => tab.value !== 0 && tab.value !== 3)
   const disableCurseforge = computed(() => tab.value !== 0 && tab.value !== 2)
@@ -64,31 +65,19 @@ export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResu
       }
     }
     const grouped: Record<string, ModListSearchItem> = {}
-    const getItemForResource = (m: Resource) => {
-      let description = ''
-      let name = ''
-      if (m.metadata.forge) {
-        description = m.metadata.forge.description
-        name = m.metadata.forge.name
-      } else if (m.metadata.fabric) {
-        if (m.metadata.fabric instanceof Array) {
-          description = m.metadata.fabric[0].description || ''
-          name = m.metadata.fabric[0].name || m.metadata.fabric[0].id || ''
-        } else {
-          description = m.metadata.fabric.description || ''
-          name = m.metadata.fabric.name || m.metadata.fabric.id || ''
-        }
-      }
+    const getItemForResource = (m: InstanceMod) => {
+      const description = m.description
+      const name = m.name
       if (!grouped[name]) {
         grouped[name] = {
           id: name,
-          icon: m.icons?.[0] ?? '',
+          icon: m.icon,
           title: name,
           description,
-          forge: m.metadata.forge !== undefined,
-          fabric: m.metadata.fabric !== undefined,
-          quilt: m.metadata.quilt !== undefined,
-          resource: [m],
+          forge: m.modLoaders.indexOf('forge') !== -1,
+          fabric: m.modLoaders.indexOf('fabric') !== -1,
+          quilt: m.modLoaders.indexOf('quilt') !== -1,
+          resource: [m.resource],
         }
         return grouped[name]
       } else {
@@ -102,7 +91,7 @@ export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResu
     }
     const prepend: ModListSearchItem[] = []
 
-    for (const i of existedMods.value) {
+    for (const i of instanceMods.value) {
       const item = getItemForResource(i)
       if (item) {
         item.installed = i

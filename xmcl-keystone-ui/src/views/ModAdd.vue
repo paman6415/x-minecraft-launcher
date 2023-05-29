@@ -178,7 +178,7 @@ import Hint from '@/components/Hint.vue'
 import SplitPane from '@/components/SplitPane.vue'
 import { kInstanceContext } from '@/composables/instanceContext'
 import { kInstallList } from '@/composables/installList'
-import { ModListSearchItem } from '@/composables/modSearchItems'
+import { ModListSearchItem, useModSearchItems } from '@/composables/modSearchItems'
 import { kCompact } from '@/composables/scrollTop'
 import { injection } from '@/util/inject'
 import { File } from '@xmcl/curseforge'
@@ -189,8 +189,13 @@ import ModAddCurseforgeDetail from './ModAddCurseforgeDetail.vue'
 import ModAddModrinthDetail from './ModAddModrinthDetail.vue'
 import ModAddResourceDetail from './ModAddResourceDetail.vue'
 import ModAddSearchItem from './ModAddSearchItem.vue'
+import { useModsSearch } from '@/composables/modSearch'
 
-const { modSearch, modSearchItems, minecraft, fabricLoader, forge, quiltLoader, instance } = injection(kInstanceContext)
+const { minecraft, fabricLoader, forge, quiltLoader, instance, version, mods: { mods: instanceMods } } = injection(kInstanceContext)
+
+const modSearch = useModsSearch(ref(''), version, instanceMods)
+const modSearchItems = useModSearchItems(modSearch.keyword, modSearch.modrinth, modSearch.curseforge, modSearch.mods, modSearch.existedMods)
+
 const modLoaderFilters = ref([] as string[])
 const { tab } = modSearchItems
 

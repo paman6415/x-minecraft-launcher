@@ -35,6 +35,7 @@
           v-for="item in unselectedItems"
           :key="item.path"
           :pack="item"
+          :minecraft="minecraft"
           :is-selected="false"
           @tags="item.tags = $event"
           @dragstart="startDragging()"
@@ -74,6 +75,7 @@
           <ResourcePackCard
             :key="item.path"
             :pack="item"
+            :minecraft="minecraft"
             :is-selected="true"
             @delete="startDelete(item)"
             @dragstart="startDragging()"
@@ -126,8 +128,8 @@ import { ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
 import { Ref, computed, onUnmounted, reactive, ref } from 'vue'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { useDialog } from '../composables/dialog'
-import { ResourcePackItem, useInstanceResourcePacks } from '../composables/resourcePack'
 import ResourcePackCard from './ResourcePackCard.vue'
+import { ResourcePackItem } from '@/composables/instanceResourcePackItem'
 
 function setupFilter(disabled: Ref<ResourcePackItem[]>, enabled: Ref<ResourcePackItem[]>) {
   function getFilterOptions(item: ResourcePackItem) {
@@ -161,6 +163,8 @@ watch(compact, (c) => {
 const filterText = ref('')
 const rightList: Ref<any> = ref(null)
 const leftList: Ref<any> = ref(null)
+
+const {} = injection(kInstanceContext)
 const { enabled, disabled, add, remove, commit, insert, showDirectory, loading } = useInstanceResourcePacks()
 const { removeResources } = useService(ResourceServiceKey)
 const { push } = useRouter()
@@ -169,6 +173,7 @@ const data = reactive({
   dragging: false,
   deletingPack: null as ResourcePackItem | null,
 })
+const { minecraft } = injection(kInstanceContext)
 const { show } = useDialog('deletion')
 const leftListElem = computed(() => leftList.value.$el) as Ref<HTMLElement>
 const rightListElem = computed(() => rightList.value.$el) as Ref<HTMLElement>

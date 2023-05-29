@@ -1,6 +1,6 @@
 import { BaseState } from './services/BaseService'
 import { DiagnoseState } from './services/DiagnoseService'
-import { InstanceOptionsState } from './services/InstanceOptionsService'
+import { GameOptionsState } from './services/InstanceOptionsService'
 import { InstanceModsState } from './services/InstanceModsService'
 import { SaveState } from './services/InstanceSavesService'
 import { InstanceState } from './services/InstanceService'
@@ -24,7 +24,7 @@ export type AllServiceMutations =
   & Mutations<DiagnoseState>
   & Mutations<InstanceState>
   & Mutations<InstanceModsState>
-  & Mutations<InstanceOptionsState>
+  & Mutations<GameOptionsState>
   & Mutations<SaveState>
   & Mutations<JavaState>
   & Mutations<LaunchState>
@@ -39,3 +39,18 @@ export type MutationPayload<T extends MutationKeys> = AllServiceMutations[T]
 export type Mutations<T> = {
   [K in keyof T as T[K] extends Function ? K : never]: T[K] extends ((payload: infer P) => void) ? P : never
 }
+
+export const AllStates = [
+  BaseState,
+  DiagnoseState,
+  InstanceState,
+  InstanceModsState,
+  GameOptionsState,
+  SaveState,
+  JavaState,
+  LaunchState,
+  UserState,
+  VersionState,
+  PeerState,
+  InstanceVersionState,
+]

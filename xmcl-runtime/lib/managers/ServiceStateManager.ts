@@ -1,30 +1,31 @@
-import { Disposable, MutationKeys, MutationPayload, State } from '@xmcl/runtime-api'
+import { MutationKeys, MutationPayload, OnMutatedHandler, State, MutableState } from '@xmcl/runtime-api'
 import { EventEmitter } from 'events'
 import { Manager } from '.'
 import LauncherApp from '../app/LauncherApp'
-import { AbstractService } from '../services/Service'
-import { ServiceStateProxy } from '../util/serviceProxy'
+import { ServiceStateContainer } from '../util/ServiceStateContainer'
 
 export const kStateKey = Symbol('StateKey')
+
+export function isStateObject(v: object): v is MutableState<any> {
+  return kStateKey in v
+}
 
 export default class ServiceStateManager extends Manager {
   private logger = this.app.logManager.getLogger('ServiceStateManager')
   private eventBus = new EventEmitter()
 
-  private registeredState: Record<string, ServiceStateProxy> = {}
+  private containers: Record<string, ServiceStateContainer> = {}
 
   constructor(app: LauncherApp) {
     super(app)
-    app.controller.handle('sync', async (_, serviceName, id) => {
-      const service = app.serviceManager.getServiceByKey(serviceName)
-      if (!service) return 'NOT_FOUND_SERVICE'
-      await (service as AbstractService).initialize()
-      const stateProxy = this.registeredState[serviceName]
+    app.controller.handle('activate', async (event, id) => {
+      const stateProxy = this.containers[id]
       if (!stateProxy) return 'NOT_STATE_SERVICE'
-      return stateProxy.takeSnapshot(id)
+      stateProxy.activate()
     })
-    app.controller.handle('commit', (event, serviceName, type, payload) => {
-      const stateProxy = this.registeredState[serviceName]
+    app.controller.handle('commit', (event, key, type, payload) => {
+      const stateProxy = this.containers[key]
+      if (!stateProxy) return 'NOT_STATE_SERVICE'
       stateProxy.commit(type, payload)
     })
   }
@@ -46,16 +47,41 @@ export default class ServiceStateManager extends Manager {
     return this
   }
 
-  register<T extends State<T>>(serviceName: string, state: T, dispose?: () => void): Disposable<T> {
-    const proxy = new ServiceStateProxy(
+  get(id: string): MutableState<any> | undefined {
+    return this.containers[id]?.state
+  }
+
+  async registerOrGet<T extends State<T>>(id: string, suppier: () => Promise<[T, () => void]>): Promise<MutableState<T>> {
+    if (this.containers[id]) {
+      const container = this.containers[id]
+      return container.state
+    }
+    const [state, dispose] = await suppier()
+    return this.register(id, state, dispose)
+  }
+
+  register<T extends State<T>>(id: string, state: T, dispose: () => void): MutableState<T> {
+    const container = new ServiceStateContainer(
       this.app,
       this.eventBus,
-      serviceName,
+      id,
       state,
       this.logger,
     )
-    this.registeredState[serviceName] = proxy
-    Object.defineProperty(state, kStateKey, serviceName)
-    return state
+    this.containers[id] = container
+    Object.defineProperty(state, kStateKey, id)
+    return Object.assign(state, {
+      dispose: () => {
+        delete this.containers[id]
+        dispose()
+      },
+      id,
+      get onMutated(): OnMutatedHandler | undefined {
+        return container.onCommit
+      },
+      set onMutated(v: OnMutatedHandler| undefined) {
+        container.onCommit = v
+      },
+    }) as MutableState<T>
   }
 }

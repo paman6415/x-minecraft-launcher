@@ -19,7 +19,4 @@ const { showDirectory } = useService(InstanceResourcePacksServiceKey)
 
 const { t } = useI18n()
 const { push } = useRouter()
-const onInstall = () => {
-  push('/mod-add')
-}
 </script>

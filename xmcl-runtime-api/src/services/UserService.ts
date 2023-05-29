@@ -95,17 +95,17 @@ export class UserState implements UserSchema {
 
   clientToken = ''
 
-  get user(): UserProfile | undefined {
-    return this.users[this.selectedUser.id]
+  static getUser(state: UserState) {
+    return state.users[state.selectedUser.id]
   }
 
-  get gameProfile() {
-    const user = this.user
+  static getGameProfile(state: UserState) {
+    const user = UserState.getUser(state)
     return user?.profiles[user.selectedProfile]
   }
 
-  get isThirdPartyAuthentication(): boolean {
-    const user = this.user
+  static isThirdPartyAuthentication(state: UserState) {
+    const user = UserState.getUser(state)
     return user?.authService !== 'mojang' && user?.authService !== 'offline' && user?.authService !== 'microsoft'
   }
 

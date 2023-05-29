@@ -6,10 +6,6 @@ import { ServiceKey, StatefulService } from './Service'
 export class JavaState {
   all = [] as JavaRecord[]
 
-  get missingJava() {
-    return this.all.length === 0
-  }
-
   javaUpdate(java: JavaRecord | JavaRecord[]) {
     if (java instanceof Array) {
       for (const j of java) {
@@ -35,7 +31,6 @@ export class JavaState {
   }
 
   javaRemove(java: JavaRecord) {
-    // TODO: remove in vue3
     this.all = this.all.filter(j => j.path !== java.path && j.version !== java.version)
   }
 }

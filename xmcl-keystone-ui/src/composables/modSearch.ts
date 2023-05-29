@@ -7,8 +7,9 @@ import debounce from 'lodash.debounce'
 import { Ref } from 'vue'
 import { kMods, useMods } from './mods'
 import { useService } from './service'
+import { InstanceMod } from './instanceMods'
 
-export function useModsSearch(keyword: Ref<string>, runtime: Ref<InstanceData['runtime']>) {
+export function useModsSearch(keyword: Ref<string>, runtime: Ref<InstanceData['runtime']>, instanceMods: Ref<InstanceMod[]>) {
   const { resources, refreshing } = inject(kMods, () => useMods(), true)
 
   const isValidResource = (r: Resource) => {
@@ -26,12 +27,11 @@ export function useModsSearch(keyword: Ref<string>, runtime: Ref<InstanceData['r
     }).map((r) => r.original ? r.original : r as any as Resource).filter(isValidResource)
     : resources.value.filter(isValidResource))
 
-  const { state } = useService(InstanceModsServiceKey)
   const existedMods = computed(() =>
     keyword.value.length === 0
-      ? state.mods.filter(isValidResource)
-      : state.mods.filter(m => m.fileName.toLocaleLowerCase().indexOf(keyword.value.toLocaleLowerCase()) !== -1)
-        .filter(isValidResource))
+      ? instanceMods.value.filter(v => isValidResource(v.resource))
+      : instanceMods.value.filter(m => m.name.toLocaleLowerCase().indexOf(keyword.value.toLocaleLowerCase()) !== -1)
+        .filter(v => isValidResource(v.resource)))
 
   const modrinth = ref(undefined as SearchResult | undefined)
   const curseforge = ref(undefined as {

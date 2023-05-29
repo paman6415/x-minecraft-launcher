@@ -3,9 +3,18 @@ import { Exception } from '../entities/exception'
 import { SettingSchema } from '../entities/setting.schema'
 import { ReleaseInfo } from '../entities/update'
 import { ServiceKey, StatefulService } from './Service'
+import { LauncherProfile } from '../entities/launcherProfile'
 
 export interface MigrateOptions {
   destination: string
+}
+
+export class LauncherProfileState implements LauncherProfile {
+  profiles = {}
+  clientToken = ''
+  authenticationDatabase = {}
+  settings = {}
+  selectedUser = {}
 }
 
 export class BaseState implements SettingSchema {

@@ -36,15 +36,15 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
 
     // const ygg = new YggdrasilAccountSystem(
     //   this,
-      // new YggdrasilThirdPartyClient(
-      //   // eslint-disable-next-line no-template-curly-in-string
-      //   'https://littleskin.cn/api/yggdrasil/sessionserver/session/minecraft/profile/${uuid}',
-      //   // eslint-disable-next-line no-template-curly-in-string
-      //   'https://littleskin.cn/api/yggdrasil/api/user/profile/${uuid}/${type}',
-      //   'https://littleskin.cn/api/yggdrasil/authserver',
-      //   () => userService.state.clientToken,
-      //   dispatcher,
-      // ),
+    // new YggdrasilThirdPartyClient(
+    //   // eslint-disable-next-line no-template-curly-in-string
+    //   'https://littleskin.cn/api/yggdrasil/sessionserver/session/minecraft/profile/${uuid}',
+    //   // eslint-disable-next-line no-template-curly-in-string
+    //   'https://littleskin.cn/api/yggdrasil/api/user/profile/${uuid}/${type}',
+    //   'https://littleskin.cn/api/yggdrasil/authserver',
+    //   () => userService.getClientToken(),
+    //   dispatcher,
+    // ),
     //   dispatcher,
     //   userService.state,
     //   tokenCache,
@@ -96,13 +96,13 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
   }
 
   async getAllCharacters(): Promise<LittleSkinCharacter[]> {
-    const user = this.userService.state.user
-    if (user?.authService !== LITTLE_SKIN_HOST || !user) {
-      throw new Error()
-    }
+    // const user = this.userService.state.user
+    // if (user?.authService !== LITTLE_SKIN_HOST || !user) {
+    //   throw new Error()
+    // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
-      throw new Error()
+    throw new Error()
     // }
     // return await this.client.getAllCharacters(token)
   }
@@ -110,11 +110,11 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
   async setCharacterName(options: SetCharacterNameOptions): Promise<void> {
     // const user = this.userService.state.user
     // if (user?.authService !== LITTLE_SKIN_HOST || !user) {
-      throw new Error()
+    //   throw new Error()
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
-    //   throw new Error()
+    throw new Error()
     // }
     // await this.client.setCharacterName(options, token)
   }
@@ -126,7 +126,7 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
-    //   throw new Error()
+    throw new Error()
     // }
     // await this.client.setCharacterTexture(options, token)
   }
@@ -138,7 +138,7 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
-    //   throw new Error()
+    throw new Error()
     // }
     // await this.client.addCloset(options, token)
   }
@@ -146,7 +146,7 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
   async renameCloset(options: RenameClosetOptions) {
     // const user = this.userService.state.user
     // if (user?.authService !== LITTLE_SKIN_HOST || !user) {
-    //   throw new Error()
+    throw new Error()
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
@@ -158,7 +158,7 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
   async deleteCloset(tid: number) {
     // const user = this.userService.state.user
     // if (user?.authService !== LITTLE_SKIN_HOST || !user) {
-    //   throw new Error()
+    throw new Error()
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
@@ -174,7 +174,7 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
     // }
     // const token = await this.cache.getToken(LITTLE_SKIN_HOST, user.username)
     // if (!token) {
-    //   throw new Error()
+    throw new Error()
     // }
     // return await this.client.getCloset(options, token)
   }

@@ -160,6 +160,14 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     this.accountSystems[name] = system
   }
 
+  getClientToken() {
+    return this.state.clientToken
+  }
+
+  getOfflineUser() {
+    return this.state.users[OFFLINE_USER_ID]
+  }
+
   @Lock('uploadSkin')
   async uploadSkin(options: UploadSkinOptions) {
     requireObject(options)
@@ -203,7 +211,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
    */
   @Lock('refreshUser')
   async refreshUser() {
-    const user = this.state.user
+    const user = UserState.getUser(this.state)
 
     if (!user) {
       this.log('Skip refresh user status as the user is empty.')
@@ -240,7 +248,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
   async selectGameProfile(profileId: string) {
     requireString(profileId)
 
-    const user = this.state.user
+    const user = UserState.getUser(this.state)
     if (!user) {
       this.warn(`No valid user`)
       return

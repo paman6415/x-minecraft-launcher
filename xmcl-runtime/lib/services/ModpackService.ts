@@ -1,6 +1,6 @@
 import { File, HashAlgo } from '@xmcl/curseforge'
 import { UnzipTask } from '@xmcl/installer'
-import { CurseforgeModpackManifest, EditInstanceOptions, ExportModpackOptions, ModpackService as IModpackService, ImportModpackOptions, InstanceFile, LockKey, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, getResolvedVersion, isAllowInModrinthModpack } from '@xmcl/runtime-api'
+import { CurseforgeModpackManifest, EditInstanceOptions, ExportModpackOptions, ModpackService as IModpackService, ImportModpackOptions, InstanceFile, LockKey, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, isAllowInModrinthModpack } from '@xmcl/runtime-api'
 import { task } from '@xmcl/task'
 import { open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
 import { createHash } from 'crypto'
@@ -18,13 +18,10 @@ import { Inject } from '../util/objectRegistry'
 import { ZipTask } from '../util/zip'
 import { BaseService } from './BaseService'
 import { CurseForgeService } from './CurseForgeService'
-import { InstallService } from './InstallService'
 import { InstanceInstallService } from './InstanceInstallService'
 import { InstanceService } from './InstanceService'
-import { InstanceVersionService } from './InstanceVersionService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
-import { VersionService } from './VersionService'
 
 export interface ModpackDownloadableFile {
   destination: string
@@ -55,9 +52,6 @@ export class ModpackService extends AbstractService implements IModpackService {
     @Inject(BaseService) private baseService: BaseService,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(InstanceService) private instanceService: InstanceService,
-    @Inject(VersionService) private versionService: VersionService,
-    @Inject(InstanceVersionService) private instanceVersionService: InstanceVersionService,
-    @Inject(InstallService) private installService: InstallService,
     @Inject(kResourceWorker) private worker: ResourceWorker,
     @Inject(CurseForgeService) curseforgeService: CurseForgeService,
     @Inject(InstanceInstallService) private instanceInstallService: InstanceInstallService,
@@ -502,15 +496,21 @@ export class ModpackService extends AbstractService implements IModpackService {
       await this.instanceService.mountInstance(instancePath)
     }
 
-    const instance = this.instanceService.state.all[instancePath]
-    const versionHeader = getResolvedVersion(this.versionService.state.local, instance.runtime, instance.version)
-    const resolvedVersion = versionHeader ? await this.versionService.resolveLocalVersion(versionHeader.id) : undefined
-    if (!resolvedVersion) {
-      const version = await this.instanceVersionService.installRuntime(instance.runtime)
-      if (version) {
-        await this.installService.installDependencies(version)
-      }
-    }
+    // const instance = this.instanceService.state.all[instancePath]
+    // const versionHeader = getResolvedVersion(this.versionService.state.local, instance.version,
+    //   instance.runtime.minecraft,
+    //   instance.runtime.forge,
+    //   instance.runtime.fabricLoader,
+    //   instance.runtime.optifine,
+    //   instance.runtime.quiltLoader,
+    // )
+    // const resolvedVersion = versionHeader ? await this.versionService.resolveLocalVersion(versionHeader.id) : undefined
+    // if (!resolvedVersion) {
+    //   const version = await this.instanceVersionService.installRuntime(instance.runtime)
+    //   if (version) {
+    //     await this.installService.installDependencies(version)
+    //   }
+    // }
 
     return instancePath
   }

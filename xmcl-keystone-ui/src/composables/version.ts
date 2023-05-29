@@ -1,13 +1,9 @@
-import { useService, useServiceBusy, useServiceOnly } from '@/composables'
+import { useService, useServiceBusy } from '@/composables'
 import { MinecraftVersion } from '@xmcl/installer'
 import { InstallServiceKey, VersionServiceKey } from '@xmcl/runtime-api'
 import useSWRV from 'swrv'
-import { computed, reactive, Ref, toRefs } from 'vue'
+import { Ref, computed, reactive, toRefs } from 'vue'
 import { kSWRVConfig } from './swrvConfig'
-
-export function useVersions() {
-  return useServiceOnly(VersionServiceKey, 'deleteVersion', 'refreshVersion', 'refreshVersions', 'showVersionDirectory', 'showVersionsDirectory')
-}
 
 export function useInstallService() {
   return useService(InstallServiceKey)

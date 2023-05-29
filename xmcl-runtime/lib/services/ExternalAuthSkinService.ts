@@ -1,6 +1,6 @@
 import { LibraryInfo, MinecraftFolder } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { ExternalAuthSkinService as IExternalAuthSkinService, ExternalAuthSkinServiceKey, IssueReportBuilder, MissingAuthLibInjectorIssue } from '@xmcl/runtime-api'
+import { ExternalAuthSkinServiceKey, ExternalAuthSkinService as IExternalAuthSkinService, IssueReportBuilder, MissingAuthLibInjectorIssue, UserState } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
@@ -121,7 +121,7 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
 
       if (user) {
         this.log(`Diagnose user ${user.username}`)
-        if (this.userService.state.isThirdPartyAuthentication) {
+        if (UserState.isThirdPartyAuthentication(this.userService.state)) {
           if (!await doesAuthLibInjectionExisted()) {
             builder.set(MissingAuthLibInjectorIssue, undefined)
           }

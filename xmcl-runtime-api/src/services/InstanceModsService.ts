@@ -1,5 +1,6 @@
+import { MutableState } from '../util/WatchSource'
 import { Resource } from '../entities/resource'
-import { ServiceKey, StatefulService } from './Service'
+import { ServiceKey } from './Service'
 
 export interface InstallModsOptions {
   mods: Resource[]
@@ -7,6 +8,10 @@ export interface InstallModsOptions {
    * The instance path to deploy. This will be the current path by default.
    */
   path: string
+}
+
+export function getInstanceModStateKey(path: string) {
+  return `instance-mods://${path}`
 }
 
 /**
@@ -17,27 +22,12 @@ export class InstanceModsState {
    * The mods under instance folder
    */
   mods = [] as Resource[]
-  /**
-   * The mounted instance
-   */
-  instance = ''
 
-  instanceModUpdate(r: Resource[]) {
-    for (const res of r) {
-      const existed = this.mods.findIndex(m => m.hash === res.hash)
-      if (existed !== -1) {
-        this.mods[existed] = res
-      } else {
-        this.mods.push(res)
-      }
-    }
-  }
-
-  instanceModUpdates({ adds, remove }: { adds: Resource[]; remove: Resource[] }) {
-    const toRemoved = new Set(remove.map(p => p.hash))
+  instanceModUpdates({ toAdd, toRemove, toUpdate }: { toAdd: Resource[]; toRemove: Resource[]; toUpdate: Resource[] }) {
+    const toRemoved = new Set(toRemove.map(p => p.hash))
     const newMods = [...this.mods]
 
-    for (const res of adds) {
+    for (const res of toAdd) {
       const existed = newMods.findIndex(m => m.hash === res.hash)
       if (existed !== -1) {
         newMods[existed] = res
@@ -49,28 +39,21 @@ export class InstanceModsState {
       }
     }
 
-    const filtered = newMods.filter(m => !toRemoved.has(m.hash))
+    if (toRemove.length > 0) {
+      const filtered = newMods.filter(m => !toRemoved.has(m.hash))
+      this.mods = filtered
+    } else {
+      this.mods = newMods
+    }
 
-    this.mods = filtered
-  }
-
-  instanceModUpdateExisted(r: Resource[]) {
-    for (const res of r) {
-      const existed = this.mods.findIndex(m => m.hash === res.hash)
-      if (existed !== -1) {
-        this.mods[existed] = { ...res, path: this.mods[existed].path }
+    if (toUpdate.length > 0) {
+      for (const res of toUpdate) {
+        const existed = this.mods.findIndex(m => m.hash === res.hash)
+        if (existed !== -1) {
+          this.mods[existed] = { ...res, path: this.mods[existed].path }
+        }
       }
     }
-  }
-
-  instanceModRemove(mods: Resource[]) {
-    const toRemoved = new Set(mods.map(p => p.hash))
-    this.mods = this.mods.filter(m => !toRemoved.has(m.hash))
-  }
-
-  instanceMods(payload: { instance: string; resources: Resource[] }) {
-    this.instance = payload.instance
-    this.mods = payload.resources
   }
 }
 
@@ -81,16 +64,18 @@ export interface InstanceModsService {
   /**
    * Read all mods under the current instance
    */
-  watch(instancePath: string): Promise<InstanceModsState>
+  watch(instancePath: string): Promise<MutableState<InstanceModsState>>
   /**
    * Show instance /mods dictionary
    * @param instancePath The instance path
    */
   showDirectory(instancePath: string): Promise<void>
-
+  /**
+   * Mark mods enabled
+   */
   enable(options: InstallModsOptions): Promise<void>
   /**
-   * Mark a mod disabled
+   * Mark mods disabled
    */
   disable(options: InstallModsOptions): Promise<void>
   /**

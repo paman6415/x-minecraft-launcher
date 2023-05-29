@@ -1,4 +1,4 @@
-import { createMinecraftProcessWatcher, diagnoseJar, diagnoseLibraries, generateArguments, launch, LaunchOption, LaunchPrecheck, MinecraftFolder, ResolvedVersion, Version } from '@xmcl/core'
+import { createMinecraftProcessWatcher, diagnoseJar, diagnoseLibraries, launch, LaunchOption, LaunchPrecheck, MinecraftFolder, ResolvedVersion, Version } from '@xmcl/core'
 import { LaunchService as ILaunchService, LaunchException, LaunchOptions, LaunchServiceKey, LaunchState } from '@xmcl/runtime-api'
 import { ChildProcess } from 'child_process'
 import { EOL } from 'os'
@@ -10,16 +10,18 @@ import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
 import { UTF8 } from '../util/encoding'
 import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
-import { DiagnoseService } from './DiagnoseService'
 import { ExternalAuthSkinService } from './ExternalAuthSkinService'
 import { InstallService } from './InstallService'
 import { InstanceResourcePackService } from './InstanceResourcePacksService'
 import { InstanceService } from './InstanceService'
 import { InstanceShaderPacksService } from './InstanceShaderPacksService'
-import { InstanceVersionService } from './InstanceVersionService'
 import { JavaService } from './JavaService'
 import { ExposeServiceKey, StatefulService } from './Service'
 import { UserService } from './UserService'
+
+export interface LaunchPlugin {
+
+}
 
 @ExposeServiceKey(LaunchServiceKey)
 export class LaunchService extends StatefulService<LaunchState> implements ILaunchService {
@@ -27,11 +29,9 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(BaseService) private baseService: BaseService,
-    @Inject(DiagnoseService) private diagnoseService: DiagnoseService,
     @Inject(ExternalAuthSkinService) private externalAuthSkinService: ExternalAuthSkinService,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstallService) private installService: InstallService,
-    @Inject(InstanceVersionService) private instanceVersionService: InstanceVersionService,
     @Inject(InstanceResourcePackService) private instanceResourcePackService: InstanceResourcePackService,
     @Inject(InstanceShaderPacksService) private instanceShaderPacksService: InstanceShaderPacksService,
     @Inject(JavaService) private javaService: JavaService,
@@ -42,77 +42,9 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
     super(app, () => new LaunchState())
   }
 
+  register() {}
+
   async generateArguments() {
-    // const instance = this.instanceService.state.instance
-    // const user = this.userService.state
-    // const gameProfile = user.gameProfile
-
-    // const minecraftFolder = new MinecraftFolder(instance.path)
-    // const instanceJava = this.instanceJavaService.state.java
-    // if (!instanceJava) {
-    //   throw new Error('No valid java')
-    // }
-    // const javaPath = instanceJava.path
-
-    // const instanceVersion = this.instanceVersionService.state.version
-
-    // if (!instanceVersion) {
-    //   throw new LaunchException({
-    //     type: 'launchNoVersionInstalled',
-    //     version: instance.version,
-    //     minecraft: instance.runtime.minecraft,
-    //     forge: instance.runtime.forge,
-    //     fabric: instance.runtime.fabricLoader,
-    //   })
-    // }
-    // const globalState = this.baseService.state
-    // const version = instanceVersion.id
-    // const assignMemory = instance.assignMemory ?? globalState.globalAssignMemory
-    // let minMemory: number | undefined = instance.minMemory ?? globalState.globalMinMemory
-    // let maxMemory: number | undefined = instance.maxMemory ?? globalState.globalMaxMemory
-
-    // minMemory = assignMemory === true && minMemory > 0
-    //   ? minMemory
-    //   : assignMemory === 'auto' ? Math.floor((await this.baseService.getMemoryStatus()).free / 1024 / 1024 - 256) : undefined
-    // maxMemory = assignMemory === true && maxMemory > 0 ? instance.maxMemory : undefined
-
-    // const yggdrasilHost = user.user ? this.userService.getAccountSystem(user.user?.authService)?.getYggdrasilAuthHost?.(user.user?.authService) : undefined
-    // let yggdrasilAgent: LaunchOption['yggdrasilAgent']
-    // if (yggdrasilHost) {
-    //   try {
-    //     const jar = await this.externalAuthSkinService.installAuthLibInjection()
-    //     yggdrasilAgent = {
-    //       jar,
-    //       server: yggdrasilHost,
-    //     }
-    //   } catch (e) {
-    //     this.error('Fail to install authlib-injection:\n %o', e)
-    //   }
-    // }
-    // const accessToken = user.user ? await this.userTokenStorage.get(user.user).catch(() => undefined) : undefined
-    // /**
-    //  * Build launch condition
-    //  */
-    // const option: LaunchOption = {
-    //   gameProfile,
-    //   accessToken,
-    //   properties: {},
-    //   gamePath: minecraftFolder.root,
-    //   resourcePath: this.getPath(),
-    //   javaPath,
-    //   minMemory,
-    //   maxMemory,
-    //   version,
-    //   extraExecOption: {
-    //     detached: true,
-    //     cwd: minecraftFolder.root,
-    //   },
-    //   extraJVMArgs: instance.vmOptions ?? globalState.globalVmOptions,
-    //   extraMCArgs: instance.mcOptions ?? globalState.globalMcOptions,
-    //   yggdrasilAgent,
-    // }
-
-    // return generateArguments(option)
     return []
   }
 
@@ -135,14 +67,11 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
 
       this.state.launchStatus('checkingProblems')
 
-      const globalState = this.baseService.state
-      const instance = options.instance
       const user = options.user
       const gameProfile = user.profiles[user.selectedProfile]
-      const fastLaunch = instance.fastLaunch ?? this.baseService.state.globalFastLaunch
       const javaPath = options.java
 
-      if (!options?.ignoreUserStatus && !fastLaunch) {
+      if (!options?.ignoreUserStatus) {
         try {
           await this.userService.refreshUser()
         } catch (e) {
@@ -150,15 +79,15 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         }
       }
 
-      if (!options?.force && !fastLaunch) {
-        await this.semaphoreManager.wait('diagnose')
-        const issues = this.diagnoseService.state.issues
-        for (let problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i = 0;
-          problems.length !== 0 && i <= 2;
-          problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i += 1) {
-          await this.diagnoseService.fix(problems)
-        }
-      }
+      // if (!options?.skipAssetsCheck) {
+      //   await this.semaphoreManager.wait('diagnose')
+      //   const issues = this.diagnoseService.state.issues
+      //   for (let problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i = 0;
+      //     problems.length !== 0 && i <= 2;
+      //     problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i += 1) {
+      //     await this.diagnoseService.fix(problems)
+      //   }
+      // }
 
       await this.instanceResourcePackService.ensureResourcePacks().catch((e) => this.error(e))
       await this.instanceShaderPacksService.ensureShaderPacks().catch((e) => this.error(e))
@@ -169,7 +98,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
 
       const yggdrasilHost = user
         ? this.userService.getAccountSystem(user?.authService)?.getYggdrasilAuthHost?.(user?.authService) ??
-          this.userService.yggdrasilAccountSystem.getYggdrasilAuthHost(user?.authService)
+        this.userService.yggdrasilAccountSystem.getYggdrasilAuthHost(user?.authService)
         : undefined
       let yggdrasilAgent: LaunchOption['yggdrasilAgent']
 
@@ -186,11 +115,11 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         }
       }
 
-      const minecraftFolder = new MinecraftFolder(options?.gameDirectory ?? instance.path)
+      const minecraftFolder = new MinecraftFolder(options.gameDirectory)
 
       let version: ResolvedVersion | undefined
 
-      if (options?.version) {
+      if (options.version) {
         this.log(`Override the version: ${options.version}`)
         try {
           version = await Version.parse(this.getPath(), options.version)
@@ -204,13 +133,14 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         throw new LaunchException({
           type: 'launchNoVersionInstalled',
           override: options?.version,
-          minecraft: instance.runtime.minecraft,
-          forge: instance.runtime.forge,
-          fabric: instance.runtime.fabricLoader,
+          minecraft: '',
+          // minecraft: instance.runtime.minecraft,
+          // forge: instance.runtime.forge,
+          // fabric: instance.runtime.fabricLoader,
         })
       }
 
-      if (!options?.force && !fastLaunch) {
+      if (!options?.skipAssetsCheck) {
         const resolvedVersion = version
         const resourceFolder = new MinecraftFolder(this.getPath())
         await Promise.all([
@@ -234,21 +164,23 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       if (!javaPath) {
         throw new LaunchException({ type: 'launchNoProperJava', javaPath: javaPath || '' }, 'Cannot launch without a valid java')
       }
-      const assignMemory = instance.assignMemory ?? globalState.globalAssignMemory
-      let minMemory: number | undefined = instance.minMemory ?? globalState.globalMinMemory
-      let maxMemory: number | undefined = instance.maxMemory ?? globalState.globalMaxMemory
+      // const assignMemory = instance.assignMemory ?? globalState.globalAssignMemory
+      // let minMemory: number | undefined = instance.minMemory ?? globalState.globalMinMemory
+      // let maxMemory: number | undefined = instance.maxMemory ?? globalState.globalMaxMemory
 
-      minMemory = assignMemory === true && minMemory > 0
-        ? minMemory
-        : assignMemory === 'auto' ? Math.floor((await this.baseService.getMemoryStatus()).free / 1024 / 1024 - 256) : undefined
-      maxMemory = assignMemory === true && maxMemory > 0 ? maxMemory : undefined
+      // minMemory = assignMemory === true && minMemory > 0
+      //   ? minMemory
+      //   : assignMemory === 'auto' ? Math.floor((await this.baseService.getMemoryStatus()).free / 1024 / 1024 - 256) : undefined
+      // maxMemory = assignMemory === true && maxMemory > 0 ? maxMemory : undefined
+      const minMemory: number | undefined = options.maxMemory
+      const maxMemory: number | undefined = options.minMemory
       const prechecks = [LaunchPrecheck.checkNatives, LaunchPrecheck.linkAssets]
       const accessToken = user ? await this.userTokenStorage.get(user).catch(() => undefined) : undefined
 
       /**
        * Build launch condition
        */
-      const option: LaunchOption = {
+      const launchOptions: LaunchOption = {
         gameProfile,
         accessToken,
         properties: {},
@@ -262,30 +194,24 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
           detached: true,
           cwd: minecraftFolder.root,
         },
-        extraJVMArgs: instance.vmOptions ?? globalState.globalVmOptions.filter(v => !!v),
-        extraMCArgs: instance.mcOptions ?? globalState.globalMcOptions.filter(v => !!v),
+        extraJVMArgs: options.vmOptions?.filter(v => !!v),
+        extraMCArgs: options.mcOptions?.filter(v => !!v),
         launcherBrand: options?.launcherBrand ?? '',
         launcherName: options?.launcherName ?? 'XMCL',
         yggdrasilAgent,
         prechecks,
       }
 
-      if (options?.server) {
+      if (options.server) {
         this.log('Launching a server')
-        option.server = {
+        launchOptions.server = {
           ip: options.server.host,
           port: options.server?.port,
-        }
-      } else if ('server' in instance && instance.server?.host) {
-        this.log('Launching a server')
-        option.server = {
-          ip: instance.server?.host,
-          port: instance.server?.port,
         }
       }
 
       this.log('Launching with these option...')
-      this.log(JSON.stringify(option, (k, v) => (k === 'accessToken' ? '***' : v), 2))
+      this.log(JSON.stringify(launchOptions, (k, v) => (k === 'accessToken' ? '***' : v), 2))
 
       try {
         const result = await this.javaService.validateJavaPath(javaPath)
@@ -300,7 +226,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       }
 
       // Launch
-      const process = await launch(option)
+      const process = await launch(launchOptions)
       this.launchedProcesses.push(process)
       process.on('spawn', () => {
         this.state.launchCount(this.state.activeCount + 1)
@@ -312,15 +238,16 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         pid: process.pid,
         version: version.id,
         minecraft: version.minecraftVersion,
-        forge: instance.runtime.forge ?? '',
-        fabricLoader: instance.runtime.fabricLoader ?? '',
+        // forge: instance.runtime.forge ?? '',
+        // fabricLoader: instance.runtime.fabricLoader ?? '',
       })
       const watcher = createMinecraftProcessWatcher(process)
       const errorLogs = [] as string[]
       const startTime = Date.now()
 
+      // TODO: move this to plugin system
       this.instanceService.editInstance({
-        instancePath: instance.path,
+        instancePath: options.gameDirectory,
         lastPlayedDate: startTime,
       })
 
@@ -352,9 +279,10 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         const endTime = Date.now()
         const playTime = endTime - startTime
 
+        // TODO: move this to plugin system
         this.instanceService.editInstance({
-          instancePath: instance.path,
-          playtime: instance.playtime + playTime,
+          instancePath: options.gameDirectory,
+          // playtime: instance.playtime + playTime,
         })
 
         this.log(`Minecraft exit: ${code}, signal: ${signal}`)

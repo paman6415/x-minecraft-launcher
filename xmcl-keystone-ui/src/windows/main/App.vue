@@ -93,7 +93,6 @@ import AppSideBar from '@/views/AppSideBar.vue'
 import AppSystemBar from '@/views/AppSystemBar.vue'
 import AppTaskDialog from '@/views/AppTaskDialog.vue'
 import Setup from '@/views/Setup.vue'
-import { useAllServices } from './services'
 
 const colorTheme = useColorTheme()
 const { primaryColor, accentColor, infoColor, errorColor, successColor, warningColor, backgroundColor } = colorTheme
@@ -123,7 +122,6 @@ watch(errorColor, (newColor) => { vuetify.theme.currentTheme.error = newColor })
 watch(successColor, (newColor) => { vuetify.theme.currentTheme.success = newColor })
 watch(warningColor, (newColor) => { vuetify.theme.currentTheme.warning = newColor })
 
-useAllServices()
 provide(kDropHandler, useDropHandler())
 useDefaultErrorHandler()
 useAuthProfileImportNotification()

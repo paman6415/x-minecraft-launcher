@@ -1,6 +1,7 @@
 import { Exception, InstanceNotFoundException } from '../entities/exception'
 import { InstanceSave, InstanceSaveMetadata } from '../entities/save'
-import { ServiceKey, StatefulService } from './Service'
+import { MutableState } from '../util/WatchSource'
+import { ServiceKey } from './Service'
 
 export interface ExportSaveOptions {
   /**
@@ -85,12 +86,12 @@ export interface CloneSaveOptions {
   newSaveName?: string
 }
 
+export function getInstanceSaveKey(path: string) {
+  return `instance-saves://${path}`
+}
+
 export class SaveState {
   saves = [] as InstanceSaveMetadata[]
-
-  instanceSaves(saves: InstanceSaveMetadata[]) {
-    this.saves = saves
-  }
 
   instanceSaveUpdate(save: InstanceSaveMetadata) {
     const existed = this.saves.find(s => s.path === save.path)
@@ -116,10 +117,10 @@ export interface InstanceSavesService {
    */
   getInstanceSaves(path: string): Promise<InstanceSave[]>
   /**
-   * Mount and load instances saves
+   * Watch instances saves
    * @param path
    */
-  watchSaves(path: string): Promise<SaveState>
+  watch(path: string): Promise<MutableState<SaveState>>
   /**
    * Clone a save under an instance to one or multiple instances.
    *

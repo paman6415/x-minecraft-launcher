@@ -33,7 +33,6 @@ import { useService } from '@/composables'
 import { injection } from '@/util/inject'
 import { kColorTheme } from '@/composables/colorTheme'
 
-const { state } = useService(InstanceOptionsServiceKey)
 const { cardColor } = injection(kColorTheme)
 const shaderPack = computed(() => state.shaderoptions.shaderPack)
 const { t } = useI18n()

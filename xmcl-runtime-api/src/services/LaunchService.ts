@@ -1,4 +1,4 @@
-import { JavaRecord } from 'src/entities/java'
+import { JavaRecord } from '../entities/java'
 import { Exception } from '../entities/exception'
 import { Instance } from '../entities/instance'
 import { LaunchStatus } from '../entities/launch'
@@ -43,16 +43,9 @@ export interface LaunchOptions {
    */
   version: string
   /**
-   * Override launching directory.
-   *
-   * By default, it will be the current selected instance directory.
+   * The game directory
    */
-  gameDirectory?: string
-  /**
-   * The instance to launch
-   */
-  instance: Instance
-  
+  gameDirectory: string
   /**
    * The user to launch
    */
@@ -68,7 +61,9 @@ export interface LaunchOptions {
     host: string
     port?: number
   }
-
+  /**
+   * The launcher name
+   */
   launcherName?: string
 
   launcherBrand?: string
@@ -82,6 +77,12 @@ export interface LaunchOptions {
   force?: boolean
 
   ignoreUserStatus?: boolean
+
+  skipAssetsCheck?: boolean
+
+  vmOptions?: string[]
+
+  mcOptions?: string[]
 }
 
 export interface LaunchService extends StatefulService<LaunchState>, GenericEventEmitter<LaunchServiceEventMap> {
@@ -93,7 +94,7 @@ export interface LaunchService extends StatefulService<LaunchState>, GenericEven
    * Launch the current selected instance. This will return a boolean promise indicate whether launch is success.
    * @returns Does this launch request success?
    */
-  launch(options?: LaunchOptions): Promise<boolean>
+  launch(options: LaunchOptions): Promise<boolean>
 }
 
 export type LaunchExceptions = {

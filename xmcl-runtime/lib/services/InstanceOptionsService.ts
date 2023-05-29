@@ -1,5 +1,5 @@
 import { Frame, parse } from '@xmcl/gamesetting'
-import { EditGameSettingOptions, EditShaderOptions, InstanceOptionsService as IInstanceOptionsService, InstanceOptionException, InstanceOptionsServiceKey, InstanceOptionsState, ResourceDomain, compareRelease, compareSnapshot, isCompatible, isReleaseVersion, isSnapshotPreview, packFormatVersionRange, parseShaderOptions, stringifyShaderOptions } from '@xmcl/runtime-api'
+import { EditGameSettingOptions, EditShaderOptions, GameOptionsState, InstanceOptionsService as IInstanceOptionsService, InstanceOptionException, InstanceOptionsServiceKey, ResourceDomain, compareRelease, compareSnapshot, getInstanceGameOptionKey, isCompatible, isReleaseVersion, isSnapshotPreview, packFormatVersionRange, parseShaderOptions, stringifyShaderOptions } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import watch from 'node-watch'
 import { basename, join, relative } from 'path'
@@ -38,51 +38,52 @@ export class InstanceOptionsService extends AbstractService implements IInstance
     })
   }
 
-  async watchOptions(path: string) {
+  async watch(path: string) {
     requireString(path)
-    const state = this.storeManager.register('InstaneOptions/' + path, new InstanceOptionsState())
 
-    const loadShaderOptions = async (path: string) => {
-      try {
-        const result = await this.getShaderOptions(path)
-        state.instanceShaderOptions(result)
-      } catch (e) {
-        if (isSystemError(e)) {
-          this.warn(`An error ocurred during load shader options of ${path}.`)
-          this.warn(e)
+    return this.storeManager.registerOrGet(getInstanceGameOptionKey(path), async () => {
+      const state = new GameOptionsState()
+
+      const loadShaderOptions = async (path: string) => {
+        try {
+          const result = await this.getShaderOptions(path)
+          state.shaderPack = result.shaderPack
+        } catch (e) {
+          if (isSystemError(e)) {
+            this.warn(`An error ocurred during load shader options of ${path}.`)
+            this.warn(e)
+          }
         }
-        state.instanceShaderOptions({ shaderPack: '' })
       }
-    }
 
-    const loadOptionsTxt = async (path: string) => {
-      try {
-        const result = await this.getGameOptions(path)
-        state.instanceGameSettingsLoad(result)
-      } catch (e) {
-        if (isSystemError(e)) {
-          this.warn(`An error ocurred during parse game options of ${path}.`)
-          this.warn(e)
+      const loadOptions = async (path: string) => {
+        try {
+          const result = await this.getGameOptions(path)
+          Object.assign(state, result)
+        } catch (e) {
+          if (isSystemError(e)) {
+            this.warn(`An error ocurred during parse game options of ${path}.`)
+            this.warn(e)
+          }
         }
-        state.instanceGameSettingsLoad({ resourcePacks: [] })
       }
-    }
 
-    this.log(`Start to watch instance options.txt in ${path}`)
+      this.log(`Start to watch instance options.txt in ${path}`)
 
-    const watcher = watch(path, (event, file) => {
-      if (basename(file) === ('options.txt')) {
-        loadOptionsTxt(path)
-      }
-      if (basename(file) === ('optionsshaders.txt')) {
-        loadShaderOptions(path)
-      }
+      const watcher = watch(path, (event, file) => {
+        if (basename(file) === ('options.txt')) {
+          loadOptions(path)
+        } else if (basename(file) === ('optionsshaders.txt')) {
+          loadShaderOptions(path)
+        }
+      })
+
+      await Promise.all([loadOptions(path), loadShaderOptions(path)])
+
+      return [state, () => {
+        watcher.close()
+      }]
     })
-
-    await loadOptionsTxt(path)
-    await loadShaderOptions(path)
-
-    return state
   }
 
   /**

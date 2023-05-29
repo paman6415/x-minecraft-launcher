@@ -1,12 +1,11 @@
 import TextComponent from '@/components/TextComponent'
-import { IssueHandler, kIssueHandlers, kSemaphores, kServiceFactory, useSemaphores } from '@/composables'
+import { IssueHandler, kIssueHandlers, kSemaphores, kServiceFactory, useSemaphores, useServiceFactory } from '@/composables'
 import { kDialogModel, useDialogModel } from '@/composables/dialog'
 import { kExceptionHandlers, useExceptionHandlers } from '@/composables/exception'
 import { kNotificationQueue, useNotificationQueue } from '@/composables/notifier'
 import { kServerStatusCache, useServerStatusCache } from '@/composables/serverStatus'
 import { kTaskManager, useTaskManager } from '@/composables/taskManager'
 import { kVuetify } from '@/composables/vuetify'
-import { VuexServiceFactory } from '@/vuexServiceProxy'
 import messages from '@intlify/unplugin-vue-i18n/messages'
 import 'virtual:windi.css'
 import Vue, { defineComponent, getCurrentInstance, h, provide } from 'vue'
@@ -72,7 +71,7 @@ const app = new Vue(defineComponent({
 
     const store = createStore()
     provide(kStore, store)
-    provide(kServiceFactory, new VuexServiceFactory(store))
+    provide(kServiceFactory, useServiceFactory())
     provide(kVuetify, vuetify.framework)
     provide(kSemaphores, useSemaphores())
     provide(kExceptionHandlers, useExceptionHandlers())

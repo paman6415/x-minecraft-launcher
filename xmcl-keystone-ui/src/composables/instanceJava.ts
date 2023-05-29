@@ -265,23 +265,23 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
 
   return {
     recomendation: resultQuality !== JavaCompatibleState.Matched
-? {
-      recomendation: {
-        selectedJava: resultJava,
-        recommendedDownload: javaVersion,
-        recommendedVersion: computedJava,
-        recommendedLevel: computedQuality,
-        version: selectedVersion?.id || '',
-        minecraft,
-        forge: instance.runtime.forge || '',
-        requirement: versionPref.requirement,
-      },
-      java: {
-        ...resultJava,
-        valid: true,
-      },
-    }
-: undefined,
+      ? {
+        recomendation: {
+          selectedJava: resultJava,
+          recommendedDownload: javaVersion,
+          recommendedVersion: computedJava,
+          recommendedLevel: computedQuality,
+          version: selectedVersion?.id || '',
+          minecraft,
+          forge: instance.runtime.forge || '',
+          requirement: versionPref.requirement,
+        },
+        java: {
+          ...resultJava,
+          valid: true,
+        },
+      }
+      : undefined,
     java: {
       ...resultJava,
       valid: true,

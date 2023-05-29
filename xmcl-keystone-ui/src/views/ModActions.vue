@@ -4,7 +4,7 @@
       v-shared-tooltip="t('mod.showDirectory')"
       icon
       large
-      @click="showDirectory()"
+      @click="showDirectory(path)"
     >
       <v-icon>folder</v-icon>
     </v-btn>
@@ -29,7 +29,7 @@ import { injection } from '@/util/inject'
 import { InstanceModsServiceKey } from '@xmcl/runtime-api'
 
 const { showDirectory } = useService(InstanceModsServiceKey)
-const { version } = injection(kInstanceContext)
+const { path, version } = injection(kInstanceContext)
 const noModLoader = computed(() =>
   !version.value.forge && !version.value.fabricLoader && !version.value.quiltLoader,
 )

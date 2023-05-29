@@ -1,5 +1,5 @@
 import { checksum } from '@xmcl/core'
-import { InstanceFile, InstanceIOException, InstanceManifest, InstanceUpdate, SetInstanceManifestOptions, XUpdateService as IXUpdateService, XUpdateServiceKey } from '@xmcl/runtime-api'
+import { InstanceFile, InstanceIOException, InstanceManifest, InstanceUpdate, SetInstanceManifestOptions, XUpdateService as IXUpdateService, XUpdateServiceKey, UserState } from '@xmcl/runtime-api'
 import { randomUUID } from 'crypto'
 import { createReadStream } from 'fs'
 import { unlink } from 'fs/promises'
@@ -72,7 +72,7 @@ export class XUpdateService extends AbstractService implements IXUpdateService {
       const start = Date.now()
       const allHeaders = headers ? { ...headers } : {}
       if (!allHeaders.Authorization) {
-        const token = this.getAccessToken(this.userService.state.user?.id ?? '')
+        const token = this.getAccessToken(UserState.getUser(this.userService.state)?.id ?? '')
         allHeaders.Authorization = `Bearer ${token}`
       }
 

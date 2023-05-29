@@ -39,13 +39,6 @@ export class InstanceState {
    */
   instances: Instance[] = []
 
-  // /**
-  //  * All selected instances.
-  //  */
-  // get instances() {
-  //   return Object.values(this.all)
-  // }
-
   /**
    * The selected instance config.
    */

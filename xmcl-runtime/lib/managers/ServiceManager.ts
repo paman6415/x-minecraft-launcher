@@ -4,6 +4,8 @@ import LauncherApp from '../app/LauncherApp'
 import { Client } from '../engineBridge'
 import { AbstractService, ServiceConstructor, getServiceKey } from '../services/Service'
 import { serializeError } from '../util/error'
+import { isStateObject } from './ServiceStateManager'
+
 interface ServiceCallSession {
   id: number
   name: string
@@ -74,6 +76,9 @@ export default class ServiceManager extends Manager {
     const [serviceName, serviceMethod] = sess.name.split('.')
     try {
       const r = await this.sessions[id].call()
+      if (isStateObject(r)) {
+        r.__state__ = Object.getPrototypeOf(r).constructor.name
+      }
       return { result: r }
     } catch (e) {
       this.logger.warn(`Error during service call session ${id}(${this.sessions[id].name}):`)

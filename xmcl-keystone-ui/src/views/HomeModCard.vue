@@ -17,8 +17,8 @@ import HomeCardBase from './HomeCardBase.vue'
 
 const props = defineProps<{ row: number; rowCount: number }>()
 
-const { mods: { items, enabledModCounts } } = injection(kInstanceContext)
-const icons = computed(() => items.value.filter(i => i.enabled).map((m) => ({ name: m.name + ' (' + m.version + ')', icon: m.icon }))
+const { mods: { mods, enabledModCounts } } = injection(kInstanceContext)
+const icons = computed(() => mods.value.filter(i => i.enabled).map((m) => ({ name: m.name + ' (' + m.version + ')', icon: m.icon }))
   .slice(0, props.row * props.rowCount))
 const { push } = useRouter()
 const refreshing = useSemaphore(computed(() => 'instance:mods'))

@@ -49,15 +49,11 @@ export class InstanceResourcePackService extends AbstractService implements IIns
         this.error(err)
         this.emit('error', err)
       })
-    }).subscribe('instanceGameSettingsLoad', async (payload) => {
-      if ('resourcePacks' in payload) {
-        await this.diagnoseResourcePacks()
-      }
     })
 
     this.resourceService.registerInstaller(ResourceDomain.ResourcePacks, async (resource, path) => {
       gameSettingService.editGameSetting({
-
+        instancePath: path,
       })
     })
 
@@ -94,112 +90,6 @@ export class InstanceResourcePackService extends AbstractService implements IIns
 
   // private watcher: FSWatcher | undefined
   // private activeResourcePacks: AnyPersistedResource[] = []
-
-  @Singleton()
-  async diagnoseResourcePacks() {
-    // this.up('diagnose')
-    // try {
-    //   const report: Partial<IssueReport> = {}
-    //   this.log('Diagnose resource packs')
-    //   const { runtime: version } = this.instanceService.state.instance
-    //   const resourcePacks = this.gameSettingService.state.options.resourcePacks
-    //   const resources = resourcePacks.map((name) => this.resourceService.state.resourcepacks.find((pack) => `file/${pack.name}${pack.ext}` === name))
-
-    //   const mcversion = version.minecraft
-    //   const resolvedMcVersion = parseVersion(mcversion)
-
-    //   const tree: Pick<IssueReport, 'incompatibleResourcePack'> = {
-    //     incompatibleResourcePack: [],
-    //   }
-
-    //   const packFormatMapping = this.packVersionToVersionRange
-    //   for (const pack of resources) {
-    //     if (!pack) continue
-    //     const metadata = pack.metadata as PackMeta.Pack
-    //     if (metadata.pack_format in packFormatMapping) {
-    //       const acceptVersion = packFormatMapping[metadata.pack_format]
-    //       const range = VersionRange.createFromVersionSpec(acceptVersion)
-    //       if (range && !range.containsVersion(resolvedMcVersion)) {
-    //         tree.incompatibleResourcePack.push({ name: pack.name, accepted: acceptVersion, actual: mcversion })
-    //       }
-    //     }
-    //   }
-
-    //   Object.assign(report, tree)
-    //   this.diagnoseService.report(report)
-    // } finally {
-    //   this.down('diagnose')
-    // }
-  }
-
-  // async dispose(): Promise<void> {
-  //   this.watcher?.close()
-  //   this.active = undefined
-  //   this.activeResourcePacks = []
-  // }
-
-  // private async watchUnmanagedInstance(path: string) {
-  //   this.watcher = watch(path, (event, name) => {
-  //     if (name.startsWith('.')) return
-  //     const filePath = name
-  //     if (event === 'update') {
-  //       this.resourceService.resolveResource({ path: filePath, type: 'resourcepack' }).then(([resource, icon]) => {
-  //         if (isResourcePackResource(resource)) {
-  //           this.log(`Instance resourcepack add ${filePath}`)
-  //         } else {
-  //           this.warn(`Non resourcepack resource added in /resourcepacks directory! ${filePath}`)
-  //         }
-  //         if (resource.fileType === 'directory') {
-  //           // ignore directory
-  //           return
-  //         }
-  //         if (!isPersistedResource(resource)) {
-  //           if (resource.fileType !== 'directory' && resource.type === ResourceType.Unknown) {
-  //             this.log(`Skip to import unknown directory to /resourcepacks! ${filePath}`)
-  //             return
-  //           }
-  //           this.resourceService.importParsedResource({ path: filePath }, resource, icon).then((res) => {
-  //             this.activeResourcePacks.push({ ...res, path: resource.path })
-  //           }, (e) => {
-  //             this.activeResourcePacks.push(resource)
-  //             this.warn(`Fail to persist resource in /resourcepacks directory! ${filePath}`)
-  //             this.warn(e)
-  //           })
-  //           this.log(`Found new resource in /resourcepacks directory! ${filePath}`)
-  //         } else {
-  //           this.activeResourcePacks.push(resource)
-  //         }
-  //       })
-  //     } else {
-  //       const target = this.activeResourcePacks.find(r => r.path === filePath)
-  //       if (target) {
-  //         this.log(`Instance resourcepack remove ${filePath}`)
-  //         const i = this.activeResourcePacks.findIndex(r => r.hash === target.hash)
-  //         this.activeResourcePacks.splice(i, 1)
-  //       } else {
-  //         this.warn(`Cannot remove the resourcepack ${filePath} as it's not found in memory cache!`)
-  //       }
-  //     }
-  //   })
-  // }
-
-  async ensureResourcePacks() {
-    if (!this.active) return
-    if (this.linked) return
-    const promises: Promise<void>[] = []
-    for (let fileName of this.gameSettingService.state.options.resourcePacks) {
-      if (fileName === 'vanilla') {
-        continue
-      }
-      fileName = fileName.startsWith('file/') ? fileName.slice(5) : fileName
-      const src = this.getPath(ResourceDomain.ResourcePacks, fileName)
-      const dest = join(this.active, ResourceDomain.ResourcePacks, fileName)
-      if (!existsSync(dest)) {
-        promises.push(linkWithTimeoutOrCopy(src, dest).catch((e) => this.error(e)))
-      }
-    }
-    await Promise.all(promises)
-  }
 
   @Singleton(p => p)
   async link(instancePath: string = this.instanceService.state.path): Promise<void> {

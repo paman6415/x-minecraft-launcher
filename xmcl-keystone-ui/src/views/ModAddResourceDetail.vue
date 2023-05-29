@@ -151,8 +151,8 @@
 <script setup lang="ts">
 import { useService } from '@/composables'
 import { getCompatibleIcon } from '@/composables/compatibleIcon'
-import { kModsContext } from '@/composables/mod'
 import { kMarketRoute } from '@/composables/useMarketRoute'
+import { kInstanceContext } from '@/composables/instanceContext'
 import { injection } from '@/util/inject'
 import { getModsCompatiblity } from '@/util/modCompatible'
 import { getModDependencies } from '@/util/modDependencies'

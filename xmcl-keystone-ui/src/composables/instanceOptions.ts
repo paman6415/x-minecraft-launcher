@@ -4,6 +4,21 @@ import { useService } from './service'
 import { useState } from './syncableState'
 
 export function useInstanceOptions(instance: Ref<Instance>) {
-  const { watchOptions } = useService(InstanceOptionsServiceKey)
-  return useState(computed(() => instance.value.path), () => watchOptions(instance.value.path))
+  const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)
+  const { state, isValidating, error } = useState(computed(() => `/instance-options/${instance.value.path}`), () => watchOptions(instance.value.path))
+
+  watch(state, (newOps) => {
+    if (newOps) {
+      editGameSetting({
+        instancePath: instance.value.path,
+        ...newOps,
+      })
+    }
+  }, { deep: true })
+
+  return {
+    gameOptions: state,
+    isValidating,
+    error,
+  }
 }

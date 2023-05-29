@@ -1,5 +1,5 @@
 import { ResolvedVersion, Version } from '@xmcl/core'
-import { CreateInstanceOption, EditInstanceOptions, InstanceService as IInstanceService, Instance, InstanceException, InstanceSchema, InstanceServiceKey, InstanceState, InstancesSchema, RuntimeVersions, createTemplate, filterForgeVersion, filterOptifineVersion, getExpectVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary } from '@xmcl/runtime-api'
+import { CreateInstanceOption, EditInstanceOptions, InstanceService as IInstanceService, Instance, InstanceException, InstanceSchema, InstanceServiceKey, InstanceState, InstancesSchema, RuntimeVersions, UserState, createTemplate, filterForgeVersion, filterOptifineVersion, getExpectVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary } from '@xmcl/runtime-api'
 import filenamify from 'filenamify'
 import { existsSync } from 'fs'
 import { ensureDir } from 'fs-extra/esm'
@@ -156,7 +156,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
 
     const instance = createTemplate()
 
-    instance.author = instance.author || this.userService.state.gameProfile?.name || ''
+    instance.author = instance.author || UserState.getGameProfile(this.userService.state)?.name || ''
     instance.runtime.minecraft = this.installService.getLatestRelease()
 
     assignShallow(instance, option)
@@ -174,7 +174,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     }
 
     instance.runtime.minecraft = instance.runtime.minecraft || this.installService.getLatestRelease()
-    instance.author = instance.author || this.userService.state.gameProfile?.name || ''
+    instance.author = instance.author || UserState.getGameProfile(this.userService.state)?.name || ''
     instance.upstream = option.upstream
     instance.playtime = option.playtime
     instance.lastPlayedDate = option.lastPlayedDate
@@ -233,7 +233,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     }
 
     instance.runtime.minecraft = instance.runtime.minecraft || this.installService.getLatestRelease()
-    instance.author = this.userService.state.gameProfile?.name ?? ''
+    instance.author = UserState.getGameProfile(this.userService.state)?.name ?? ''
     instance.creationDate = Date.now()
     instance.lastAccessDate = Date.now()
 

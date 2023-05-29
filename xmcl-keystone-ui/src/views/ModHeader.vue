@@ -13,7 +13,7 @@
       /> -->
       <v-btn
         icon
-        @click="showDirectory()"
+        @click="showDirectory(path)"
       >
         <v-icon>folder</v-icon>
       </v-btn>

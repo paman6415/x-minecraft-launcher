@@ -67,7 +67,6 @@ export function useLoginValidation(isOffline: Ref<boolean>) {
 }
 
 export function useMojangSecurityStatus() {
-  const { state } = useService(UserServiceKey)
   const security = computed(() => true)
 
   return {
@@ -100,10 +99,10 @@ export function useMojangSecurity(profile: Ref<UserProfile>) {
       if (data.loading) return
       if (data.challenges.length > 0) return
       data.loading = true
-      const sec = await checkLocation()
+      const sec = await checkLocation(profile.value)
       if (sec) return
       try {
-        const challenges = await getChallenges()
+        const challenges = await getChallenges(profile.value)
         data.challenges = challenges.map(c => ({ question: c.question, answer: { id: c.answer.id, answer: '' } }))
       } catch (e) {
         data.error = e
@@ -115,7 +114,7 @@ export function useMojangSecurity(profile: Ref<UserProfile>) {
   async function submit() {
     data.loading = true
     try {
-      await submitChallenges(data.challenges.map(c => c.answer))
+      await submitChallenges(profile.value, data.challenges.map(c => c.answer))
     } catch (e) {
       data.error = e
     } finally {
