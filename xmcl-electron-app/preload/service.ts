@@ -4,19 +4,20 @@ import { AllStates, ServiceChannels, ServiceKey, MutableState, StateMetadata } f
 import { contextBridge, ipcRenderer } from 'electron'
 import EventEmitter from 'events'
 
-function getPrototypeMetadata(prototype: object, name: string) {
+function getPrototypeMetadata(T: { new(): object }, prototype: object, name: string) {
   const methods = Object.getOwnPropertyNames(prototype)
     .map((name) => [name, Object.getOwnPropertyDescriptor(prototype, name)?.value] as const)
     .filter(([, v]) => v instanceof Function)
   return {
     name,
+    constructor: () => new T(),
     methods: methods.map(([name, f]) => [name, f.call] as [string, (o: any, ...args: any[]) => any]),
     prototype,
   }
 }
 
 const idToStatePrototype: Record<string, StateMetadata> = AllStates.reduce((obj, cur) => {
-  obj[cur.name] = getPrototypeMetadata(cur.prototype, cur.name)
+  obj[cur.name] = getPrototypeMetadata(cur, cur.prototype, cur.name)
   return obj
 }, {} as Record<string, StateMetadata>)
 

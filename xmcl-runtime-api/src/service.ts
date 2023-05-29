@@ -43,7 +43,17 @@ export type ServiceChannel<T> = {
 } & GenericEventEmitter<SyncableEventMap>
 
 export interface StateMetadata {
+  /**
+   * The name of the state
+   */
   name: string
+  /**
+   * The constructor of the state
+   */
+  constructor: () => object
+  /**
+   * The methods of the state
+   */
   methods: [string, (o: any, ...args: any[]) => any][]
   prototype: object
 }
