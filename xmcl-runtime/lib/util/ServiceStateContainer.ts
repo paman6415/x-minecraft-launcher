@@ -43,7 +43,7 @@ export class ServiceStateContainer {
 
   commit(type: string, payload: any) {
     if (typeof this.state[type] !== 'function') {
-      this.logger.error(`Cannot find mutation named ${type} in service ${this.id}`)
+      this.logger.error(new Error(`Cannot find mutation named ${type} in service ${this.id}`))
     } else {
       this.state[type](payload)
     }

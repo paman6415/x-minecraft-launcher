@@ -11,14 +11,12 @@ import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
-import { InstanceService } from './InstanceService'
 
 @ExposeServiceKey(CurseForgeServiceKey)
 export class CurseForgeService extends AbstractService implements ICurseForgeService {
   readonly client: CurseforgeV1Client
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(ResourceService) private resourceService: ResourceService,
   ) {
     super(app)
@@ -40,7 +38,7 @@ export class CurseForgeService extends AbstractService implements ICurseForgeSer
   async installFile({ file, type, instancePath, icon }: InstallFileOptions): Promise<InstallFileResult> {
     requireString(type)
     requireObject(file)
-    instancePath ||= this.instanceService.state.path
+    // instancePath ||= this.instanceService.state.path
 
     const typeToDomain: Record<ProjectType, ResourceDomain> = {
       'mc-mods': ResourceDomain.Mods,

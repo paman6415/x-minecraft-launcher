@@ -164,10 +164,6 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     return this.state.clientToken
   }
 
-  getOfflineUser() {
-    return this.state.users[OFFLINE_USER_ID]
-  }
-
   @Lock('uploadSkin')
   async uploadSkin(options: UploadSkinOptions) {
     requireObject(options)

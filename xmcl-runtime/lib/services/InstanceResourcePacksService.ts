@@ -29,7 +29,7 @@ export class InstanceResourcePackService extends AbstractService implements IIns
     @Inject(DiagnoseService) private diagnoseService: DiagnoseService,
   ) {
     super(app)
-    this.storeManager.subscribe('instanceGameSettingsLoad', async (payload) => {
+    this.storeManager/* .subscribe('instanceGameSettingsLoad', async (payload) => {
       if (payload.resourcePacks && this.active && !this.instanceService.isUnderManaged(this.active)) {
         for (const pack of payload.resourcePacks.filter(v => v !== 'vanilla')) {
           const fileName = pack.startsWith('file/') ? pack.substring('file/'.length) : pack
@@ -42,7 +42,7 @@ export class InstanceResourcePackService extends AbstractService implements IIns
           }
         }
       }
-    }).subscribe('instanceSelect', (instancePath) => {
+    }) */.subscribe('instanceSelect', (instancePath) => {
       this.link(instancePath).catch((e) => {
         // TODO: decorate error
         const err = new Error(`Fail to link instance ${instancePath} resource pack!`, { cause: e })

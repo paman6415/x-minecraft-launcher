@@ -513,27 +513,6 @@ export class InstallService extends AbstractService implements IInstallService {
 
   @Lock((v: _InstallForgeOptions) => LockKey.version(`forge-${v.mcversion}-${v.version}`))
   async installForge(options: _InstallForgeOptions) {
-    const minecraft = MinecraftFolder.from(this.getPath())
-    let { issues } = await diagnose(options.mcversion, minecraft)
-    const missingVersion = issues.some(r => r.role === 'versionJson' || r.role === 'minecraftJar')
-    if (missingVersion) {
-      const versions = await this.getMinecraftVersionList()
-      const meta = versions.versions.find(f => f.id === options.mcversion)!
-      const option = this.getInstallOptions()
-      const version = await this.submit(installVersionTask(meta, minecraft, option).setName('installVersion'))
-      issues = await diagnoseLibraries(version, minecraft)
-    }
-
-    const missingLib = issues.some(r => r.role === 'library')
-    if (missingLib) {
-      await this.installLibraries(issues.filter((i): i is LibraryIssue => i.role === 'library').map(i => i.library))
-    }
-
-    return await this.installForgeInternal(options)
-  }
-
-  @Lock((v: _InstallForgeOptions) => LockKey.version(`forge-${v.mcversion}-${v.version}`))
-  async installForgeUnsafe(options: _InstallForgeOptions) {
     return await this.installForgeInternal(options)
   }
 

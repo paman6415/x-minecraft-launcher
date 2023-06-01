@@ -21,7 +21,7 @@ export class ServiceFactoryImpl implements ServiceFactory {
     } as any, {
       get(o, key, r) {
         if (key in o) return o[key]
-        const f = (payload: any) => channel.call(key as any, payload)
+        const f = (...payload: any[]) => channel.call(key as any, ...(payload as any))
         o[key] = f
         return f
       },

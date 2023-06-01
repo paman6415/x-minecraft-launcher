@@ -9,7 +9,6 @@ import { JavaValidation } from '../entities/java'
 import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
 import { UTF8 } from '../util/encoding'
 import { Inject } from '../util/objectRegistry'
-import { BaseService } from './BaseService'
 import { ExternalAuthSkinService } from './ExternalAuthSkinService'
 import { InstallService } from './InstallService'
 import { InstanceResourcePackService } from './InstanceResourcePacksService'
@@ -28,7 +27,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
   private launchedProcesses: ChildProcess[] = []
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(BaseService) private baseService: BaseService,
     @Inject(ExternalAuthSkinService) private externalAuthSkinService: ExternalAuthSkinService,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstallService) private installService: InstallService,
@@ -89,7 +87,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       //   }
       // }
 
-      await this.instanceResourcePackService.ensureResourcePacks().catch((e) => this.error(e))
+      // await this.instanceResourcePackService.ensureResourcePacks().catch((e) => this.error(e))
       await this.instanceShaderPacksService.ensureShaderPacks().catch((e) => this.error(e))
 
       if (this.state.status === 'idle') { // check if we have cancel (set to ready) this launch

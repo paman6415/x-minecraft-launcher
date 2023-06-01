@@ -1,6 +1,6 @@
-import { diagnoseAssetIndex, diagnoseAssets, diagnoseJar, diagnoseLibraries, LibraryIssue, MinecraftFolder, ResolvedVersion } from '@xmcl/core'
-import { diagnoseInstall, InstallProfile } from '@xmcl/installer'
-import { Asset, AssetIndexIssueKey, AssetsIssueKey, getExpectVersion, getResolvedVersion, InstallableLibrary, InstallProfileIssueKey, Instance, InstanceVersionException, InstanceVersionService as IInstanceVersionService, InstanceVersionServiceKey, InstanceVersionState, IssueReportBuilder, LibrariesIssueKey, LocalVersionHeader, RuntimeVersions, VersionIssueKey, VersionJarIssueKey } from '@xmcl/runtime-api'
+import { AssetIndexIssue, AssetIssue, diagnoseAssetIndex, diagnoseAssets, diagnoseJar, diagnoseLibraries, LibraryIssue, MinecraftFolder, MinecraftJarIssue, ResolvedVersion } from '@xmcl/core'
+import { diagnoseInstall, InstallProfile, InstallProfileIssueReport } from '@xmcl/installer'
+import { Asset, AssetIndexIssueKey, AssetsIssueKey, getExpectVersion, getResolvedVersion, InstallableLibrary, InstallProfileIssueKey, Instance, InstanceVersionException, InstanceVersionService as IInstanceVersionService, InstanceVersionServiceKey, InstanceVersionState, IssueReportBuilder, LibrariesIssueKey, LocalVersionHeader, RuntimeVersions, VersionIssueKey, VersionJarIssueKey, VersionJarIssue, InstallProfileIssue } from '@xmcl/runtime-api'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import LauncherApp from '../app/LauncherApp'
@@ -230,52 +230,43 @@ export class InstanceVersionService extends StatefulService<InstanceVersionState
     return undefined
   }
 
-  async diagnoseLibraries(builder: IssueReportBuilder, currentVersion: ResolvedVersion, minecraft: MinecraftFolder) {
+  async diagnoseLibraries(currentVersion: ResolvedVersion): Promise<LibraryIssue[]> {
     this.log(`Diagnose for version ${currentVersion.id} libraries`)
-    const librariesIssues = await diagnoseLibraries(currentVersion, minecraft, { strict: false, checksum: this.worker.checksum })
-    builder.set(LibrariesIssueKey)
-    if (librariesIssues.length > 0) {
-      builder.set(LibrariesIssueKey, { version: currentVersion.id, libraries: librariesIssues })
-    }
+    const librariesIssues = await diagnoseLibraries(currentVersion, new MinecraftFolder(this.getPath()), { strict: false, checksum: this.worker.checksum })
+    return librariesIssues
   }
 
-  private async diagnoseAssetIndex(builder: IssueReportBuilder, currentVersion: ResolvedVersion, minecraft: MinecraftFolder) {
+  async diagnoseAssetIndex(currentVersion: ResolvedVersion): Promise<AssetIndexIssue | undefined> {
     this.log(`Diagnose for version ${currentVersion.id} assets index`)
-    const assetIndexIssue = await diagnoseAssetIndex(currentVersion, minecraft)
-    builder.set(AssetIndexIssueKey)
+    const assetIndexIssue = await diagnoseAssetIndex(currentVersion, new MinecraftFolder(this.getPath()))
     if (assetIndexIssue) {
-      builder.set(AssetIndexIssueKey, assetIndexIssue)
       assetIndexIssue.version = assetIndexIssue.version || currentVersion.id
+      return assetIndexIssue
     }
-    return assetIndexIssue
   }
 
-  private async diagnoseAssets(builder: IssueReportBuilder, currentVersion: ResolvedVersion, minecraft: MinecraftFolder, strict = false) {
+  async diagnoseAssets(currentVersion: ResolvedVersion, strict = false): Promise<AssetIssue[]> {
     this.log(`Diagnose for version ${currentVersion.id} assets`)
+    const minecraft = new MinecraftFolder(this.getPath())
     const objects: Record<string, { hash: string; size: number }> = (await readFile(minecraft.getAssetsIndex(currentVersion.assets), 'utf-8').then((b) => JSON.parse(b.toString()))).objects
 
-    builder.set(AssetsIssueKey)
     const assetsIssues = await diagnoseAssets(objects, minecraft, { strict, checksum: this.worker.checksum })
 
-    if (assetsIssues.length > 0) {
-      builder.set(AssetsIssueKey, { version: currentVersion.id, assets: assetsIssues })
-    }
+    return assetsIssues
   }
 
-  async diagnoseJar(builder: IssueReportBuilder, currentVersion: ResolvedVersion, minecraft: MinecraftFolder, runtime: RuntimeVersions) {
+  async diagnoseJar(currentVersion: ResolvedVersion): Promise<MinecraftJarIssue | undefined> {
     this.log(`Diagnose for version ${currentVersion.id} jar`)
+    const minecraft = new MinecraftFolder(this.getPath())
     const jarIssue = await diagnoseJar(currentVersion, minecraft)
 
-    builder.set(VersionJarIssueKey)
-    if (jarIssue) {
-      builder.set(VersionJarIssueKey, { ...jarIssue, ...runtime })
-    }
+    return jarIssue
   }
 
-  private async diagnoseProfile(builder: IssueReportBuilder, version: string, mcVersion: string, minecraft: MinecraftFolder) {
+  async diagnoseProfile(version: string): Promise<InstallProfileIssueReport | undefined> {
+    const minecraft = new MinecraftFolder(this.getPath())
     const root = minecraft.getVersionRoot(version)
     const installProfilePath = join(root, 'install_profile.json')
-    builder.set(InstallProfileIssueKey)
     if (await exists(installProfilePath)) {
       const installProfile: InstallProfile = JSON.parse(await readFile(installProfilePath, 'utf8'))
       const report = await diagnoseInstall(installProfile, minecraft.root)
@@ -288,11 +279,8 @@ export class InstanceVersionService extends StatefulService<InstanceVersionState
           librariesIssues.push(issue)
         }
       }
-      if (librariesIssues.length > 0) {
-        builder.set(LibrariesIssueKey, { version, libraries: librariesIssues })
-      }
-      if (badInstall) {
-        builder.set(InstallProfileIssueKey, { version, installProfile: report.installProfile, minecraft: mcVersion })
+      if (librariesIssues.length > 0 || badInstall) {
+        return report
       }
     }
   }

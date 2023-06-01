@@ -24,19 +24,19 @@ export class InstanceShaderPacksService extends AbstractService implements IInst
     @Inject(InstanceService) private instanceService: InstanceService,
   ) {
     super(app)
-    this.storeManager.subscribe('instanceShaderOptions', async (payload) => {
-      if (payload.shaderPack && this.active && !this.instanceService.isUnderManaged(this.active)) {
-        const fileName = payload.shaderPack
+    // this.storeManager.subscribe('instanceShaderOptions', async (payload) => {
+    //   if (payload.shaderPack && this.active && !this.instanceService.isUnderManaged(this.active)) {
+    //     const fileName = payload.shaderPack
 
-        const existedResource = await this.resourceService.getResourceUnder({ fileName, domain: ResourceDomain.ShaderPacks })
-        const localFilePath = join(this.active!, fileName)
-        if (!existsSync(localFilePath)) {
-          if (existedResource) {
-            linkWithTimeoutOrCopy(existedResource.path, localFilePath)
-          }
-        }
-      }
-    })
+    //     const existedResource = await this.resourceService.getResourceUnder({ fileName, domain: ResourceDomain.ShaderPacks })
+    //     const localFilePath = join(this.active!, fileName)
+    //     if (!existsSync(localFilePath)) {
+    //       if (existedResource) {
+    //         linkWithTimeoutOrCopy(existedResource.path, localFilePath)
+    //       }
+    //     }
+    //   }
+    // })
     this.storeManager.subscribe('instanceSelect', (payload) => {
       this.link(payload)
     })

@@ -38,7 +38,7 @@ export type ServiceChannel<T> = {
    */
   call<M extends keyof T, MT = T[M]>(
     method: M,
-    payload: MT extends (...args: any) => any ? Parameters<MT>[0] : never,
+    ...payload: MT extends (...args: infer A) => any ? A : never
   ): Promise<MT extends (...args: any) => any ? ReturnType<MT> : never>
 } & GenericEventEmitter<SyncableEventMap>
 

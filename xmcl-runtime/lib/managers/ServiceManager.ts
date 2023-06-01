@@ -26,7 +26,7 @@ export default class ServiceManager extends Manager {
   constructor(app: LauncherApp, private preloadServices: ServiceConstructor[]) {
     super(app)
 
-    this.app.controller.handle('service-call', (e, service: string, name: string, payload: any) => this.handleServiceCall(e.sender, service, name, payload))
+    this.app.controller.handle('service-call', (e, service: string, name: string, ...payload: any[]) => this.handleServiceCall(e.sender, service, name, ...payload))
     this.app.controller.handle('session', (_, id) => this.startServiceCall(id))
 
     for (const type of preloadServices) {
@@ -108,7 +108,7 @@ export default class ServiceManager extends Manager {
    * @param payload The payload
    * @returns The service call session id
    */
-  private handleServiceCall(client: Client, service: string, name: string, payload: any): number | undefined {
+  private handleServiceCall(client: Client, service: string, name: string, ...payload: any[]): number | undefined {
     const serv = this.servicesMap[service]
     if (!serv) {
       this.logger.error(new Error(`Cannot execute service call ${name} from service ${service}. No service exposed as ${service}.`))
@@ -117,7 +117,7 @@ export default class ServiceManager extends Manager {
         const sessionId = this.usedSession++
 
         const session: ServiceCallSession = {
-          call: () => (serv as any)[name](payload),
+          call: () => (serv as any)[name](...payload),
           name: `${service}.${name}`,
           pure: false,
           id: sessionId,

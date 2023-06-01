@@ -280,6 +280,6 @@ export abstract class StatefulService<M extends State<M>> extends AbstractServic
     super(app, initializer)
     const state = createState()
     Object.defineProperty(state, STATE_SYMBOL, { value: true })
-    this.state = app.serviceStateManager.register(getServiceKey(Object.getPrototypeOf(this).constructor), state)
+    // this.state = app.serviceStateManager.register(getServiceKey(Object.getPrototypeOf(this).constructor), state)
   }
 }
