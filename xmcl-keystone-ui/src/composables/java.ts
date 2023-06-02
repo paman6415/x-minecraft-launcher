@@ -12,7 +12,7 @@ export const JavaIssueDialogKey: DialogKey<void> = 'java-issue'
 export function useJava() {
   const { state, resolveJava, installDefaultJava: installJava, refreshLocalJava } = useJavaService()
   const all = computed(() => state.all)
-  const missing = computed(() => state.missingJava)
+  const missing = computed(() => state.all.length === 0)
   const refreshing = useServiceBusy(JavaServiceKey, 'refreshLocalJava')
   function remove(java: JavaRecord) {
     state.javaRemove(java)

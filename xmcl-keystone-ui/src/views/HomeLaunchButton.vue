@@ -100,11 +100,8 @@ const { show: showLaunchStatusDialog } = useDialog(LaunchStatusDialogKey)
 const { show: showMultiInstanceDialog } = useDialog('multi-instance-launch')
 const { t } = useI18n()
 const { state } = useService(UserServiceKey)
-const { issues, fix } = useIssues()
 const { checkInstanceInstall, installInstanceFiles } = useService(InstanceInstallServiceKey)
 const showProblems = ref(false)
-
-const pendingInstallFiles: Ref<InstanceFile[]> = ref([])
 
 const diagnosingVersion = useBusy('diagnoseVersion')
 const checkingInstall = useServiceBusy(InstanceInstallServiceKey, 'checkInstanceInstall')
@@ -112,11 +109,6 @@ const loading = computed(() => diagnosingVersion.value || checkingInstall.value)
 
 const needInstall = computed(() => !!props.issue || pendingInstallFiles.value.length > 0)
 const color = computed(() => needInstall.value || diagnosingVersion.value ? 'blue' : 'primary')
-
-const { refresh: refreshInstanceInstall } = useRefreshable(async () => {
-  const files = await checkInstanceInstall()
-  pendingInstallFiles.value = files
-})
 
 let handle: any
 

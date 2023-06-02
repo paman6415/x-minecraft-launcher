@@ -1,16 +1,33 @@
+import { injection } from '@/util/inject'
 import { InstallServiceKey, RuntimeVersions, VersionServiceKey } from '@xmcl/runtime-api'
-import { useMinecraftVersions } from './version'
-import useSWRV from 'swrv'
-import { useSWRVConfig } from './swrvConfig'
 import { useService } from './service'
+import { kSWRVConfig } from './swrvConfig'
 
 export function useInstanceVersionInstall() {
-  const { cache } = useSWRVConfig()
-  const { state, resolveLocalVersion } = useService(VersionServiceKey)
-  const { getMinecraftVersionList, getForgeVersionList, getFabricVersionList, installForge, installMinecraft } = useService(InstallServiceKey)
-  async function installRuntime(runtime: RuntimeVersions) {
+  const { cache } = injection(kSWRVConfig)
+  const { state } = useService(VersionServiceKey)
+  const {
+    getMinecraftVersionList,
+    getForgeVersionList,
+    installForge,
+    installMinecraft,
+    installOptifine,
+    installFabric,
+    installQuilt,
+  } = useService(InstallServiceKey)
+
+  const getCacheOrFetch = async <T>(key: string, fetcher: () => Promise<T>) => {
+    const cached = cache.get(key)
+    if (cached) {
+      return cached.data as T
+    }
+    const data = await fetcher()
+    cache.set(key, data, 1000 * 60 * 60 * 24)
+    return data
+  }
+  async function install(runtime: RuntimeVersions) {
     const { minecraft, forge, fabricLoader, quiltLoader, optifine } = runtime
-    const mcVersions = await getMinecraftVersionList()
+    const mcVersions = await getCacheOrFetch('/minecraft-versions', () => getMinecraftVersionList())
     const local = state.local
     if (!local.find(v => v.id === minecraft)) {
       const metadata = mcVersions.versions.find(v => v.id === minecraft)!
@@ -21,7 +38,7 @@ export function useInstanceVersionInstall() {
     if (forge) {
       const localForge = local.find(v => v.forge === forge && v.minecraft === minecraft)
       if (!localForge) {
-        const forgeVersions = await getForgeVersionList({ minecraftVersion: minecraft })
+        const forgeVersions = await getCacheOrFetch(`/forge-versions/${minecraft}`, () => getForgeVersionList({ minecraftVersion: minecraft }))
         const found = forgeVersions.find(v => v.version === forge)
         const forgeVersionId = found?.version ?? forge
         forgeVersion = await installForge({ mcversion: minecraft, version: forgeVersionId, installer: found?.installer })
@@ -42,7 +59,7 @@ export function useInstanceVersionInstall() {
       const index = optifineVersion.lastIndexOf('_')
       const type = optifineVersion.substring(0, index)
       const patch = optifineVersion.substring(index + 1)
-      return await this.installService.installOptifineUnsafe({ type, patch, mcversion: minecraft, inheritFrom: forgeVersion })
+      return await installOptifine({ type, patch, mcversion: minecraft, inheritFrom: forgeVersion })
     } else if (forgeVersion) {
       return forgeVersion
     }
@@ -52,7 +69,7 @@ export function useInstanceVersionInstall() {
       if (localFabric) {
         return localFabric.id
       }
-      return await this.installService.installFabricUnsafe({ loader: fabricLoader, minecraft })
+      return await installFabric({ loader: fabricLoader, minecraft })
     }
 
     if (quiltLoader) {
@@ -60,9 +77,12 @@ export function useInstanceVersionInstall() {
       if (localQuilt) {
         return localQuilt.id
       }
-      return await this.installService.installQuiltUnsafe({ version: quiltLoader, minecraftVersion: minecraft })
+      return await installQuilt({ version: quiltLoader, minecraftVersion: minecraft })
     }
-    // TODO: check liteloader
     return minecraft
+  }
+
+  return {
+    install,
   }
 }

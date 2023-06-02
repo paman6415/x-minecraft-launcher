@@ -10,57 +10,17 @@ export enum JavaCompatibleState {
   VeryLikelyIncompatible,
 }
 
-interface BaseJavaIssue {
-  /**
-    * The java version requirement string
-    */
-  requirement: string
-  /**
-    * Best matched java path to select. (Only present if there is a suitable java)
-    */
+export interface JavaRecommendation {
+  selectedJava?: Java
+  selectedJavaPath?: string
+  recommendedDownload?: JavaVersion
   recommendedVersion?: Java
   recommendedLevel?: JavaCompatibleState
-  /**
-    * Recommended to download java version automatically. (Please use this if there is no suitable java)
-    */
-  recommendedDownload?: JavaVersion
-  /**
-    * The selected game version.
-    *
-    * Might be empty if the current version is not downloaded.
-    */
   version: string
-  /**
-    * Current minecraft
-    */
   minecraft: string
-  /**
-    * Current forge
-    */
   forge: string
+  requirement: string
 }
-
-interface IncompatibleJavaIssue extends BaseJavaIssue {
-  /**
-   * The current java info. Can either be user assigned, or be launcher computed
-   */
-  selectedJava: Java
-}
-
-/**
- * Only present if user assigned java path
- */
-interface InvalidJavaIssue extends BaseJavaIssue {
-  /**
-   * The user assigned java path
-   */
-  selectedJavaPath: string
-}
-
-interface MissingJavaIssue extends BaseJavaIssue {
-
-}
-
 /**
  * Current java path is invalid. Like file not existed or java is broken.
  */
@@ -242,13 +202,13 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
           version: selectedVersion?.id || '',
           minecraft,
           forge: forge ?? '',
-        },
+        } as JavaRecommendation,
         java: {
           valid: false,
           path: javaPath,
           version: '',
           majorVersion: -1,
-        },
+        } as JavaRecord,
       }
     }
 
@@ -275,16 +235,16 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
           minecraft,
           forge: instance.runtime.forge || '',
           requirement: versionPref.requirement,
-        },
+        } as JavaRecommendation,
         java: {
           ...resultJava,
           valid: true,
-        },
+        } as JavaRecord,
       }
       : undefined,
     java: {
       ...resultJava,
       valid: true,
-    },
+    } as JavaRecord,
   }
 }

@@ -1,47 +1,32 @@
-import type { AssetIndexIssue, AssetIssue, LibraryIssue, MinecraftJarIssue, ResolvedVersion } from '@xmcl/core'
-import type { InstallProfile } from '@xmcl/installer'
-import { InstanceVersionServiceKey, IssueKey, RuntimeVersions, getExpectVersion } from '@xmcl/runtime-api'
+import type { ResolvedVersion } from '@xmcl/core'
+import { InstallServiceKey, InstanceVersionServiceKey, RuntimeVersions, getExpectVersion } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
+import { useInstanceVersionInstall } from './instanceVersionInstall'
+import { IssueItem } from './issues'
 import { useService } from './service'
-
-interface VersionIssue extends RuntimeVersions {
-  version: string
-}
-
-interface VersionJarIssue extends RuntimeVersions, MinecraftJarIssue {
-}
-
-interface VersionJsonIssue extends RuntimeVersions {
-  version: string
-}
-
-interface InstallProfileIssue {
-  version: string
-  minecraft: string
-  installProfile: InstallProfile
-}
-
-export const VersionIssueKey: IssueKey<VersionIssue> = 'version'
-export const VersionJsonIssueKey: IssueKey<VersionJsonIssue> = 'versionJson'
-export const VersionJarIssueKey: IssueKey<VersionJarIssue> = 'versionJar'
-export const AssetIndexIssueKey: IssueKey<AssetIndexIssue & RuntimeVersions> = 'assetIndex'
-export const LibrariesIssueKey: IssueKey<{ version: string; libraries: LibraryIssue[] }> = 'library'
-export const AssetsIssueKey: IssueKey<{ version: string; assets: AssetIssue[] }> = 'asset'
-export const InstallProfileIssueKey: IssueKey<InstallProfileIssue> = 'badInstall'
-
-export interface IssueItem {
-  title: string
-  description: string
-  onClick?: () => void
-}
 
 export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolvedVersion: Ref<ResolvedVersion | undefined>) {
   const { diagnoseAssetIndex, diagnoseAssets, diagnoseJar, diagnoseLibraries, diagnoseProfile } = useService(InstanceVersionServiceKey)
   const issueItems = ref([] as IssueItem[])
+  const operations = ref(undefined as undefined | (() => Promise<void>))
   const { t } = useI18n()
+  const { install } = useInstanceVersionInstall()
+  const { installAssetsForVersion, installAssets, installLibraries, installDependencies, installByProfile } = useService(InstallServiceKey)
+  let abortController = new AbortController()
 
   async function update(version: ResolvedVersion | undefined) {
+    abortController.abort()
+    abortController = new AbortController()
+
+    const abortSignal = abortController.signal
+
     if (!version) {
+      operations.value = async () => {
+        const version = await install(runtime.value)
+        if (version) {
+          await installDependencies(version)
+        }
+      }
       issueItems.value = [{
         title: t('diagnosis.missingVersion.name', { version: getExpectVersion(runtime.value) }),
         description: t('diagnosis.missingVersion.message'),
@@ -50,30 +35,37 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
     }
 
     const jarIssue = await diagnoseJar(version)
+    if (abortSignal.aborted) { return }
 
     const items: IssueItem[] = []
+    const ops: Array<() => Promise<void>> = []
 
     if (jarIssue) {
       const options = { version: jarIssue.version }
-      const onClick = async () => {
-        update(resolvedVersion.value)
-      }
+      ops.push(async () => {
+        const version = await install(runtime.value)
+        if (version) {
+          await installDependencies(version)
+        }
+      })
       items.push(jarIssue.type === 'corrupted'
         ? {
           title: t('diagnosis.corruptedVersionJar.name', options),
           description: t('diagnosis.corruptedVersionJar.message'),
-          onClick,
         }
         : {
           title: t('diagnosis.missingVersionJar.name', options),
           description: t('diagnosis.missingVersionJar.message'),
-          onClick,
         })
     }
 
     const assetIndexIssue = await diagnoseAssetIndex(version)
+    if (abortSignal.aborted) { return }
 
     if (assetIndexIssue) {
+      ops.push(async () => {
+        await installAssetsForVersion(version.id)
+      })
       items.push(assetIndexIssue.type === 'corrupted'
         ? {
           title: t('diagnosis.corruptedAssetsIndex.name', { version: assetIndexIssue.version }),
@@ -86,9 +78,13 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
     }
 
     const librariesIssue = await diagnoseLibraries(version)
+    if (abortSignal.aborted) { return }
 
     if (librariesIssue.length > 0) {
       const options = { named: { count: librariesIssue.length } }
+      ops.push(async () => {
+        await installLibraries(librariesIssue.map(v => v.library))
+      })
       items.push(librariesIssue.some(v => v.type === 'corrupted')
         ? {
           title: t('diagnosis.corruptedLibraries.name', 2, options),
@@ -102,8 +98,12 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
 
     if (!assetIndexIssue) {
       const assetsIssue = await diagnoseAssets(version)
+      if (abortSignal.aborted) { return }
       if (assetsIssue.length > 0) {
         const options = { named: { count: assetsIssue.length } }
+        ops.push(async () => {
+          await installAssets(assetsIssue.map(v => v.asset))
+        })
         items.push(assetsIssue.some(v => v.type === 'corrupted')
           ? {
             title: t('diagnosis.corruptedAssets.name', 2, options),
@@ -118,7 +118,11 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
     }
 
     const profileIssue = await diagnoseProfile(version.id)
+    if (abortSignal.aborted) { return }
     if (profileIssue) {
+      ops.push(async () => {
+        await installByProfile(profileIssue.installProfile)
+      })
       items.push({
         title: t('diagnosis.badInstall.name', { version: version.id }),
         description: t('diagnosis.badInstall.message'),
@@ -126,10 +130,20 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
     }
 
     issueItems.value = items
+    if (ops.length > 0) {
+      operations.value = async () => {
+        for (const op of ops) {
+          await op()
+        }
+        await update(resolvedVersion.value)
+      }
+    }
   }
 
   watch(resolvedVersion, update)
-  watch(runtime, () => update(resolvedVersion.value))
+  watch(runtime, () => {
+    update(resolvedVersion.value)
+  })
   onMounted(() => {
     update(resolvedVersion.value)
   })

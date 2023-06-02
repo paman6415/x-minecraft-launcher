@@ -549,20 +549,6 @@ export class InstallService extends AbstractService implements IInstallService {
 
   @Lock((v: InstallFabricOptions) => LockKey.version(`fabric-${v.minecraft}-${v.loader}`))
   async installFabric(options: InstallFabricOptions) {
-    const minecraft = MinecraftFolder.from(this.getPath())
-    const hasValidVersion = async () => {
-      try {
-        await Version.parse(minecraft, options.minecraft)
-        return true
-      } catch (e) {
-        return false
-      }
-    }
-    if (!await hasValidVersion()) {
-      const meta = (await this.getMinecraftVersionList()).versions.find(f => f.id === options.minecraft)!
-      const option = this.getInstallOptions()
-      await this.submit(installVersionTask(meta, minecraft, option).setName('installVersion', { id: options.minecraft }))
-    }
     return await this.installFabricInternal(options)
   }
 
@@ -647,21 +633,6 @@ export class InstallService extends AbstractService implements IInstallService {
 
   @Lock(v => LockKey.version(`quilt-${v.minecraftVersion}-${v.version}`))
   async installQuilt(options: InstallQuiltOptions) {
-    const minecraft = MinecraftFolder.from(this.getPath())
-    const hasValidVersion = async () => {
-      try {
-        await Version.parse(minecraft, options.minecraftVersion)
-        return true
-      } catch (e) {
-        return false
-      }
-    }
-    if (!await hasValidVersion()) {
-      const meta = (await this.getMinecraftVersionList()).versions.find(f => f.id === options.minecraftVersion)!
-      const option = this.getInstallOptions()
-      await this.submit(installVersionTask(meta, minecraft, option).setName('installVersion', { id: options.minecraftVersion }))
-    }
-
     return await this.installQuiltInternal(options)
   }
 
@@ -681,34 +652,6 @@ export class InstallService extends AbstractService implements IInstallService {
 
   @Lock((v: InstallOptifineOptions) => LockKey.version(`optifine-${v.mcversion}-${v.type}_${v.patch}`))
   async installOptifine(options: InstallOptifineOptions) {
-    const minecraft = MinecraftFolder.from(this.getPath())
-    const hasValidVersion = async (version: string) => {
-      try {
-        await Version.parse(minecraft, version)
-        return true
-      } catch (e) {
-        return false
-      }
-    }
-    if (!await hasValidVersion(options.mcversion)) {
-      const meta = (await this.getMinecraftVersionList()).versions.find(f => f.id === options.mcversion)!
-      const option = this.getInstallOptions()
-      await this.submit(installVersionTask(meta, minecraft, option).setName('installVersion', { id: meta.id }))
-    }
-
-    if (options.forgeVersion) {
-      const localForge = this.versionService.state.local.find(v => v.minecraft === options.mcversion && v.forge === options.forgeVersion)
-      if (!localForge) {
-        const list = await this.getForgeVersionList({ minecraftVersion: options.mcversion })
-        const forgeVersion = list.find(v => v.version === options.forgeVersion)
-        const forgeVersionId = forgeVersion?.version ?? options.forgeVersion
-        const installedForge = await this.installForgeUnsafe({ mcversion: options.mcversion, version: forgeVersionId })
-        options.inheritFrom = installedForge
-      } else {
-        options.inheritFrom = localForge.id
-      }
-    }
-
     return await this.installOptifineInternal(options)
   }
 

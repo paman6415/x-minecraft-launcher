@@ -1,10 +1,15 @@
-import { computed, InjectionKey } from 'vue'
+import { computed, InjectionKey, Ref } from 'vue'
 import { DiagnoseSemaphoreKey, DiagnoseServiceKey, Issue, IssueKey } from '@xmcl/runtime-api'
 import { injection } from '../util/inject'
 import { useBusy } from './semaphore'
 import { useService } from './service'
 
 export const kIssueHandlers: InjectionKey<IssueHandler> = Symbol('IssueHandlerKey')
+
+export interface IssueItem {
+  title: string
+  description: string
+}
 
 export class IssueHandler {
   handlers: Record<string, (content: any) => void > = {}
@@ -24,20 +29,9 @@ export class IssueHandler {
 }
 
 export function useIssues() {
-  const { state, fix: fixIssue } = useService(DiagnoseServiceKey)
-  const handlers = injection(kIssueHandlers)
-  const issues = computed(() => Object.values(state.report).filter(v => v.parameters.length > 0))
-  const refreshing = useBusy(DiagnoseSemaphoreKey)
-
-  function fix(issue: Issue, issues: readonly Issue[]) {
-    if (!handlers.handle(issue)) {
-      return fixIssue(issues)
-    }
+  function register(issueDep: Ref<IssueItem[]>) {
+    watch(issueDep, () => {})
   }
-
   return {
-    issues,
-    refreshing,
-    fix,
   }
 }
