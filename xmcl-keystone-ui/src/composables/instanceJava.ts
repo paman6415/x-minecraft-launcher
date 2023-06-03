@@ -176,7 +176,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
         version: selectedVersion?.id || '',
         minecraft,
         forge: forge ?? '',
-      },
+      } as JavaRecommendation,
       java: undefined,
     }
   }
@@ -223,28 +223,29 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
     resultJava = record
   }
 
-  return {
-    recomendation: resultQuality !== JavaCompatibleState.Matched
-      ? {
-        recomendation: {
-          selectedJava: resultJava,
-          recommendedDownload: javaVersion,
-          recommendedVersion: computedJava,
-          recommendedLevel: computedQuality,
-          version: selectedVersion?.id || '',
-          minecraft,
-          forge: instance.runtime.forge || '',
-          requirement: versionPref.requirement,
-        } as JavaRecommendation,
-        java: {
-          ...resultJava,
-          valid: true,
-        } as JavaRecord,
-      }
-      : undefined,
-    java: {
-      ...resultJava,
-      valid: true,
-    } as JavaRecord,
-  }
+  return resultQuality !== JavaCompatibleState.Matched
+    ? {
+      // Incompatible
+      recomendation: {
+        selectedJava: resultJava,
+        recommendedDownload: javaVersion,
+        recommendedVersion: computedJava,
+        recommendedLevel: computedQuality,
+        version: selectedVersion?.id || '',
+        minecraft,
+        forge: instance.runtime.forge || '',
+        requirement: versionPref.requirement,
+      } as JavaRecommendation,
+      java: {
+        ...resultJava,
+        valid: true,
+      } as JavaRecord,
+    }
+    : {
+      recomendation: undefined,
+      java: {
+        ...resultJava,
+        valid: true,
+      } as JavaRecord,
+    }
 }

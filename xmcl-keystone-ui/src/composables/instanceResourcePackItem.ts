@@ -1,13 +1,8 @@
-import { PackMeta } from '@xmcl/resourcepack'
-import { Instance, InstanceOptionsServiceKey, InstanceResourcePacksServiceKey, isPersistedResource, packFormatVersionRange, Persisted, Resource, ResourcePackResource, ResourceServiceKey } from '@xmcl/runtime-api'
-import { computed, onMounted, ref, Ref, watch } from 'vue'
+import { Instance, InstanceOptionsServiceKey, InstanceResourcePacksServiceKey, ResourceServiceKey } from '@xmcl/runtime-api'
+import { computed, onMounted, Ref, watch } from 'vue'
 
-import unknownPack from '@/assets/unknown_pack.png'
-import { useService, useServiceBusy } from '@/composables'
+import { useService } from '@/composables'
 import { isStringArrayEquals } from '@/util/equal'
-import { kResourcePacks, useResourcePacks } from './resourcePacks'
-import { injection } from '@/util/inject'
-import { kInstanceContext } from './instanceContext'
 import { InstanceResourcePack } from './instanceResourcePack'
 
 export interface ResourcePackItem {

@@ -33,7 +33,7 @@ export function useLaunchTask(path: Ref<string>, version: Ref<Instance['runtime'
       return true
     }
     if (i.path === 'installInstance' && p.instance === path.value) {
-    // installing this instance
+      // installing this instance
       return true
     }
     return false

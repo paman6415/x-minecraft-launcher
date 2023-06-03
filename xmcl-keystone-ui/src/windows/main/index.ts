@@ -1,5 +1,5 @@
 import TextComponent from '@/components/TextComponent'
-import { IssueHandler, kIssueHandlers, kSemaphores, kServiceFactory, useSemaphores, useServiceFactory } from '@/composables'
+import { kSemaphores, kServiceFactory, useSemaphores, useServiceFactory } from '@/composables'
 import { kDialogModel, useDialogModel } from '@/composables/dialog'
 import { kExceptionHandlers, useExceptionHandlers } from '@/composables/exception'
 import { kNotificationQueue, useNotificationQueue } from '@/composables/notifier'
@@ -77,7 +77,6 @@ const app = new Vue(defineComponent({
     provide(kExceptionHandlers, useExceptionHandlers())
     provide(kDialogModel, useDialogModel())
     provide(kTaskManager, useTaskManager())
-    provide(kIssueHandlers, new IssueHandler())
     provide(kServerStatusCache, useServerStatusCache())
     provide(kNotificationQueue, useNotificationQueue())
 

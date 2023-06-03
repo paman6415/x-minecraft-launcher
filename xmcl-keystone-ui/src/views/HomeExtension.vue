@@ -88,11 +88,7 @@
         :progress="progress"
       />
       <HomeLaunchButton
-        :issue="issue"
         :compact="compact"
-        :status="status"
-        @pause="pause"
-        @resume="resume"
       />
     </div>
   </div>
@@ -109,9 +105,9 @@ import HomeHeaderInstallStatus from './HomeHeaderInstallStatus.vue'
 import HomeLaunchButton from './HomeLaunchButton.vue'
 import useSWRV from 'swrv'
 
-const { issue, task, version, instance } = injection(kInstanceContext)
+const { task, version, instance } = injection(kInstanceContext)
 const isInFocusMode = useInFocusMode()
-const { total, progress, pause, resume, status, name: taskName } = task
+const { total, progress, status, name: taskName } = task
 const { t } = useI18n()
 
 const compact = injection(kCompact)

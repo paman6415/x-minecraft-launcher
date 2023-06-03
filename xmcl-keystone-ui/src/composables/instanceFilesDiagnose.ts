@@ -1,47 +1,20 @@
-import { InstanceFile, InstanceInstallServiceKey } from '@xmcl/runtime-api'
+import { InstanceFile } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
-import { IssueItem } from './issues'
-import { useRefreshable } from './refreshable'
-import { useService } from './service'
 
-export function useInstanceFilesDiagnose(instancePath: Ref<string>) {
-  const files: Ref<InstanceFile[]> = ref([])
-  const { checkInstanceInstall, installInstanceFiles } = useService(InstanceInstallServiceKey)
+export function useInstanceFilesDiagnose(instanceFiles: Ref<InstanceFile[]>, install: () => Promise<void>) {
+  const { t } = useI18n()
 
-  let abortController = new AbortController()
-  const { refresh, error, refreshing } = useRefreshable(async () => {
-    abortController.abort()
-    abortController = new AbortController()
-    const abortSignal = abortController.signal
-    const result = await checkInstanceInstall(instancePath.value)
-    // If abort, just ignore this result
-    if (abortSignal.aborted) { return }
-    files.value = result
-  })
-
-  const issueItems = ref([] as IssueItem[])
-
-  async function fix() {
-    if (files.value.length > 0) {
-      // has unfinished files
-      try {
-        await installInstanceFiles({ files: files.value, path: instancePath.value })
-      } finally {
-        refresh()
-      }
-    } else {
-      refresh()
+  const issue = computed(() => instanceFiles.value.length > 0
+    ? {
+      title: t('diagnosis.instanceFiles.title', { plural: 2, named: instanceFiles.value.length }),
+      description: t('diagnosis.instanceFiles.description'),
     }
-  }
+    : undefined)
 
-  onMounted(() => refresh())
-  watch(instancePath, () => refresh())
+  const fix = install
 
   return {
-    issues: issueItems,
-    refreshing,
-    refresh,
-    error,
+    issue,
     fix,
   }
 }

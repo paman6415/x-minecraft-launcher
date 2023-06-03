@@ -114,13 +114,15 @@
 </template>
 
 <script lang=ts setup>
-import { kIssueHandlers, useServiceBusy, useService, useRefreshable } from '@/composables'
-import { DiagnoseServiceKey, IncompatibleJavaIssueKey, InstanceServiceKey, InvalidJavaIssueKey, Java, JavaCompatibleState, JavaServiceKey, MissingJavaIssueKey } from '@xmcl/runtime-api'
-import { useDialog } from '../composables/dialog'
+import { useRefreshable, useService, useServiceBusy } from '@/composables'
+import { JavaCompatibleState } from '@/composables/instanceJava'
 import { JavaVersion } from '@xmcl/core'
+import { DiagnoseServiceKey, InstanceServiceKey, Java, JavaServiceKey } from '@xmcl/runtime-api'
+import { useDialog } from '../composables/dialog'
 import { JavaIssueDialogKey, useJava } from '../composables/java'
 import { useNotifier } from '../composables/notifier'
 import { injection } from '@/util/inject'
+import { kInstanceContext } from '@/composables/instanceContext'
 
 const { showOpenDialog } = windowController
 const { t } = useI18n()
@@ -131,10 +133,12 @@ const { installDefaultJava, refreshLocalJava } = useService(JavaServiceKey)
 const { subscribeTask } = useNotifier()
 const { state } = useService(DiagnoseServiceKey)
 const downloadingJava = useServiceBusy(JavaServiceKey, 'installDefaultJava')
-const handlers = injection(kIssueHandlers)
+
+const { java } = injection(kInstanceContext)
+
+const recommendation = java.recommendation
 
 const data = reactive({
-  type: '' as 'incompatible' | 'missing' | 'invalid',
   requirement: '',
   version: '',
   minecraft: '',
@@ -165,43 +169,43 @@ watch(hasIssue, (newValue) => {
   }
 })
 
-handlers.register(InvalidJavaIssueKey, (issue) => {
-  data.type = 'invalid'
-  data.requirement = issue.requirement
-  data.version = issue.version
-  data.minecraft = issue.minecraft
-  data.forge = issue.forge
-  data.recommendedDownload = issue.recommendedDownload
-  data.recommendedLevel = issue.recommendedLevel
-  data.recommendedVersion = issue.recommendedVersion
-  data.selectedJavaPath = issue.selectedJavaPath
+// handlers.register(InvalidJavaIssueKey, (issue) => {
+//   data.type = 'invalid'
+//   data.requirement = issue.requirement
+//   data.version = issue.version
+//   data.minecraft = issue.minecraft
+//   data.forge = issue.forge
+//   data.recommendedDownload = issue.recommendedDownload
+//   data.recommendedLevel = issue.recommendedLevel
+//   data.recommendedVersion = issue.recommendedVersion
+//   data.selectedJavaPath = issue.selectedJavaPath
 
-  show()
-})
+//   show()
+// })
 
-handlers.register(IncompatibleJavaIssueKey, (issue) => {
-  data.type = 'incompatible'
-  data.requirement = issue.requirement
-  data.version = issue.version
-  data.minecraft = issue.minecraft
-  data.forge = issue.forge
-  data.recommendedDownload = issue.recommendedDownload
-  data.recommendedLevel = issue.recommendedLevel
-  data.recommendedVersion = issue.recommendedVersion
-  data.selectedJava = issue.selectedJava
+// handlers.register(IncompatibleJavaIssueKey, (issue) => {
+//   data.type = 'incompatible'
+//   data.requirement = issue.requirement
+//   data.version = issue.version
+//   data.minecraft = issue.minecraft
+//   data.forge = issue.forge
+//   data.recommendedDownload = issue.recommendedDownload
+//   data.recommendedLevel = issue.recommendedLevel
+//   data.recommendedVersion = issue.recommendedVersion
+//   data.selectedJava = issue.selectedJava
 
-  show()
-})
+//   show()
+// })
 
-handlers.register(MissingJavaIssueKey, (issue) => {
-  data.type = 'missing'
-  data.requirement = issue.requirement
-  data.version = issue.version
-  data.minecraft = issue.minecraft
-  data.forge = issue.forge
-  data.recommendedDownload = issue.recommendedDownload
-  show()
-})
+// handlers.register(MissingJavaIssueKey, (issue) => {
+//   data.type = 'missing'
+//   data.requirement = issue.requirement
+//   data.version = issue.version
+//   data.minecraft = issue.minecraft
+//   data.forge = issue.forge
+//   data.recommendedDownload = issue.recommendedDownload
+//   show()
+// })
 
 const { refresh, refreshing } = useRefreshable(async () => {
   await refreshLocalJava(true)
