@@ -38,11 +38,10 @@
 <script lang=ts setup>
 import { kInstallList, useInstallList } from '@/composables/installList'
 import { kInstanceContext, useInstanceContext } from '@/composables/instanceContext'
+import { kMods, useMods } from '@/composables/mods'
 import { usePresence } from '@/composables/presence'
 import { kCompact, useCompactScroll } from '@/composables/scrollTop'
-import { useInFocusMode } from '@/composables/uiLayout'
 import { useInstanceServerStatus } from '../composables/serverStatus'
-import HomeFocusFooter from './HomeFocusFooter.vue'
 import HomeHeader from './HomeHeader.vue'
 import HomeInstanceUpdateDialog from './HomeInstanceUpdateDialog.vue'
 import HomeJavaIssueDialog from './HomeJavaIssueDialog.vue'
@@ -62,7 +61,11 @@ router.afterEach((r) => {
 const context = useInstanceContext()
 
 provide(kInstanceContext, context)
-provide(kInstallList, useInstallList())
+
+const mods = useMods()
+provide(kMods, mods)
+
+provide(kInstallList, useInstallList(context.path, mods.resources))
 
 const instance = context.instance
 const { refresh } = useInstanceServerStatus(instance.value.path)
