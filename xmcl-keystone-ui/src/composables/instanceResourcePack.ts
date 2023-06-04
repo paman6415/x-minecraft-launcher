@@ -52,7 +52,7 @@ export function useInstanceResourcePacks(gameOptions: Ref<GameOptions | undefine
    * It's the REVERSED version of the resourcePacks array in options.txt (gamesetting).
    * It should be something like ['file/pack.zip', 'vanilla']
    */
-  const enabled = computed(() => gameOptions.value?.resourcePacks?.map(name => getResourcePackItemFromGameSettingName(name, allResourcePacks.value)).reverse())
+  const enabled = computed(() => gameOptions.value?.resourcePacks?.map(name => getResourcePackItemFromGameSettingName(name, allResourcePacks.value)).reverse() || [])
   const enabledSet = computed(() => new Set(enabled.value?.map(v => v.id)))
   /**
    * Disabled pack item

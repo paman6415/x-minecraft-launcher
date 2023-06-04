@@ -20,7 +20,7 @@
         v-fallback-img="unknownPack"
         style="image-rendering: pixelated"
         class="select-none h-[125px]"
-        :src="pack.icon"
+        :src="pack.resourcePack.icon"
         contain
       >
       <div class="flex flex-col overflow-x-auto gap-1 px-3">
@@ -91,12 +91,12 @@ const emit = defineEmits(['tags', 'dragstart', 'dragend', 'delete'])
 const { darkTheme } = useTheme()
 
 const { t } = useI18n()
-const name = computed(() => props.pack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.name)
-const description = computed(() => props.pack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.description)
+const name = computed(() => props.pack.resourcePack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.name)
+const description = computed(() => props.pack.resourcePack.id === 'vanilla' ? t('resourcepack.defaultName') : props.pack.resourcePack.description)
 
 const iconImage: Ref<any> = ref(null)
 
-const { compatible } = useRangeCompatible(computed(() => props.pack.acceptingRange ?? ''), computed(() => props.minecraft))
+const { compatible } = useRangeCompatible(computed(() => props.pack.resourcePack.acceptingRange ?? ''), computed(() => props.minecraft))
 const { searchInCurseforge, goCurseforgeProject, searchInModrinth, goModrinthProject } = injection(kMarketRoute)
 const { showItemInDirectory } = useService(BaseServiceKey)
 const card: Ref<any> = ref(null)
@@ -108,28 +108,28 @@ const { editTag, createTag, removeTag } = useTags(computed({
 }))
 const onDeleteTag = removeTag
 
-useDragTransferItem(computed(() => card.value?.$el as HTMLElement), props.pack.id, props.isSelected ? 'right' : 'left')
+useDragTransferItem(computed(() => card.value?.$el as HTMLElement), props.pack.resourcePack.id, props.isSelected ? 'right' : 'left')
 const tags = ref([...props.pack.tags])
 
 const tooltip = computed(() => compatible.value
   ? t('resourcepack.compatible', {
-    format: props.pack.pack_format,
+    format: props.pack.resourcePack.pack_format,
     version: props.minecraft,
   })
   : t('resourcepack.incompatible', {
-    accept: props.pack.acceptingRange,
+    accept: props.pack.resourcePack.acceptingRange,
     actual: props.minecraft,
-    format: props.pack.pack_format,
+    format: props.pack.resourcePack.pack_format,
   }))
 
 const contextMenuItems = computed(() => {
-  if (props.pack.id === 'vanilla') {
+  if (props.pack.resourcePack.id === 'vanilla') {
     return []
   }
   const menuItems: ContextMenuItem[] = [{
-    text: t('resourcepack.showFile', { file: props.pack.path }),
+    text: t('resourcepack.showFile', { file: props.pack.resourcePack.path }),
     onClick: () => {
-      showItemInDirectory(props.pack.path)
+      showItemInDirectory(props.pack.resourcePack.path)
     },
     icon: 'folder',
   }, {
@@ -149,11 +149,11 @@ const contextMenuItems = computed(() => {
       color: 'error',
     })
   }
-  if (props.pack.resource && props.pack.resource.metadata.curseforge) {
+  if (props.pack.resourcePack.resource && props.pack.resourcePack.resource.metadata.curseforge) {
     menuItems.push({
       text: t('resourcepack.showInCurseforge', { name: props.pack.name }),
       onClick: () => {
-        goCurseforgeProject(props.pack.resource!.metadata.curseforge!.projectId, 'texture-packs')
+        goCurseforgeProject(props.pack.resourcePack.resource!.metadata.curseforge!.projectId, 'texture-packs')
       },
       icon: '$vuetify.icons.curseforge',
     })
@@ -167,11 +167,11 @@ const contextMenuItems = computed(() => {
     })
   }
 
-  if (props.pack.resource && props.pack.resource.metadata.modrinth) {
+  if (props.pack.resourcePack.resource && props.pack.resourcePack.resource.metadata.modrinth) {
     menuItems.push({
       text: t('resourcepack.showInModrinth', { name: props.pack.name }),
       onClick: () => {
-        goModrinthProject(props.pack.resource!.metadata.modrinth!.projectId)
+        goModrinthProject(props.pack.resourcePack.resource!.metadata.modrinth!.projectId)
       },
       icon: '$vuetify.icons.modrinth',
     })
@@ -190,13 +190,13 @@ const contextMenuItems = computed(() => {
 
 function onDragStart(e: DragEvent) {
   e.dataTransfer!.effectAllowed = 'move'
-  if (props.pack.id !== 'vanilla') {
+  if (props.pack.resourcePack.id !== 'vanilla') {
     emit('dragstart', e)
   }
   e.dataTransfer!.setDragImage(iconImage.value, 0, 0)
 }
 function onDragEnd(e: DragEvent) {
-  if (props.pack.id !== 'vanilla') {
+  if (props.pack.resourcePack.id !== 'vanilla') {
     emit('dragend', e)
   }
 }

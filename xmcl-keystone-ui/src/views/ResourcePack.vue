@@ -2,7 +2,7 @@
   <div class="resource-pack-page">
     <v-progress-linear
       class="absolute top-0 z-10 m-0 p-0 left-0"
-      :active="loading"
+      :active="resourcePacks.refreshing"
       height="3"
       :indeterminate="true"
     />
@@ -33,7 +33,7 @@
       >
         <ResourcePackCard
           v-for="item in unselectedItems"
-          :key="item.path"
+          :key="item.resourcePack.path"
           :pack="item"
           :minecraft="minecraft"
           :is-selected="false"
@@ -73,7 +73,7 @@
           v-for="item in selectedItems"
         >
           <ResourcePackCard
-            :key="item.path"
+            :key="item.resourcePack.path"
             :pack="item"
             :minecraft="minecraft"
             :is-selected="true"
@@ -111,7 +111,7 @@
     >
       <div>{{ t("resourcepack.deletionHint") }}</div>
       <span class="text-gray-500">
-        {{ data.deletingPack ? data.deletingPack.resource ? data.deletingPack.resource.path : '' : '' }}
+        {{ data.deletingPack ? data.deletingPack.resourcePack.resource ? data.deletingPack.resourcePack.resource.path : '' : '' }}
       </span>
     </DeleteDialog>
   </div>
@@ -121,15 +121,15 @@
 import Hint from '@/components/Hint.vue'
 import { useDragTransferList, useDropImport, useFilterCombobox, useService } from '@/composables'
 import { kInstanceContext } from '@/composables/instanceContext'
+import { ResourcePackItem, useInstanceResourcePackItem } from '@/composables/instanceResourcePackItem'
 import { usePresence } from '@/composables/presence'
 import { kCompact } from '@/composables/scrollTop'
 import { injection } from '@/util/inject'
 import { ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
-import { Ref, computed, onUnmounted, reactive, ref } from 'vue'
+import { Ref, computed, reactive, ref } from 'vue'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { useDialog } from '../composables/dialog'
 import ResourcePackCard from './ResourcePackCard.vue'
-import { ResourcePackItem } from '@/composables/instanceResourcePackItem'
 
 function setupFilter(disabled: Ref<ResourcePackItem[]>, enabled: Ref<ResourcePackItem[]>) {
   function getFilterOptions(item: ResourcePackItem) {
@@ -138,7 +138,7 @@ function setupFilter(disabled: Ref<ResourcePackItem[]>, enabled: Ref<ResourcePac
     ]
   }
   const filterOptions = computed(() => disabled.value.map(getFilterOptions).concat(enabled.value.map(getFilterOptions)).reduce((a, b) => [...a, ...b], []))
-  const { filter } = useFilterCombobox(filterOptions, getFilterOptions, (i) => `${i.name} ${i.description}`)
+  const { filter } = useFilterCombobox(filterOptions, getFilterOptions, (i) => `${i.name} ${i.resourcePack.description}`)
   const selectedItems = computed(() => filter(enabled.value))
   const unselectedItems = computed(() => filter(disabled.value))
 
@@ -164,8 +164,8 @@ const filterText = ref('')
 const rightList: Ref<any> = ref(null)
 const leftList: Ref<any> = ref(null)
 
-const {} = injection(kInstanceContext)
-const { enabled, disabled, add, remove, commit, insert, showDirectory, loading } = useInstanceResourcePacks()
+const { resourcePacks, path } = injection(kInstanceContext)
+const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, resourcePacks.enabled, resourcePacks.disabled)
 const { removeResources } = useService(ResourceServiceKey)
 const { push } = useRouter()
 const { t } = useI18n()
@@ -187,8 +187,6 @@ useDragTransferList(
 useDropImport(leftListElem, ResourceDomain.ResourcePacks)
 useDropImport(rightListElem, ResourceDomain.ResourcePacks)
 
-onUnmounted(commit)
-
 function stopDragging() {
   data.dragging = false
 }
@@ -205,7 +203,7 @@ function filterName(r: ResourcePackItem) {
 const { unselectedItems, selectedItems, filterOptions } = setupFilter(computed(() => disabled.value), computed(() => enabled.value))
 
 async function confirmDeletingPack() {
-  removeResources([data.deletingPack!.id])
+  removeResources([data.deletingPack!.resourcePack.id])
   data.deletingPack = null
 }
 
@@ -220,7 +218,7 @@ function stopDelete() {
 
 function onDropDelete(e: DragEvent) {
   const url = e.dataTransfer!.getData('id')
-  const target = enabled.value.find(m => m.id === url) ?? disabled.value.find(m => m.id === url) ?? null
+  const target = enabled.value.find(m => m.resourcePack.id === url) ?? disabled.value.find(m => m.resourcePack.id === url) ?? null
   if (target) {
     startDelete(target)
   }

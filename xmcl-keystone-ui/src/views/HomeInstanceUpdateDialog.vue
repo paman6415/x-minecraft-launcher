@@ -128,7 +128,7 @@
 <script lang="ts" setup>
 import InstanceManifestFileTree from '@/components/InstanceManifestFileTree.vue'
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
-import { InstanceFileNode, provideFileNodes } from '@/composables/instanceFiles'
+import { InstanceFileNode, provideFileNodes } from '@/composables/instanceFileNodeData'
 import { InstanceInstallDialog } from '@/composables/instanceUpdate'
 import { useVuetifyColor } from '@/composables/vuetify'
 import { basename } from '@/util/basename'

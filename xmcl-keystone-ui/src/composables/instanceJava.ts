@@ -11,6 +11,7 @@ export enum JavaCompatibleState {
 }
 
 export interface JavaRecommendation {
+  reason: 'missing' | 'incompatible' | 'invalid'
   selectedJava?: Java
   selectedJavaPath?: string
   recommendedDownload?: JavaVersion
@@ -171,6 +172,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
     // No java installed
     return {
       recomendation: {
+        reason: 'missing',
         recommendedDownload: javaVersion,
         requirement: versionPref.requirement,
         version: selectedVersion?.id || '',
@@ -194,6 +196,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
       // Invalid java
       return {
         recomendation: {
+          reason: 'invalid',
           selectedJavaPath: javaPath,
           recommendedDownload: javaVersion,
           recommendedVersion: computedJava,
@@ -227,6 +230,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
     ? {
       // Incompatible
       recomendation: {
+        reason: 'incompatible',
         selectedJava: resultJava,
         recommendedDownload: javaVersion,
         recommendedVersion: computedJava,

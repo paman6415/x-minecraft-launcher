@@ -1,27 +1,29 @@
 import { Instance, InstanceOptionsServiceKey, InstanceResourcePacksServiceKey, ResourceServiceKey } from '@xmcl/runtime-api'
-import { computed, onMounted, Ref, watch } from 'vue'
+import { Ref, computed, watch } from 'vue'
 
 import { useService } from '@/composables'
 import { isStringArrayEquals } from '@/util/equal'
+import debounce from 'lodash.debounce'
 import { InstanceResourcePack } from './instanceResourcePack'
 
 export interface ResourcePackItem {
   resourcePack: InstanceResourcePack
+  name: string
   tags: string[]
 }
 
 /**
  * The hook return a reactive resource pack array.
  */
-export function useInstanceResourcePacks(instance: Ref<Instance>, enabledPacks: Ref<InstanceResourcePack[]>, disabledPacks: Ref<InstanceResourcePack[]>) {
+export function useInstanceResourcePackItem(instancePath: Ref<string>, enabledPacks: Ref<InstanceResourcePack[]>, disabledPacks: Ref<InstanceResourcePack[]>) {
   const { updateResources } = useService(ResourceServiceKey)
   const { editGameSetting } = useService(InstanceOptionsServiceKey)
   const { showDirectory } = useService(InstanceResourcePacksServiceKey)
-  const { t } = useI18n()
 
   function getItemFromPack(pack: InstanceResourcePack): ResourcePackItem {
     return {
-      resourcePack: pack,
+      resourcePack: markRaw(pack),
+      name: pack.name,
       tags: [...pack.tags],
     }
   }
@@ -29,12 +31,22 @@ export function useInstanceResourcePacks(instance: Ref<Instance>, enabledPacks: 
   const enabled = computed(() => enabledPacks.value.map(getItemFromPack))
   const disabled = computed(() => disabledPacks.value.map(getItemFromPack))
 
+  const enabledResourcePackNames = ref(enabledPacks.value.map(p => p.id))
+
+  watch(enabledPacks, (packs) => {
+    enabledResourcePackNames.value = packs.map(p => p.id)
+  })
+
+  const loading = ref(false)
+  const doCommit = debounce(() => commit(), 3000)
+
   /**
    * Add a new resource to the enabled list
    */
   function add(id: string, to?: string) {
+    loading.value = true
     if (typeof to === 'undefined') {
-      const found = disabled.value.find(m => m.id === id)
+      const found = disabled.value.find(m => m.resourcePack.id === id)
       if (found) {
         enabledResourcePackNames.value.push(id)
       }
@@ -47,6 +59,7 @@ export function useInstanceResourcePacks(instance: Ref<Instance>, enabledPacks: 
         enabledResourcePackNames.value.push(id)
       }
     }
+    doCommit()
   }
 
   /**
@@ -57,54 +70,46 @@ export function useInstanceResourcePacks(instance: Ref<Instance>, enabledPacks: 
       return
     }
 
-    editGameSetting({ instancePath: instance.value.path, resourcePacks: [...enabled.value.map(e => e.resourcePack.id).filter(v => v !== id)].reverse() })
+    loading.value = true
+    enabledResourcePackNames.value = enabledResourcePackNames.value.filter(v => v !== id)
+    doCommit()
   }
 
   function insert(from: string, to: string) {
+    loading.value = true
     const packs = enabledResourcePackNames.value
     const temp = packs.splice(packs.findIndex(p => p === from), 1)
     packs.splice(packs.findIndex(p => p === to), 0, ...temp)
     enabledResourcePackNames.value = [...packs]
+    doCommit()
   }
 
   /**
-     * Commit the change for current mods setting
-     */
+   * Commit the change for current mods setting
+   */
   function commit() {
-    editGameSetting({ instancePath: path.value, resourcePacks: [...enabledResourcePackNames.value].reverse() })
-    const modified = storage.value.filter(v => v.resource).filter((v) => v.name !== v.resource!.name || !isStringArrayEquals(v.tags, v.resource!.tags))
-    updateResources(modified.map(res => ({ ...res.resource!, name: res.name, tags: res.tags })))
+    const modified = enabled.value.filter(e => e.name !== e.resourcePack.resource?.name || !isStringArrayEquals(e.tags, e.resourcePack.resource?.tags))
+      .concat(disabled.value.filter(e => e.name !== e.resourcePack.resource?.name || !isStringArrayEquals(e.tags, e.resourcePack.resource?.tags)))
+      .filter(v => !!v.resourcePack.resource)
+
+    Promise.all([
+      editGameSetting({ instancePath: instancePath.value, resourcePacks: [...enabledResourcePackNames.value].reverse() }).catch(console.error),
+      updateResources(modified.map(e => ({ hash: e.resourcePack.resource!.hash, name: e.name, tags: e.tags }))).catch(console.error),
+    ]).finally(() => {
+      loading.value = false
+    })
   }
 
-  watch(optionsResourcePacks, (packs) => {
-    const arr = [...packs.map((p) => ((p === 'vanilla' || p.startsWith('file/')) ? p : `file/${p}`))]
-    if (arr.indexOf('vanilla') === -1) {
-      arr.unshift('vanilla')
-    }
-    enabledResourcePackNames.value = arr.reverse()
-  })
-  onMounted(() => {
-    storage.value = resources.value.map(getResourcePackItem)
-
-    const arr = [...optionsResourcePacks.value.map((p) => ((p === 'vanilla' || p.startsWith('file/')) ? p : `file/${p}`))]
-    if (arr.indexOf('vanilla') === -1) {
-      arr.unshift('vanilla')
-    }
-    enabledResourcePackNames.value = arr.reverse()
-  })
-
-  watch(resources, (packs) => {
-    storage.value = packs.map(getResourcePackItem)
+  onUnmounted(() => {
+    doCommit.flush()
   })
 
   return {
     showDirectory,
-    modified,
     enabled,
     disabled,
     add,
     remove,
-    commit,
     insert,
     loading,
   }
