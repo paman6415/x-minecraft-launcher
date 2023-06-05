@@ -21,7 +21,7 @@ export class InstanceVersionState {
   }
 }
 
-export interface InstanceVersionService extends StatefulService<InstanceVersionState> {
+export interface InstanceVersionService {
   diagnoseLibraries(currentVersion: ResolvedVersion): Promise<LibraryIssue[]>
   diagnoseAssetIndex(currentVersion: ResolvedVersion): Promise<AssetIndexIssue | undefined>
   diagnoseAssets(currentVersion: ResolvedVersion, strict?: boolean): Promise<AssetIssue[]>

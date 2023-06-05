@@ -98,8 +98,8 @@
 </template>
 
 <script lang=ts setup>
+import { InstanceInstallServiceKey, PeerServiceKey, ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
-import { InstanceInstallServiceKey, ModpackServiceKey, PeerServiceKey, ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
 import AdvanceContent from '../components/StepperAdvanceContent.vue'
 import BaseContent from '../components/StepperBaseContent.vue'
 import StepperFooter from '../components/StepperFooter.vue'
@@ -118,7 +118,6 @@ const { show } = useDialog('task')
 const { create, reset, data: creationData } = useInstanceCreation()
 const router = useRouter()
 const { on, removeListener } = useService(ResourceServiceKey)
-const { importModpack } = useService(ModpackServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { t } = useI18n()
 const { notify } = useNotifier()

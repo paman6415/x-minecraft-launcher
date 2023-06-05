@@ -6,8 +6,11 @@ export interface InstanceShaderPacksService {
    * @param instancePath The instance absolute path
    */
   link(instancePath: string): Promise<void>
-
-  showDirectory(): Promise<void>
+  /**
+   * Show shaderPacks folder under the instance path
+   * @param instancePath The instance absolute path
+   */
+  showDirectory(instancePath: string): Promise<void>
 }
 
 export const InstanceShaderPacksServiceKey: ServiceKey<InstanceShaderPacksService> = 'InstanceShaderPacksService'

@@ -28,10 +28,10 @@ export class InstanceManifestService extends AbstractService implements IInstanc
   }
 
   @Singleton(p => JSON.stringify(p))
-  async getInstanceManifest(options?: GetManifestOptions): Promise<InstanceManifest> {
+  async getInstanceManifest(options: GetManifestOptions): Promise<InstanceManifest> {
     // Ensure the resource service is initialized...
     await this.resourceService.initialize()
-    const instancePath = options?.path || this.instanceService.state.path
+    const instancePath = options?.path
 
     const instance = this.instanceService.state.all[instancePath]
 

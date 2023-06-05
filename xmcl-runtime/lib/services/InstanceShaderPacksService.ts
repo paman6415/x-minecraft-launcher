@@ -15,9 +15,6 @@ import { InstanceOptionsService } from './InstanceOptionsService'
 
 @ExposeServiceKey(InstanceShaderPacksServiceKey)
 export class InstanceShaderPacksService extends AbstractService implements IInstanceShaderPacksServic {
-  private active: string | undefined
-  private linked = false
-
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(InstanceOptionsService) private gameSettingService: InstanceOptionsService,
@@ -54,7 +51,7 @@ export class InstanceShaderPacksService extends AbstractService implements IInst
   }
 
   @Singleton(p => p)
-  async link(instancePath: string = this.instanceService.state.path) {
+  async link(instancePath: string) {
     const destPath = join(instancePath, 'shaderpacks')
     const srcPath = this.getPath('shaderpacks')
     const stat = await lstat(destPath).catch((e) => {
@@ -63,8 +60,7 @@ export class InstanceShaderPacksService extends AbstractService implements IInst
       }
       throw e
     })
-    this.active = destPath
-    const scan = async () => {
+    const loadAll = async () => {
       const files = await readdir(destPath)
 
       this.log(`Import shaderpacks directories while linking: ${instancePath}`)
@@ -113,7 +109,7 @@ export class InstanceShaderPacksService extends AbstractService implements IInst
     }
   }
 
-  async showDirectory(): Promise<void> {
-    await this.app.shell.openDirectory(join(this.instanceService.state.path, 'shaderpacks'))
+  async showDirectory(instancePath: string): Promise<void> {
+    await this.app.shell.openDirectory(join(instancePath, 'shaderpacks'))
   }
 }

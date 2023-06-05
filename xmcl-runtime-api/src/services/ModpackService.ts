@@ -114,14 +114,9 @@ export interface ModpackService {
    */
   exportModpack(options: ExportModpackOptions): Promise<void>
   /**
-   * Import the curseforge modpack zip file to the instance.
-   * @param options The options provide instance directory path and curseforge modpack zip path
+   * Get modpack install profile from the modpack. Use the `installInstanceFiles` to create an instance.
    */
-  importModpack(options: ImportModpackOptions): Promise<string>
-  /**
-   * Preview the modpack content apply to the instance
-   */
-  getInstallModpackProfile(modpackPath: string): Promise<{
+  getModpackInstallProfile(modpackPath: string): Promise<{
     instance: EditInstanceOptions
     files: InstanceFile[]
   }>

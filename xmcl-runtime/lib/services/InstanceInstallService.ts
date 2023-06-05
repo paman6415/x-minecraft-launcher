@@ -170,11 +170,9 @@ export class InstanceInstallService extends AbstractService implements IInstance
   @Singleton((o) => o.path)
   async installInstanceFiles(options: InstallInstanceOptions): Promise<void> {
     const {
-      path,
+      path: instancePath,
       files,
     } = options
-
-    const instancePath = path || this.instanceService.state.path
 
     const instance = this.instanceService.state.all[instancePath]
 
@@ -230,9 +228,8 @@ export class InstanceInstallService extends AbstractService implements IInstance
     }
   }
 
-  async checkInstanceInstall() {
-    const current = this.instanceService.state.path
-    const profile = join(current, '.install-profile')
+  async checkInstanceInstall(path: string) {
+    const profile = join(path, '.install-profile')
     if (existsSync(profile)) {
       try {
         const fileContent = JSON.parse(await readFile(profile, 'utf-8'))

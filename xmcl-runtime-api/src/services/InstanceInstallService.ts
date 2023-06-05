@@ -40,6 +40,7 @@ export interface InstanceInstallService {
   /**
    * Check if this instance has any pending install
    *
+   * @param path The instance path
    * @return All pending instance installation
    */
   checkInstanceInstall(path: string): Promise<InstanceFileWithOperation[]>

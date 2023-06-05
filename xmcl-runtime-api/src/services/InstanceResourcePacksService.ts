@@ -10,7 +10,11 @@ export interface InstanceResourcePacksService {
    */
   link(instancePath: string): Promise<void>
 
-  showDirectory(): Promise<void>
+  /**
+   * Show the `resourcepacks` directory under the instance path
+   * @param instancePath The instance path
+   */
+  showDirectory(instancePath: string): Promise<void>
 }
 
 export const InstanceResourcePacksServiceKey: ServiceKey<InstanceResourcePacksService> = 'InstanceResourcePacksService'

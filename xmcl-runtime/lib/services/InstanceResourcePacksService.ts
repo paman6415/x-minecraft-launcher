@@ -25,8 +25,7 @@ export class InstanceResourcePackService extends AbstractService implements IIns
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(InstanceService) private instanceService: InstanceService,
-    @Inject(InstanceOptionsService) private gameSettingService: InstanceOptionsService,
-    @Inject(DiagnoseService) private diagnoseService: DiagnoseService,
+    @Inject(InstanceOptionsService) gameSettingService: InstanceOptionsService,
   ) {
     super(app)
     this.storeManager/* .subscribe('instanceGameSettingsLoad', async (payload) => {
@@ -92,7 +91,7 @@ export class InstanceResourcePackService extends AbstractService implements IIns
   // private activeResourcePacks: AnyPersistedResource[] = []
 
   @Singleton(p => p)
-  async link(instancePath: string = this.instanceService.state.path): Promise<void> {
+  async link(instancePath: string): Promise<void> {
     await this.resourceService.whenReady(ResourceDomain.ResourcePacks)
     const destPath = join(instancePath, 'resourcepacks')
     const srcPath = this.getPath('resourcepacks')
@@ -155,7 +154,7 @@ export class InstanceResourcePackService extends AbstractService implements IIns
     }
   }
 
-  async showDirectory(): Promise<void> {
-    await this.app.shell.openDirectory(join(this.instanceService.state.path, 'resourcepacks'))
+  async showDirectory(path: string): Promise<void> {
+    await this.app.shell.openDirectory(join(path, 'resourcepacks'))
   }
 }

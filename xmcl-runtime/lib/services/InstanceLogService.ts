@@ -1,5 +1,5 @@
 import { InstanceLogService as IInstanceLogService, InstanceLogServiceKey } from '@xmcl/runtime-api'
-import { unlink, readFile } from 'fs/promises'
+import { readFile, unlink } from 'fs/promises'
 import { isAbsolute, join } from 'path'
 import { LauncherApp } from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
@@ -8,7 +8,6 @@ import { UTF8 } from '../util/encoding'
 import { readdirIfPresent } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { gunzip } from '../util/zip'
-import { InstanceService } from './InstanceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 
 /**
@@ -17,7 +16,6 @@ import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 @ExposeServiceKey(InstanceLogServiceKey)
 export class InstanceLogService extends AbstractService implements IInstanceLogService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(kEncodingWorker) private encoder: EncodingWorker,
   ) {
     super(app)
