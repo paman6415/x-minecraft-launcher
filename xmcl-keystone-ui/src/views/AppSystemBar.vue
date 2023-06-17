@@ -12,7 +12,7 @@
     >
       <div
         v-if="platformName === 'osx'"
-        style="width:80px"
+        style="width: 80px"
       />
       <v-icon
         v-ripple
