@@ -11,7 +11,7 @@
       class="p-0 flex flex-shrink flex-grow-0"
     >
       <div
-        v-if="platformName === 'osx'"
+        v-if="shouldShiftBackControl"
         style="width: 80px"
       />
       <v-icon
@@ -105,7 +105,7 @@ defineProps<{
 const { appBarColor } = injection(kColorTheme)
 const { blurAppBar } = useBarBlur()
 const { maximize, minimize, close } = windowController
-const { platformName, hideWindowControl } = useWindowStyle()
+const { shouldShiftBackControl, hideWindowControl } = useWindowStyle()
 const { show: showFeedbackDialog } = useDialog('feedback')
 const { show: showTaskDialog } = useDialog('task')
 const { t } = useI18n()
