@@ -190,7 +190,7 @@ type FileOperationNode = InstanceFileNode<{ operation: InstanceFileUpdate['opera
 function getFileNode(f: InstanceFileUpdate): FileOperationNode {
   return {
     name: basename(f.file.path),
-    id: f.file.path,
+    path: f.file.path,
     size: f.file.size,
     style: {
       textDecorationLine: f.operation === 'remove' || f.operation === 'backup-remove' ? 'line-through' : '',

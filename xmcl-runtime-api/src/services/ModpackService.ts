@@ -1,3 +1,4 @@
+import { RuntimeVersions } from '../entities/instance.schema'
 import { Exception } from '../entities/exception'
 import { InstanceFile } from '../entities/instanceManifest.schema'
 import { ResourceMetadata } from '../entities/resource'
@@ -103,6 +104,14 @@ export interface ImportModpackCreateInstanceOptions {
   mountAfterSucceed?: boolean
 }
 
+export interface ModpackInstallProfile {
+  instance: EditInstanceOptions & {
+    name: string
+    runtime: RuntimeVersions
+  }
+  files: InstanceFile[]
+}
+
 /**
  * Provide the abilities to import/export instance from/to modpack file.
  * For json format modpack like FTB, you can use the `InstanceIOService`
@@ -116,10 +125,7 @@ export interface ModpackService {
   /**
    * Get modpack install profile from the modpack. Use the `installInstanceFiles` to create an instance.
    */
-  getModpackInstallProfile(modpackPath: string): Promise<{
-    instance: EditInstanceOptions
-    files: InstanceFile[]
-  }>
+  getModpackInstallProfile(modpackPath: string): Promise<ModpackInstallProfile>
 
   showModpacksFolder(): Promise<void>
 }

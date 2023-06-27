@@ -1,18 +1,14 @@
 import { File, HashAlgo } from '@xmcl/curseforge'
-import { UnzipTask } from '@xmcl/installer'
-import { CurseforgeModpackManifest, EditInstanceOptions, ExportModpackOptions, ModpackService as IModpackService, ImportModpackOptions, InstanceFile, LockKey, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, isAllowInModrinthModpack } from '@xmcl/runtime-api'
-import { task } from '@xmcl/task'
+import { CurseforgeModpackManifest, EditInstanceOptions, ExportModpackOptions, ModpackService as IModpackService, InstanceFile, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackInstallProfile, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, isAllowInModrinthModpack } from '@xmcl/runtime-api'
 import { open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
-import { createHash } from 'crypto'
 import { stat } from 'fs/promises'
-import { basename, join, relative } from 'path'
-import { pipeline } from 'stream/promises'
+import { join } from 'path'
 import { Entry, ZipFile } from 'yauzl'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { ResourceWorker, kResourceWorker } from '../entities/resourceWorker'
 import { guessCurseforgeFileUrl } from '../util/curseforge'
-import { checksumFromStream, isFile } from '../util/fs'
+import { checksumFromStream } from '../util/fs'
 import { requireObject } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { ZipTask } from '../util/zip'
@@ -37,7 +33,7 @@ export interface ModpackHandler<M = any> {
   resolveUnpackPath(manifest: M, e: Entry): string | void
 
   readMetadata(zipFile: ZipFile, entries: Entry[]): Promise<M | undefined>
-  resolveInstanceOptions(manifest: M): EditInstanceOptions
+  resolveInstanceOptions(manifest: M): ModpackInstallProfile['instance']
   resolveInstanceFiles(manifest: M): Promise<InstanceFile[]>
 }
 
@@ -317,7 +313,7 @@ export class ModpackService extends AbstractService implements IModpackService {
     }
   }
 
-  async getModpackInstallProfile(path: string) {
+  async getModpackInstallProfile(path: string): Promise<ModpackInstallProfile> {
     const fStat = await stat(path)
     if (!fStat.isFile()) {
       throw new ModpackException({ type: 'requireModpackAFile', path }, `Cannot import modpack ${path}, since it's not a file!`)

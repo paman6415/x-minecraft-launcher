@@ -5,7 +5,9 @@ import { CSSProperties } from 'vue/types/jsx'
 
 export interface InstanceFileNode<T = never> {
   name: string
-  id: string
+  path: string
+  icon?: string
+  avatar?: string
   style?: CSSProperties
   size: number
   data?: T
@@ -26,7 +28,7 @@ export function useInstanceFileNodesFromLocal(local: Ref<InstanceFile[]>) {
   function getFileNode(f: InstanceFile): InstanceFileNode<InstanceFileExportData> {
     return reactive({
       name: basename(f.path),
-      id: f.path,
+      path: f.path,
       size: f.size,
       data: {
         client: '',
@@ -60,14 +62,14 @@ export function provideFileNodes<T>(files: Ref<InstanceFileNode<T>[]>) {
       if (!edgeNode) {
         edgeNode = {
           name,
-          id: current,
+          path: current,
           size: 0,
           children: [],
         }
         cwd.push(edgeNode)
       }
       buildEdges(edgeNode.children!, remained, current, file)
-      edgeNode.children?.sort((a, b) => a.id.localeCompare(b.id))
+      edgeNode.children?.sort((a, b) => a.path.localeCompare(b.path))
     } else { // leaf
       cwd.push(file)
     }
@@ -80,7 +82,7 @@ export function provideFileNodes<T>(files: Ref<InstanceFileNode<T>[]>) {
     const leavesNodes = files
     const result: InstanceFileNode<T>[] = []
     for (const file of leavesNodes) {
-      buildEdges(result, file.id.split('/'), '', file)
+      buildEdges(result, file.path.split('/'), '', file)
     }
     leaves.value = leavesNodes
     nodes.value = result

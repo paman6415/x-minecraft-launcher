@@ -30,7 +30,7 @@
         </v-stepper-step>
         <v-divider />
         <v-stepper-step
-          :editable="canPreview"
+          editable
           :complete="step > 2"
           step="3"
         >
@@ -87,7 +87,6 @@
           class="overflow-auto max-h-[70vh]"
         >
           <StepperModpackContent
-            v-if="canPreview"
             :modpack="selectedTemplate"
             :shown="isModpackContentShown"
           />
@@ -109,11 +108,9 @@ import { useDialog } from '../composables/dialog'
 import { AddInstanceDialogKey, Template, useAllTemplate } from '../composables/instanceAdd'
 import { CreateOptionKey, useInstanceCreation } from '../composables/instanceCreation'
 import { useNotifier } from '../composables/notifier'
-
 import { useRefreshable, useService } from '@/composables'
-import { getFTBPath } from '@/util/ftb'
 
-const { isShown, dialog, show: showAddInstance } = useDialog(AddInstanceDialogKey)
+const { isShown, dialog, show: showAddInstance, hide } = useDialog(AddInstanceDialogKey)
 const { show } = useDialog('task')
 const { create, reset, data: creationData } = useInstanceCreation()
 const router = useRouter()
@@ -121,7 +118,7 @@ const { on, removeListener } = useService(ResourceServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { t } = useI18n()
 const { notify } = useNotifier()
-const { templates, apply, refresh, setup, dispose } = useAllTemplate(creationData)
+const { templates } = useAllTemplate()
 
 provide(CreateOptionKey, creationData)
 
@@ -131,131 +128,84 @@ const selectedTemplate: Ref<Template | undefined> = ref(undefined)
 
 const isModpackContentShown = computed(() => step.value === 3)
 const selectedTemplateName = computed(() => selectedTemplate.value?.name ?? '')
-const canPreview = computed(() => selectedTemplate.value?.source && selectedTemplate.value?.source.type !== 'instance')
 
 function quit() {
   if (creating.value) return
-  isShown.value = false
+  hide()
 }
 
 function onSelect(template: Template) {
   selectedTemplate.value = template
 }
 
-watch(selectedTemplate, (newVal) => {
-  if (newVal) {
-    apply(newVal)
-    step.value = 2
-  }
+watch(selectedTemplate, (t) => {
+  if (!t) return
+  const instData = t.instance
+  creationData.name = instData.name
+  creationData.runtime = { ...instData.runtime }
+  creationData.java = instData.java ?? ''
+  creationData.showLog = instData.showLog ?? false
+  creationData.hideLauncher = instData.hideLauncher ?? true
+  creationData.vmOptions = [...instData.vmOptions ?? []]
+  creationData.mcOptions = [...instData.mcOptions ?? []]
+  creationData.maxMemory = instData.maxMemory ?? 0
+  creationData.minMemory = instData.minMemory ?? 0
+  creationData.author = instData.author ?? ''
+  creationData.description = instData.description ?? ''
+  creationData.url = instData.url ?? ''
+  creationData.icon = instData.icon ?? ''
+  creationData.modpackVersion = instData.modpackVersion || ''
+  creationData.server = instData.server ? { ...instData.server } : null
+  creationData.upstream = instData.upstream
+  step.value = 2
 })
 
 const { refreshing: creating, refresh: onCreate } = useRefreshable(async () => {
   const template = selectedTemplate.value
   if (template) {
-    if (template.source.type === 'instance') {
-      await create()
+    try {
+      const resultInstancePath = await create()
       router.push('/')
-    } else if (template.source.type === 'ftb') {
-      try {
-        const path = await create()
-        await installInstanceFiles({
-          path,
-          files: template.source.manifest.files.map(f => ({
-            path: getFTBPath(f),
-            hashes: {
-              sha1: f.sha1,
-            },
-            curseforge: f.curseforge
-              ? {
-                projectId: f.curseforge.project,
-                fileId: f.curseforge.file,
-              }
-              : undefined,
-            downloads: f.url ? [f.url] : undefined,
-            size: f.size,
-          })),
-        })
-        notify({
-          title: t('importModpack.success', { modpack: template?.name }),
-          level: 'success',
-          full: true,
-          more() {
-            router.push('/')
-          },
-        })
-      } catch {
-        notify({
-          title: t('importModpack.failed', { modpack: template?.name }),
-          level: 'error',
-          full: true,
-          more() {
-            show()
-          },
-        })
-      }
-    } else if (template.source.type === 'peer') {
-      try {
-        const path = await create()
-        await installInstanceFiles({
-          path,
-          files: template.source.manifest.files,
-        })
-        notify({
-          title: t('importModpack.success', { modpack: template?.name }),
-          level: 'success',
-          full: true,
-          more() {
-            router.push('/')
-          },
-        })
-      } catch {
-        notify({
-          title: t('importModpack.failed', { modpack: template?.name }),
-          level: 'error',
-          full: true,
-          more() {
-            show()
-          },
-        })
-      }
-    } else {
-      try {
-        await importModpack({
-          path: template.source.resource.path,
-          instanceConfig: { ...creationData },
-          mountAfterSucceed: true,
-        })
-        notify({
-          title: t('importModpack.success', { modpack: template?.name }),
-          level: 'success',
-          full: true,
-          more() {
-            router.push('/')
-          },
-        })
-      } catch {
-        notify({
-          title: t('importModpack.failed', { modpack: template?.name }),
-          level: 'error',
-          full: true,
-          more() {
-            show()
-          },
-        })
-      }
+      await installInstanceFiles({
+        path: resultInstancePath,
+        files: template.files,
+      })
+      notify({
+        title: t('importModpack.success', { modpack: template?.name }),
+        level: 'success',
+        full: true,
+        more() {
+          router.push('/')
+        },
+      })
+    } catch {
+      notify({
+        title: t('importModpack.failed', { modpack: template?.name }),
+        level: 'error',
+        full: true,
+        more() {
+          show()
+        },
+      })
     }
   } else {
     await create()
     router.push('/')
   }
 
-  isShown.value = false
+  hide()
 })
 
-on('resourceAdd', (r) => {
-  if (r.domain === ResourceDomain.Modpacks) {
-    onModpackAdded({ path: r.path, name: r.name })
-  }
+let listener: any = undefined
+onMounted(() => {
+  on('resourceAdd', (r) => {
+    if (r.domain === ResourceDomain.Modpacks) {
+      onModpackAdded({ path: r.path, name: r.name })
+    }
+  })
+})
+onUnmounted(() => {
+  removeListener('resourceAdd', listener)
 })
 
 const onModpackAdded = ({ path, name }: { path: string; name: string }) => {
@@ -295,7 +245,7 @@ onPeerService('share', (event) => {
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    isShown.value = false
+    hide()
   }
 })
 
@@ -306,7 +256,6 @@ watch(isShown, (shown) => {
   if (!shown) {
     setTimeout(() => {
       selectedTemplate.value = undefined
-      dispose()
       reset()
     }, 500)
     return
