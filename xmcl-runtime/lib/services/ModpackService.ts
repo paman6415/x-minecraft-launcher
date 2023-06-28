@@ -18,6 +18,7 @@ import { InstanceInstallService } from './InstanceInstallService'
 import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { AnyError } from '../util/error'
 
 export interface ModpackDownloadableFile {
   destination: string
@@ -395,7 +396,7 @@ export class ModpackService extends AbstractService implements IModpackService {
         },
       }])
     } catch (e) {
-      this.error(new Error('Fail to update resource', { cause: e }))
+      this.error(new AnyError('ModpackInstallProfileError', 'Fail to update resource', { cause: e }))
     }
 
     return {

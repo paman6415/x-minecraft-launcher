@@ -204,8 +204,8 @@ export class LauncherAppManager extends Manager implements AppsHost {
           }
         }
       }
-      throw new Error('InvalidHTML')
+      throw new SyntaxError('InvalidHTML')
     }
-    throw new Error('NonHTML')
+    throw new SyntaxError('NonHTML')
   }
 }

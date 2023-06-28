@@ -1,20 +1,21 @@
 import { OfficialUserService as IOfficialUserService, OfficialUserServiceKey, UserException, UserProfile } from '@xmcl/runtime-api'
-import { MojangChallengeResponse, YggdrasilClient } from '@xmcl/user'
+import { MojangChallengeResponse, MojangClient, YggdrasilClient } from '@xmcl/user'
 import { Client } from 'undici'
 import { MicrosoftAccountSystem } from '../accountSystems/MicrosoftAccountSystem'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { MicrosoftAuthenticator } from '../clients/MicrosoftAuthenticator'
 import { MicrosoftOAuthClient } from '../clients/MicrosoftOAuthClient'
-import { MojangClient } from '../clients/MojangClient'
 import { CLIENT_ID, IS_DEV } from '../constant'
 import { normalizeGameProfile } from '../entities/user'
 import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
-import { isSystemError } from '../util/error'
+import { AnyError, isSystemError } from '../util/error'
 import { toRecord } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { AbstractService, ExposeServiceKey } from './Service'
 import { UserService } from './UserService'
+
+const UserAuthenticationError = AnyError.make('UserAuthenticationError')
 
 @ExposeServiceKey(OfficialUserServiceKey)
 export class OfficialUserService extends AbstractService implements IOfficialUserService {
@@ -77,11 +78,10 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
     userService.registerAccountSystem('microsoft', system)
 
     const headers = {}
-    const options = {
+    const legacyClient = new YggdrasilClient('https://authserver.mojang.com', {
       dispatcher,
       headers,
-    }
-    const legacyClient = new YggdrasilClient('https://authserver.mojang.com', options)
+    })
     userService.registerAccountSystem('mojang', {
       login: async (options) => {
         const result = await legacyClient.login({
@@ -175,7 +175,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async setName(user: UserProfile, name: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     await this.mojangApi.setName(name, token)
   }
@@ -183,7 +183,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async getNameChangeInformation(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     const result = await this.mojangApi.getNameChangeInformation(token)
     return result
@@ -192,7 +192,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async checkNameAvailability(user: UserProfile, name: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     const result = await this.mojangApi.checkNameAvailability(name, token)
     return result
@@ -201,7 +201,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async hideCape(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     await this.mojangApi.hideCape(token)
   }
@@ -209,7 +209,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async showCape(user: UserProfile, capeId: string) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     await this.mojangApi.showCape(capeId, token)
   }
@@ -217,7 +217,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async verifySecurityLocation(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     return await this.mojangApi.verifySecurityLocation(token)
   }
@@ -225,7 +225,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async getSecurityChallenges(user: UserProfile) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     return await this.mojangApi.getSecurityChallenges(token)
   }
@@ -233,7 +233,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
   async submitSecurityChallenges(user: UserProfile, answers: MojangChallengeResponse[]) {
     const token = await this.userTokenStorage.get(user)
     if (!token) {
-      throw new Error()
+      throw new UserAuthenticationError()
     }
     return await this.mojangApi.submitSecurityChallenges(answers, token)
   }

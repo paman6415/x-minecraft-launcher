@@ -16,6 +16,7 @@ import { JavaService } from './JavaService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Lock, Singleton } from './Service'
 import { VersionService } from './VersionService'
+import { AnyError } from '../util/error'
 
 /**
  * Version install service provide some functions to install Minecraft/Forge/Liteloader, etc. version
@@ -105,7 +106,7 @@ export class InstallService extends AbstractService implements IInstallService {
     const { minecraftVersion, force } = options
 
     if (!minecraftVersion) {
-      throw new Error('Empty Minecraft Version')
+      throw new TypeError('Empty Minecraft Version')
     }
 
     const processBMCL = async (response: Dispatcher.ResponseData) => {
@@ -166,7 +167,7 @@ export class InstallService extends AbstractService implements IInstallService {
         }
       }
     } catch (e) {
-      throw new Error(`Fail to fetch forge info of ${minecraftVersion}`, { cause: e })
+      throw new AnyError('ForgeVersionListError', `Fail to fetch forge info of ${minecraftVersion}`, { cause: e })
     }
   }
 
@@ -271,7 +272,7 @@ export class InstallService extends AbstractService implements IInstallService {
     try {
       const { body, statusCode } = await request('https://meta.quiltmc.org/v3/versions/loader')
       if (statusCode >= 400) {
-        throw new Error()
+        throw new AnyError('QuiltVersionListError')
       }
       versions = await body.json()
       if (statusCode === 200) {
@@ -443,7 +444,7 @@ export class InstallService extends AbstractService implements IInstallService {
     const location = this.getPath()
     const local = await this.versionService.resolveLocalVersion(version)
     if (!local) {
-      throw new Error(`Cannot reinstall ${version} as it's not found!`)
+      throw new AnyError('ReinstallError', `Cannot reinstall ${version} as it's not found!`)
     }
     await this.submit(installVersionTask({ id: local.minecraftVersion, url: '' }, location).setName('installVersion', { id: local.minecraftVersion }))
     const forgeLib = local.libraries.find(isForgeLibrary)
@@ -707,7 +708,7 @@ export class InstallService extends AbstractService implements IInstallService {
         destination: path,
       }).setName('download'))
       resourceService.importResources([{ path, domain: ResourceDomain.Mods }]).catch((e) => {
-        error(new Error(`Fail to import optifine as mod! ${path}`, { cause: e }))
+        error(new AnyError('InstallOptifineError', `Fail to import optifine as mod! ${path}`, { cause: e }))
       })
       let id: string = await this.concat(installOptifineTask(path, minecraft, { java }))
 

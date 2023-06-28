@@ -9,6 +9,7 @@ import { readdirIfPresent } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { gunzip } from '../util/zip'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
+import { AnyError } from '../util/error'
 
 /**
  * Provide the ability to list/read/remove log and crash reports of a instance.
@@ -57,7 +58,7 @@ export class InstanceLogService extends AbstractService implements IInstanceLogS
       const result = await this.encoder.decode(buf, encoding || UTF8)
       return result
     } catch (e) {
-      this.error(new Error(`Fail to get log content "${name}"`, { cause: e }))
+      this.error(new AnyError('GetLogContentError', `Fail to get log content "${name}"`, { cause: e }))
       return ''
     }
   }

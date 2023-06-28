@@ -4,6 +4,7 @@ import { join } from 'path'
 import { EventEmitter } from 'stream'
 import LauncherApp from '../app/LauncherApp'
 import { createPromiseSignal, PromiseSignal } from '../util/promiseSignal'
+import { AnyError } from '../util/error'
 
 export type ServiceConstructor<T extends AbstractService = AbstractService> = {
   new(...args: any[]): T
@@ -240,7 +241,7 @@ export abstract class AbstractService extends EventEmitter {
       if (this.initializer) {
         const startTime = Date.now()
         this.initializeSignal.accept(this.initializer().catch((e) => {
-          this.error(new Error('Fail to initialize', { cause: e }))
+          this.error(new AnyError('ServiceInitializeError', 'Fail to initialize', { cause: e }))
           throw e
         }).finally(() => {
           const endTime = Date.now()

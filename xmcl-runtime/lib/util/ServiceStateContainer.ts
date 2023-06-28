@@ -2,6 +2,7 @@ import { OnMutatedHandler } from '@xmcl/runtime-api'
 import EventEmitter from 'events'
 import { LauncherApp } from '../app/LauncherApp'
 import { Logger } from './log'
+import { AnyError } from './error'
 
 /**
  * The util class to hold each service state snapshot
@@ -43,7 +44,7 @@ export class ServiceStateContainer {
 
   commit(type: string, payload: any) {
     if (typeof this.state[type] !== 'function') {
-      this.logger.error(new Error(`Cannot find mutation named ${type} in service ${this.id}`))
+      this.logger.error(new AnyError('StateError', `Cannot find mutation named ${type} in service ${this.id}`))
     } else {
       this.state[type](payload)
     }

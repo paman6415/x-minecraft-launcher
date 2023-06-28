@@ -27,6 +27,7 @@ import { ModrinthService } from './ModrinthService'
 import { PeerService } from './PeerService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
+import { AnyError } from '../util/error'
 
 type RequiredPick<T, K extends keyof T> = T & Required<Pick<T, K>>
 
@@ -128,7 +129,7 @@ class UnzipFileTask extends AbortableTask<void> {
   protected async process(): Promise<void> {
     const [zip, entry] = await this.getEntry
     if (!entry) {
-      throw new Error(`Cannot find zip entry for ${this.destination}`)
+      throw new AnyError('UnzipError', `Cannot find zip entry for ${this.destination}`)
     }
     const stream = await openEntryReadStream(zip, entry)
     this._total = entry.uncompressedSize
@@ -224,7 +225,7 @@ export class InstanceInstallService extends AbstractService implements IInstance
       await this.removeInstallProfile(instancePath)
     } catch (e) {
       await this.writeInstallProfile(instancePath, files)
-      throw new Error(`Fail to install instance ${instancePath}`, { cause: e })
+      throw new AnyError('InstallInstanceFilesError', `Fail to install instance ${instancePath}`, { cause: e })
     }
   }
 
@@ -234,13 +235,13 @@ export class InstanceInstallService extends AbstractService implements IInstance
       try {
         const fileContent = JSON.parse(await readFile(profile, 'utf-8'))
         if (fileContent.lockVersion !== 0) {
-          throw new Error(`Cannot identify lockfile version ${fileContent.lockVersion}`)
+          throw new AnyError('InstanceFileError', `Cannot identify lockfile version ${fileContent.lockVersion}`)
         }
         const files = fileContent.files as InstanceFile[]
         return files
       } catch (e) {
         if (e instanceof SyntaxError) {
-          this.error(new Error(`Fail to parse instance install profile ${profile} as syntex error`, { cause: e }))
+          this.error(new AnyError('InstanceFileError', `Fail to parse instance install profile ${profile} as syntex error`, { cause: e }))
           await unlink(profile).catch(() => undefined)
         } else {
           throw e
@@ -280,7 +281,7 @@ export class InstanceInstallService extends AbstractService implements IInstance
 
     const createDownloadTask = async (file: InstanceFile, destination: string, pending?: string, sha1?: string) => {
       if (!file.downloads) {
-        throw new Error(Object.assign('Cannot create download file task', { file }))
+        throw new AnyError('DownloadFileError', 'Cannot create download file task', undefined, { file })
       }
 
       const zipUrl = file.downloads.find(u => u.startsWith('zip:'))
@@ -329,7 +330,7 @@ export class InstanceInstallService extends AbstractService implements IInstance
         return this.peerService.createDownloadTask(peerUrl, destination, sha1 ?? '', file.size)
       }
 
-      throw new Error(`Cannot resolve file! ${file.path}`)
+      throw new AnyError('DownloadFileError', `Cannot resolve file! ${file.path}`)
     }
 
     const sha1 = file.hashes.sha1

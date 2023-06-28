@@ -98,6 +98,16 @@ const parseStack = (stack: any) => {
   return parsedStack
 }
 
+function decorateError(e: Error) {
+  if (e.name === 'Error') {
+    if (e.message.startsWith('ECANCELED:')) {
+      e.name = 'FSWatchError'
+    } else if (e.message.startsWith('EPERM:')) {
+      e.name = 'FSPermError'
+    }
+  }
+}
+
 export const pluginTelemetry: LauncherAppPlugin = async (app) => {
   if (IS_DEV) {
     return
