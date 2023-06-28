@@ -119,7 +119,7 @@ export class InstanceModsService extends AbstractService implements IInstanceMod
       const dest = join(path, ResourceDomain.Mods, res.fileName)
       const [srcStat, destStat] = await Promise.all([stat(src), stat(dest).catch(() => undefined)])
 
-      let promise: Promise<void> | undefined
+      let promise: Promise<any> | undefined
       if (!destStat) {
         promise = linkWithTimeoutOrCopy(src, dest)
       } else if (srcStat.ino !== destStat.ino) {

@@ -135,6 +135,8 @@ import { basename } from '@/util/basename'
 import { getUpstreamFromResource } from '@/util/upstream'
 import { EditInstanceOptions, InstanceFileOperation, InstanceFileUpdate, InstanceInstallServiceKey, InstanceServiceKey, InstanceUpdateServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
+import { injection } from '@/util/inject'
+import { kInstanceContext } from '@/composables/instanceContext'
 
 const selected = ref([] as string[])
 
@@ -149,7 +151,7 @@ const { getInstanceUpdateProfile } = useService(InstanceUpdateServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { state, editInstance } = useService(InstanceServiceKey)
 const { t } = useI18n()
-const instancePath = computed(() => state.path)
+const { path: instancePath } = injection(kInstanceContext)
 
 const oldRuntime = computed(() => state.instance.runtime)
 

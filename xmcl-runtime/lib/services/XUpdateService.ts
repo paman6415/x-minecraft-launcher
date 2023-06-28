@@ -29,7 +29,7 @@ export class XUpdateService extends AbstractService implements IXUpdateService {
 
   @Singleton((o) => o.path)
   async uploadInstanceManifest({ path, manifest, headers, includeFileWithDownloads, forceJsonFormat }: SetInstanceManifestOptions): Promise<void> {
-    const instancePath = path || this.instanceService.state.path
+    const instancePath = path
 
     const instance = this.instanceService.state.all[instancePath]
 
@@ -98,8 +98,8 @@ export class XUpdateService extends AbstractService implements IXUpdateService {
   }
 
   @Singleton(p => p)
-  async fetchInstanceUpdate(path?: string): Promise<InstanceUpdate | undefined> {
-    const instancePath = path || this.instanceService.state.path
+  async fetchInstanceUpdate(path: string): Promise<InstanceUpdate | undefined> {
+    const instancePath = path
 
     const instance = this.instanceService.state.all[instancePath]
 

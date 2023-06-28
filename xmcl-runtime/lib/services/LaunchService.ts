@@ -11,9 +11,7 @@ import { UTF8 } from '../util/encoding'
 import { Inject } from '../util/objectRegistry'
 import { ExternalAuthSkinService } from './ExternalAuthSkinService'
 import { InstallService } from './InstallService'
-import { InstanceResourcePackService } from './InstanceResourcePacksService'
 import { InstanceService } from './InstanceService'
-import { InstanceShaderPacksService } from './InstanceShaderPacksService'
 import { JavaService } from './JavaService'
 import { ExposeServiceKey, StatefulService } from './Service'
 import { UserService } from './UserService'
@@ -30,8 +28,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
     @Inject(ExternalAuthSkinService) private externalAuthSkinService: ExternalAuthSkinService,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstallService) private installService: InstallService,
-    @Inject(InstanceResourcePackService) private instanceResourcePackService: InstanceResourcePackService,
-    @Inject(InstanceShaderPacksService) private instanceShaderPacksService: InstanceShaderPacksService,
     @Inject(JavaService) private javaService: JavaService,
     @Inject(kUserTokenStorage) private userTokenStorage: UserTokenStorage,
     @Inject(kEncodingWorker) private encoder: EncodingWorker,
@@ -68,27 +64,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       const user = options.user
       const gameProfile = user.profiles[user.selectedProfile]
       const javaPath = options.java
-
-      if (!options?.ignoreUserStatus) {
-        try {
-          await this.userService.refreshUser()
-        } catch (e) {
-          this.warn(`Fail to determine user status to launch: ${e}`)
-        }
-      }
-
-      // if (!options?.skipAssetsCheck) {
-      //   await this.semaphoreManager.wait('diagnose')
-      //   const issues = this.diagnoseService.state.issues
-      //   for (let problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i = 0;
-      //     problems.length !== 0 && i <= 2;
-      //     problems = issues.filter(p => p.autoFix && p.parameters.length > 0), i += 1) {
-      //     await this.diagnoseService.fix(problems)
-      //   }
-      // }
-
-      // await this.instanceResourcePackService.ensureResourcePacks().catch((e) => this.error(e))
-      await this.instanceShaderPacksService.ensureShaderPacks().catch((e) => this.error(e))
 
       if (this.state.status === 'idle') { // check if we have cancel (set to ready) this launch
         return false
@@ -162,14 +137,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       if (!javaPath) {
         throw new LaunchException({ type: 'launchNoProperJava', javaPath: javaPath || '' }, 'Cannot launch without a valid java')
       }
-      // const assignMemory = instance.assignMemory ?? globalState.globalAssignMemory
-      // let minMemory: number | undefined = instance.minMemory ?? globalState.globalMinMemory
-      // let maxMemory: number | undefined = instance.maxMemory ?? globalState.globalMaxMemory
-
-      // minMemory = assignMemory === true && minMemory > 0
-      //   ? minMemory
-      //   : assignMemory === 'auto' ? Math.floor((await this.baseService.getMemoryStatus()).free / 1024 / 1024 - 256) : undefined
-      // maxMemory = assignMemory === true && maxMemory > 0 ? maxMemory : undefined
       const minMemory: number | undefined = options.maxMemory
       const maxMemory: number | undefined = options.minMemory
       const prechecks = [LaunchPrecheck.checkNatives, LaunchPrecheck.linkAssets]
@@ -293,6 +260,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
             code,
             signal,
             crashReport,
+            duration: playTime,
             crashReportLocation: crashReportLocation ? crashReportLocation.replace('\r\n', '').trim() : '',
             errorLog: errorLogs.join('\n'),
           })

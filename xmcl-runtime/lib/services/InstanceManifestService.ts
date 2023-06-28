@@ -33,7 +33,7 @@ export class InstanceManifestService extends AbstractService implements IInstanc
     await this.resourceService.initialize()
     const instancePath = options?.path
 
-    const instance = this.instanceService.state.all[instancePath]
+    // const instance = this.instanceService.state.all[instancePath]
 
     const resolveHashes = async (file: string, sha1?: string) => {
       const result: Record<string, string> = {}
@@ -54,10 +54,10 @@ export class InstanceManifestService extends AbstractService implements IInstanc
       return result as any
     }
 
-    if (!instance) {
-      throw new Error('Instance not found')
-      // throw new InstanceIOException({ instancePath, type: 'instanceNotFound' })
-    }
+    // if (!instance) {
+    //   throw new Error('Instance not found')
+    //   // throw new InstanceIOException({ instancePath, type: 'instanceNotFound' })
+    // }
 
     const files = [] as Array<InstanceFile>
     const undecorated = [] as Array<InstanceFile>

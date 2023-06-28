@@ -1,14 +1,14 @@
 import { DownloadTask } from '@xmcl/installer'
+import { ModrinthV2Client } from '@xmcl/modrinth'
 import { ModrinthService as IModrinthService, InstallModrinthVersionResult, InstallProjectVersionOptions, ModrinthServiceKey, ResourceDomain, getModrinthVersionFileUri, getModrinthVersionUri } from '@xmcl/runtime-api'
 import { unlink } from 'fs/promises'
 import { basename, join } from 'path'
 import { LauncherApp } from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { Inject } from '../util/objectRegistry'
-import { ResourceService } from './ResourceService'
-import { ModrinthV2Client } from '@xmcl/modrinth'
-import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 import { InstanceService } from './InstanceService'
+import { ResourceService } from './ResourceService'
+import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 
 @ExposeServiceKey(ModrinthServiceKey)
 export class ModrinthService extends AbstractService implements IModrinthService {
@@ -25,7 +25,7 @@ export class ModrinthService extends AbstractService implements IModrinthService
   @Singleton((o) => `${o.version.id}`)
   async installVersion({ version, icon, instancePath }: InstallProjectVersionOptions): Promise<InstallModrinthVersionResult> {
     const isSingleFile = version.files.length === 1
-    instancePath ||= this.instanceService.state.path
+    // instancePath ||= this.instanceService.state.path
     const resources = await Promise.all(version.files.map(async (file) => {
       this.log(`Try install project version file ${file.filename} ${file.url}`)
       const destination = join(this.app.temporaryPath, basename(file.filename))

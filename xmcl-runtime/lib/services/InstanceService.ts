@@ -95,21 +95,21 @@ export class InstanceService extends StatefulService<InstanceState> implements I
       this.storeManager
         .subscribe('instanceAdd', async (payload: Instance) => {
           await this.instanceFile.write(join(payload.path, 'instance.json'), payload)
-          await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
+          // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
           this.log(`Saved new instance ${payload.path}`)
         })
         .subscribe('instanceRemove', async () => {
-          await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
-          this.log(`Removed instance files under ${this.state.instance.path}`)
+          // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
+          // this.log(`Removed instance files under ${this.state.instance.path}`)
         })
-        .subscribe('instanceEdit', async () => {
-          const inst = this.state.all[this.state.instance.path]
-          await this.instanceFile.write(join(inst.path, 'instance.json'), inst)
-          this.log(`Saved instance ${this.state.instance.path}`)
+        .subscribe('instanceEdit', async ({ path }) => {
+          const inst = this.state.all[path]
+          await this.instanceFile.write(join(path, 'instance.json'), inst)
+          this.log(`Saved instance ${path}`)
         })
         .subscribe('instanceSelect', async (path) => {
           await this.instanceFile.write(join(path, 'instance.json'), this.state.all[path])
-          await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
+          // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
           this.log(`Saved instance selection ${path}`)
         })
     })
@@ -270,48 +270,48 @@ export class InstanceService extends StatefulService<InstanceState> implements I
    */
   @Lock('mountInstance')
   async mountInstance(path: string) {
-    if (path === this.state.path) {
-      return
-    }
+    // if (path === this.state.path) {
+    //   return
+    // }
 
-    requireString(path)
+    // requireString(path)
 
-    if (!isAbsolute(path)) {
-      path = this.getPathUnder(path)
-    }
+    // if (!isAbsolute(path)) {
+    //   path = this.getPathUnder(path)
+    // }
 
-    if (path === this.state.instance.path) { return }
+    // if (path === this.state.instance.path) { return }
 
-    const missed = await missing(path)
-    if (missed) {
-      this.log(`Cannot mount instance ${path}, either the directory not exist or the launcher has no permission.`)
-      return
-    }
+    // const missed = await missing(path)
+    // if (missed) {
+    //   this.log(`Cannot mount instance ${path}, either the directory not exist or the launcher has no permission.`)
+    //   return
+    // }
 
-    this.log(`Try to mount instance ${path}`)
+    // this.log(`Try to mount instance ${path}`)
 
-    this.state.instanceSelect(path)
+    // this.state.instanceSelect(path)
   }
 
   /**
    * Delete the managed instance from the disk
    * @param path The instance path
    */
-  async deleteInstance(path = this.state.instance.path) {
+  async deleteInstance(path: string) {
     requireString(path)
 
     // if the instance is selected now
-    if (this.state.instance.path === path) {
-      const restPath = Object.keys(this.state.all).filter(p => p !== path)
-      // if only one instance left
-      if (restPath.length === 0) {
-        // then create and select a new one
-        await this.createAndMount({ name: 'Minecraft' })
-      } else {
-        // else select the first instance
-        await this.mountInstance(restPath[0])
-      }
-    }
+    // if (this.state.path === path) {
+    //   const restPath = Object.keys(this.state.all).filter(p => p !== path)
+    //   // if only one instance left
+    //   if (restPath.length === 0) {
+    //     // then create and select a new one
+    //     await this.createAndMount({ name: 'Minecraft' })
+    //   } else {
+    //     // else select the first instance
+    //     await this.mountInstance(restPath[0])
+    //   }
+    // }
 
     this.state.instanceRemove(path)
 
@@ -325,10 +325,10 @@ export class InstanceService extends StatefulService<InstanceState> implements I
    * Edit the instance. If the `path` is not present, it will edit the current selected instance.
    * Otherwise, it will edit the instance on the provided path
    */
-  async editInstance(options: EditInstanceOptions) {
+  async editInstance(options: EditInstanceOptions & { instancePath: string }) {
     requireObject(options)
 
-    const instancePath = options.instancePath || this.state.instance.path
+    const instancePath = options.instancePath
     const state = this.state.all[instancePath]
 
     const ignored = { runtime: true, deployments: true, server: true, vmOptions: true, mcOptions: true, minMemory: true, maxMemory: true }

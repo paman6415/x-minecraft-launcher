@@ -61,14 +61,14 @@ export class ResourcePackPreviewService extends AbstractService implements IReso
     })
   }
 
-  protected getResourcePackPath(pack: string) {
+  protected getResourcePackPath(instancePath: string, pack: string) {
     if (pack === 'vanilla') {
       const version = this.instanceVersionService.state.version?.minecraftVersion
       const jarPath = new MinecraftFolder(this.getPath()).getVersionJar(version!)
       return jarPath
     }
     pack = pack.startsWith('file/') ? pack.substring(5) : pack
-    return join(this.instanceService.state.path, 'resourcepacks', pack)
+    return join(instancePath, 'resourcepacks', pack)
   }
 
   protected async loadResourcePack(path: string) {

@@ -263,7 +263,7 @@ watch(isShown, (shown) => {
   setup().then(() => {
     const id = dialog.value.parameter
     if (id) {
-      selectedTemplate.value = templates.value.find(t => t.id === id.toString())
+      selectedTemplate.value = templates.value.find(t => t.filePath === id.toString())
     }
   })
 

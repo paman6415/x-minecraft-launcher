@@ -84,7 +84,7 @@ export class InstanceUpdateService extends AbstractService implements IInstanceU
   }
 
   async getInstanceUpdateProfile(options: UpgradeModpackOptions) {
-    const instancePath = options.instancePath || this.instanceService.state.path
+    const instancePath = options.instancePath
     const instance = this.instanceService.state.all[instancePath]
     if (!instance) {
       throw new Error()

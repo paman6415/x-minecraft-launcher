@@ -68,7 +68,7 @@ provide(kMods, mods)
 provide(kInstallList, useInstallList(context.path, mods.resources))
 
 const instance = context.instance
-const { refresh } = useInstanceServerStatus(instance.value.path)
+const { refresh } = useInstanceServerStatus(instance)
 const containerRef = ref(null as null | HTMLDivElement)
 
 onMounted(() => {

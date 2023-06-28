@@ -8,7 +8,7 @@ import { kModpacks } from './modpack'
 export const AddInstanceDialogKey: DialogKey<string> = 'add-instance-dialog'
 
 export interface Template extends ModpackInstallProfile {
-  id: string
+  filePath: string
   name: string
   runtime: Required<RuntimeVersions>
   type: 'curseforge' | 'mcbbs' | 'modpack' | 'modrinth' | 'instance' | 'ftb' | 'peer'
@@ -38,7 +38,7 @@ export function useAllTemplate() {
     for (const [i, profile] of profiles.entries()) {
       const modpack = resources.value[i]
       const result: Template = {
-        id: modpack.path,
+        filePath: modpack.path,
         name: profile.instance.name,
         runtime: {
           minecraft: profile.instance.runtime.minecraft,
@@ -74,7 +74,7 @@ export function useAllTemplate() {
 
   function getPeerTemplate(id: string, name: string, man: InstanceManifest) {
     const result: Template = {
-      id,
+      filePath: id,
       name: `${man.name ?? 'Instance'}@${name}`,
       runtime: {
         minecraft: man.runtime.minecraft,
@@ -155,7 +155,7 @@ export function useAllTemplate() {
     }
 
     return {
-      id: `${man.parent}-${man.id.toString()}`,
+      filePath: `${man.parent}-${man.id.toString()}`,
       name: '',
       runtime: {},
       instance: {

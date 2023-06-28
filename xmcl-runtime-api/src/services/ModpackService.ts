@@ -46,7 +46,7 @@ export interface ExportModpackOptions {
   /**
    * The instance path to be exported
    */
-  instancePath?: string
+  instancePath: string
   /**
   * The dest path of the exported instance
   */

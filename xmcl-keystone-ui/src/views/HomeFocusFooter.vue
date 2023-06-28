@@ -81,8 +81,7 @@ import { BaseServiceKey, InstanceServiceKey } from '@xmcl/runtime-api'
 import HomeLaunchButton from './HomeLaunchButton.vue'
 import HomeSettingsSpeedDial from './HomeSettingsSpeedDial.vue'
 
-const { task, issue, refreshing } = injection(kInstanceContext)
-const { state } = useService(InstanceServiceKey)
+const { task, path, refreshing } = injection(kInstanceContext)
 const { status, pause, resume } = task
 const { openDirectory } = useService(BaseServiceKey)
 const { show: showExport } = useDialog(AppExportDialogKey)
@@ -90,6 +89,6 @@ const { show: showLogDialog } = useDialog('log')
 const { t } = useI18n()
 
 function showInstanceFolder() {
-  openDirectory(state.path)
+  openDirectory(path.value)
 }
 </script>

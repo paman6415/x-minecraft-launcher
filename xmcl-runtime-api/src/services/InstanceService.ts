@@ -18,10 +18,6 @@ export interface EditInstanceOptions extends Partial<Omit<InstanceSchema, 'runti
    * If this is undefined, it will disable the server of this instance
    */
   server?: InstanceSchema['server']
-  /**
-    * The target instance path. If this is absent, it will use the selected instance.
-    */
-  instancePath?: string
 }
 
 export class InstanceState {
@@ -30,21 +26,9 @@ export class InstanceState {
    */
   all = {} as { [path: string]: Instance }
   /**
-  * Current selected path
-  */
-  path = '' as string
-
-  /**
    * All selected instances.
    */
   instances: Instance[] = []
-
-  /**
-   * The selected instance config.
-   */
-  get instance(): Instance {
-    return this.instances.find(v => v.path === this.path) ?? DEFAULT_PROFILE
-  }
 
   instanceAdd(instance: Instance) {
     /**
@@ -67,16 +51,16 @@ export class InstanceState {
   }
 
   instanceSelect(path: string) {
-    let inst = this.instances.find(i => i.path === (path || this.path))
-    if (inst) {
-      this.path = path
-    } else if (this.path === '') {
-      this.path = Object.keys(this.all)[0]
-    }
-    inst = this.instances.find(i => i.path === (path || this.path))
-    if (inst) {
-      inst.lastAccessDate = Date.now()
-    }
+    // let inst = this.instances.find(i => i.path === (path || this.path))
+    // if (inst) {
+    //   this.path = path
+    // } else if (this.path === '') {
+    //   this.path = Object.keys(this.all)[0]
+    // }
+    // inst = this.instances.find(i => i.path === (path || this.path))
+    // if (inst) {
+    //   inst.lastAccessDate = Date.now()
+    // }
   }
 
   instanceMove({ from, to }: { from: string; to: string }) {
@@ -94,10 +78,9 @@ export class InstanceState {
    * @param settings The modified data
    */
   instanceEdit(settings: DeepPartial<InstanceSchema> & { path: string }) {
-    const inst = this.instances.find(i => i.path === (settings.path || this.path)) /* this.all[settings.path || this.path] */
+    const inst = this.instances.find(i => i.path === (settings.path)) /* this.all[settings.path || this.path] */
 
     if (!inst) {
-      console.error(`Cannot commit profile. Illegal State with missing profile ${this.path}`)
       return
     }
 
@@ -206,7 +189,7 @@ export interface InstanceService extends StatefulService<InstanceState> {
    * Edit the instance. If the `path` is not present, it will edit the current selected instance.
    * Otherwise, it will edit the instance on the provided path.
    */
-  editInstance(options: EditInstanceOptions): Promise<void>
+  editInstance(options: EditInstanceOptions & { instancePath: string }): Promise<void>
   /**
    * Add a directory as managed instance folder. It will try to load the instance.json.
    * If it's a common folder, it will try to create instance from the directory data.

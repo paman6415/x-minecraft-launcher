@@ -162,11 +162,14 @@ export async function clearDirectoryNarrow(dir: string) {
 export async function createSymbolicLink(srcPath: string, destPath: string, logger: Logger) {
   try {
     await symlink(srcPath, destPath, 'dir')
+    return true
   } catch (e) {
     logger.warn(`Cannot create symbolic link ${srcPath} -> ${destPath} by dir, try junction: ${e}`)
     if ((e as any).code === EPERM_ERROR && platform() === 'win32') {
       await symlink(srcPath, destPath, 'junction')
+      return false
     }
+    throw e
   }
 }
 
@@ -186,10 +189,14 @@ export function linkWithTimeout(from: string, to: string, timeout = 1500) {
   })
 }
 
-export function linkWithTimeoutOrCopy(from: string, to: string, timeout = 1500) {
-  return linkWithTimeout(from, to, timeout).catch(() => {
-    return copyFile(from, to)
-  })
+export async function linkWithTimeoutOrCopy(from: string, to: string, timeout = 1500) {
+  try {
+    await linkWithTimeout(from, to, timeout)
+    return true
+  } catch {
+    await copyFile(from, to)
+    return false
+  }
 }
 
 /**

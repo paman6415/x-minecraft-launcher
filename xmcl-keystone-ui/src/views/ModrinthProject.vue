@@ -125,6 +125,7 @@
           >
             <ModrinthProjectVersions
               :versions="project.versions"
+              :mod-loaders="project.loaders"
               :project="project.id"
               :modpack="project.project_type === 'modpack'"
             />
@@ -172,7 +173,6 @@ const projectId = computed(() => props.id)
 const { project, refreshing, refreshError, refresh } = useModrinthProject(projectId)
 
 // modrinth project
-
 const installTo = ref(project.value?.project_type === 'mod' ? instanceState.path : '')
 
 // modrinth version status

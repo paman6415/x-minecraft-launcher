@@ -432,6 +432,7 @@ export function useInstallList(instancePath: Ref<string>, mods: Ref<Resource[]>)
         ...toInstallModrinth.map(([version, icon]) => installVersion({
           version,
           icon,
+          instancePath: instancePath.value,
         }).then(() => {
           successedToInstallModrinth.push(version)
         }, (e) => {

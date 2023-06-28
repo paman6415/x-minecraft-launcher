@@ -81,7 +81,7 @@ class ReactiveNatState extends NatState {
 class ReactiveInstanceState extends InstanceState {
   instanceEdit(settings: DeepPartial<InstanceSchema> & { path: string }): void {
     super.instanceEdit(settings)
-    const inst = this.instances.find(i => i.path === (settings.path || this.path))!
+    const inst = this.instances.find(i => i.path === (settings.path))!
     if ('showLog' in settings) {
       set(inst, 'showLog', settings.showLog)
     }
