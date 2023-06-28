@@ -54,19 +54,20 @@
 <script lang="ts" setup>
 import Hint from '@/components/Hint.vue'
 import { useDrop, useOperation, useService } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { usePresence } from '@/composables/presence'
 import { injection } from '@/util/inject'
 import { InstanceSavesServiceKey } from '@xmcl/runtime-api'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { useDialog } from '../composables/dialog'
-import { useInstances } from '../composables/instance'
+import { kInstance, useInstances } from '../composables/instance'
 import SaveViewPagePreviewCard from './SaveCard.vue'
 import SaveViewPageCopyFromDialog from './SaveCopyFromDialog.vue'
 import SaveViewPageCopyToDialog from './SaveCopyToDialog.vue'
 import SaveViewPageFloatButton from './SaveFloatButton.vue'
+import { kInstanceSave } from '@/composables/save'
 
-const { saves: { saves }, path } = injection(kInstanceContext)
+const { path } = injection(kInstance)
+const { saves } = injection(kInstanceSave)
 const { deleteSave, importSave, exportSave, cloneSave: copySave } = useService(InstanceSavesServiceKey)
 const { instances } = useInstances()
 const { showSaveDialog, showOpenDialog } = windowController
@@ -103,7 +104,7 @@ function onStartDelete(id: string) {
   show()
 }
 
-const { name } = injection(kInstanceContext)
+const { name } = injection(kInstance)
 usePresence(computed(() => t('presence.save', { instance: name.value })))
 
 async function doImport() {

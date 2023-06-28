@@ -1,8 +1,10 @@
 import { UserProfile } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { useDialog } from './dialog'
 import { LoginDialog } from './login'
 import { LaunchMenuItem } from './launchButton'
+
+export const kUserDiagnose: InjectionKey<ReturnType<typeof useUserDiagnose>> = Symbol('UserDiagnose')
 
 export function useUserDiagnose(user: Ref<UserProfile | undefined>) {
   const { show } = useDialog(LoginDialog)

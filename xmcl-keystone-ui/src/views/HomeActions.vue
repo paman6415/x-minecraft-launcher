@@ -55,26 +55,21 @@
 
 <script lang=ts setup>
 import { useService } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
-import { kCompact } from '@/composables/scrollTop'
+import { kInstance } from '@/composables/instance'
+import { useInFocusMode } from '@/composables/uiLayout'
 import { vSharedTooltip } from '@/directives/sharedTooltip'
 import { injection } from '@/util/inject'
-import { BaseServiceKey, VersionServiceKey } from '@xmcl/runtime-api'
+import { BaseServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
 import { AppExportDialogKey } from '../composables/instanceExport'
-import { useInFocusMode } from '@/composables/uiLayout'
 
 const isFocus = useInFocusMode()
 
-const { path, refreshing, name, version, resolvedVersion } = injection(kInstanceContext)
+const { path, refreshing } = injection(kInstance)
 const { openDirectory } = useService(BaseServiceKey)
 const { show: showLogDialog } = useDialog('log')
 const { show: showExport } = useDialog(AppExportDialogKey)
 const { t } = useI18n()
-const { showVersionDirectory } = useService(VersionServiceKey)
-
-const scrollTop = injection(kCompact)
-const compact = computed(() => scrollTop.value)
 
 function showInstanceFolder() {
   openDirectory(path.value)

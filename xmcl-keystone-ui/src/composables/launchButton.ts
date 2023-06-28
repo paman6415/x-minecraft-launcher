@@ -1,7 +1,6 @@
 import { injection } from '@/util/inject'
 import { TaskState } from '@xmcl/runtime-api'
 import { useDialog } from './dialog'
-import { kInstanceContext } from './instanceContext'
 import { LaunchStatusDialogKey, useLaunch } from './launch'
 
 export interface LaunchMenuItem {

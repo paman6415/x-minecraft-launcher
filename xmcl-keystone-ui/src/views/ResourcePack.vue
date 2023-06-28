@@ -120,7 +120,6 @@
 <script lang=ts setup>
 import Hint from '@/components/Hint.vue'
 import { useDragTransferList, useDropImport, useFilterCombobox, useService } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { ResourcePackItem, useInstanceResourcePackItem } from '@/composables/instanceResourcePackItem'
 import { usePresence } from '@/composables/presence'
 import { kCompact } from '@/composables/scrollTop'
@@ -130,6 +129,8 @@ import { Ref, computed, reactive, ref } from 'vue'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { useDialog } from '../composables/dialog'
 import ResourcePackCard from './ResourcePackCard.vue'
+import { kInstance } from '@/composables/instance'
+import { kInstanceResourcePacks } from '@/composables/instanceResourcePack'
 
 function setupFilter(disabled: Ref<ResourcePackItem[]>, enabled: Ref<ResourcePackItem[]>) {
   function getFilterOptions(item: ResourcePackItem) {
@@ -164,7 +165,8 @@ const filterText = ref('')
 const rightList: Ref<any> = ref(null)
 const leftList: Ref<any> = ref(null)
 
-const { resourcePacks, path } = injection(kInstanceContext)
+const { path } = injection(kInstance)
+const resourcePacks = injection(kInstanceResourcePacks)
 const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, resourcePacks.enabled, resourcePacks.disabled)
 const { removeResources } = useService(ResourceServiceKey)
 const { push } = useRouter()
@@ -173,7 +175,6 @@ const data = reactive({
   dragging: false,
   deletingPack: null as ResourcePackItem | null,
 })
-const { minecraft } = injection(kInstanceContext)
 const { show } = useDialog('deletion')
 const leftListElem = computed(() => leftList.value.$el) as Ref<HTMLElement>
 const rightListElem = computed(() => rightList.value.$el) as Ref<HTMLElement>
@@ -227,7 +228,7 @@ function goPreview() {
   push('/resource-pack-preview')
 }
 
-const { name } = injection(kInstanceContext)
+const { name } = injection(kInstance)
 usePresence(computed(() => t('presence.resourcePack', { instance: name.value })))
 </script>
 

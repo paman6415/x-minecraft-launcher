@@ -128,15 +128,15 @@
 <script lang="ts" setup>
 import InstanceManifestFileTree from '@/components/InstanceManifestFileTree.vue'
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
+import { kInstance } from '@/composables/instance'
 import { InstanceFileNode, provideFileNodes } from '@/composables/instanceFileNodeData'
 import { InstanceInstallDialog } from '@/composables/instanceUpdate'
 import { useVuetifyColor } from '@/composables/vuetify'
 import { basename } from '@/util/basename'
+import { injection } from '@/util/inject'
 import { getUpstreamFromResource } from '@/util/upstream'
 import { EditInstanceOptions, InstanceFileOperation, InstanceFileUpdate, InstanceInstallServiceKey, InstanceServiceKey, InstanceUpdateServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
-import { injection } from '@/util/inject'
-import { kInstanceContext } from '@/composables/instanceContext'
 
 const selected = ref([] as string[])
 
@@ -151,7 +151,7 @@ const { getInstanceUpdateProfile } = useService(InstanceUpdateServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { state, editInstance } = useService(InstanceServiceKey)
 const { t } = useI18n()
-const { path: instancePath } = injection(kInstanceContext)
+const { path: instancePath } = injection(kInstance)
 
 const oldRuntime = computed(() => state.instance.runtime)
 

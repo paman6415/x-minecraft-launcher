@@ -96,7 +96,6 @@
 
 <script lang=ts setup>
 import AvatarItem from '@/components/AvatarItem.vue'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { kCompact } from '@/composables/scrollTop'
 import { useInFocusMode } from '@/composables/uiLayout'
 import { getAgoOrDate, getHumanizeDuration, TimeUnit } from '@/util/date'
@@ -104,8 +103,11 @@ import { injection } from '@/util/inject'
 import HomeHeaderInstallStatus from './HomeHeaderInstallStatus.vue'
 import HomeLaunchButton from './HomeLaunchButton.vue'
 import useSWRV from 'swrv'
+import { kInstance } from '@/composables/instance'
+import { kInstanceVersion } from '@/composables/instanceVersion'
 
-const { task, version, instance } = injection(kInstanceContext)
+const { instance } = injection(kInstance)
+const { task, runtime: version } = injection(kInstanceVersion)
 const isInFocusMode = useInFocusMode()
 const { total, progress, status, name: taskName } = task
 const { t } = useI18n()

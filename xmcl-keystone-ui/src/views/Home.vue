@@ -37,10 +37,11 @@
 
 <script lang=ts setup>
 import { kInstallList, useInstallList } from '@/composables/installList'
-import { kInstanceContext, useInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
 import { kMods, useMods } from '@/composables/mods'
 import { usePresence } from '@/composables/presence'
 import { kCompact, useCompactScroll } from '@/composables/scrollTop'
+import { injection } from '@/util/inject'
 import { useInstanceServerStatus } from '../composables/serverStatus'
 import HomeHeader from './HomeHeader.vue'
 import HomeInstanceUpdateDialog from './HomeInstanceUpdateDialog.vue'
@@ -58,21 +59,17 @@ router.afterEach((r) => {
   }
 })
 
-const context = useInstanceContext()
-
-provide(kInstanceContext, context)
-
 const mods = useMods()
 provide(kMods, mods)
 
-provide(kInstallList, useInstallList(context.path, mods.resources))
+const { path, isServer, instance } = injection(kInstance)
+provide(kInstallList, useInstallList(path, mods.resources))
 
-const instance = context.instance
 const { refresh } = useInstanceServerStatus(instance)
 const containerRef = ref(null as null | HTMLDivElement)
 
 onMounted(() => {
-  if (context.isServer.value) {
+  if (isServer.value) {
     refresh()
   }
 })

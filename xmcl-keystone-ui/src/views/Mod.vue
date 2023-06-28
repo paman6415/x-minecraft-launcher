@@ -68,7 +68,6 @@
 <script lang=ts setup>
 import Hint from '@/components/Hint.vue'
 import { kColorTheme } from '@/composables/colorTheme'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { useModDeletion } from '@/composables/modDelete'
 import { useModDragging } from '@/composables/modDraggable'
 import { useModDropHandler } from '@/composables/modDropHandler'
@@ -81,8 +80,11 @@ import DeleteDialog from '../components/DeleteDialog.vue'
 import { ModItem, useInstanceModItems } from '../composables/instanceModItems'
 import ModCard from './ModCard.vue'
 import ModDeleteView from './ModDeleteView.vue'
+import { kInstance } from '@/composables/instance'
+import { kInstanceModsContext } from '@/composables/instanceMods'
 
-const { mods: { mods: _mods, provideRuntime, isValidating: loading }, instance } = injection(kInstanceContext)
+const { instance } = injection(kInstance)
+const { mods: _mods, provideRuntime, isValidating: loading } = injection(kInstanceModsContext)
 const { cardColor } = injection(kColorTheme)
 const { items: mods, enableMod, disableMod, updateTag, updating } = useInstanceModItems(instance, _mods)
 const filtered = useModFilter(mods)

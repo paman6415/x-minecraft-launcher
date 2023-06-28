@@ -84,12 +84,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           await this.createAndMount({ name: 'Minecraft' })
         }
       } else {
-        const selectedInstancePath = isAbsolute(selectedInstance) ? selectedInstance : this.getPathUnder(selectedInstance)
-        if (this.state.all[selectedInstancePath]) {
-          await this.mountInstance(selectedInstancePath)
-        } else {
-          await this.mountInstance(Object.keys(state.all)[0])
-        }
       }
 
       this.storeManager
@@ -98,19 +92,10 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
           this.log(`Saved new instance ${payload.path}`)
         })
-        .subscribe('instanceRemove', async () => {
-          // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
-          // this.log(`Removed instance files under ${this.state.instance.path}`)
-        })
         .subscribe('instanceEdit', async ({ path }) => {
           const inst = this.state.all[path]
           await this.instanceFile.write(join(path, 'instance.json'), inst)
           this.log(`Saved instance ${path}`)
-        })
-        .subscribe('instanceSelect', async (path) => {
-          await this.instanceFile.write(join(path, 'instance.json'), this.state.all[path])
-          // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })
-          this.log(`Saved instance selection ${path}`)
         })
     })
   }
@@ -260,7 +245,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     requireObject(payload)
 
     const path = await this.createInstance(payload)
-    await this.mountInstance(path)
     return path
   }
 
@@ -289,8 +273,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     // }
 
     // this.log(`Try to mount instance ${path}`)
-
-    // this.state.instanceSelect(path)
   }
 
   /**

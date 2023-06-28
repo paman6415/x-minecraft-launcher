@@ -139,11 +139,13 @@
 
 <script lang=ts setup>
 import AvatarItem from '@/components/AvatarItem.vue'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
+import { kModsSearch } from '@/composables/modSearch'
 import { injection } from '@/util/inject'
 
-const { modSearch, version, modSearchItems } = injection(kInstanceContext)
-const { modrinth, curseforge, mods, keyword } = modSearch
+const { runtime: version } = injection(kInstance)
+const { modSearchItems } = injection(kInstanceContext)
+const { modrinth, curseforge, mods, keyword } = injection(kModsSearch)
 const { tab } = modSearchItems
 const curseforgeCount = computed(() => curseforge.value ? curseforge.value.pagination.totalCount : 0)
 const modrinthCount = computed(() => modrinth.value ? modrinth.value.total_hits : 0)

@@ -1,7 +1,7 @@
 import type { JavaVersion, ResolvedVersion } from '@xmcl/core'
 import { Instance, Java, JavaRecord, JavaServiceKey, parseVersion } from '@xmcl/runtime-api'
 import useSWRV from 'swrv'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { useService } from './service'
 
 export enum JavaCompatibleState {
@@ -22,18 +22,8 @@ export interface JavaRecommendation {
   forge: string
   requirement: string
 }
-/**
- * Current java path is invalid. Like file not existed or java is broken.
- */
-// export const InvalidJavaIssueKey: IssueKey<InvalidJavaIssue> = 'invalidJava'
-/**
- * Current selected java might be incompatible with minecraft
- */
-// export const IncompatibleJavaIssueKey: IssueKey<IncompatibleJavaIssue> = 'incompatibleJava'
-/**
- * Cannot find proper java for fulfill the requirement
- */
-// export const MissingJavaIssueKey: IssueKey<MissingJavaIssue> = 'missingJava'
+
+export const kInstanceJava: InjectionKey<ReturnType<typeof useInstanceJava>> = Symbol('InstanceJava')
 
 export function useInstanceJava(instance: Ref<Instance>, version: Ref<ResolvedVersion | undefined>) {
   const { resolveJava, state } = useService(JavaServiceKey)

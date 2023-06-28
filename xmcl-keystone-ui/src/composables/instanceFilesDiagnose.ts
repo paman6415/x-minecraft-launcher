@@ -1,5 +1,7 @@
 import { InstanceFile } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
+
+export const kInstanceFilesDiagnose: InjectionKey<ReturnType<typeof useInstanceFilesDiagnose>> = Symbol('InstanceFilesDiagnose')
 
 export function useInstanceFilesDiagnose(instanceFiles: Ref<InstanceFile[]>, install: () => Promise<void>) {
   const { t } = useI18n()

@@ -1,17 +1,15 @@
 import { clientCurseforgeV1, clientModrinthV2 } from '@/util/clients'
 import { FileModLoaderType, Mod, ModsSearchSortField, Pagination } from '@xmcl/curseforge'
 import { SearchResult } from '@xmcl/modrinth'
-import { InstanceData, InstanceModsServiceKey, Resource } from '@xmcl/runtime-api'
+import { InstanceData, Resource } from '@xmcl/runtime-api'
 import { filter } from 'fuzzy'
 import debounce from 'lodash.debounce'
-import { Ref } from 'vue'
-import { kMods, useMods } from './mods'
-import { useService } from './service'
+import { Ref, InjectionKey } from 'vue'
 import { InstanceMod } from './instanceMods'
 
-export function useModsSearch(keyword: Ref<string>, runtime: Ref<InstanceData['runtime']>, instanceMods: Ref<InstanceMod[]>) {
-  const { resources, refreshing } = inject(kMods, () => useMods(), true)
+export const kModsSearch: InjectionKey<ReturnType<typeof useModsSearch>> = Symbol('ModsSearch')
 
+export function useModsSearch(keyword: Ref<string>, resources: Ref<Resource[]>, runtime: Ref<InstanceData['runtime']>, instanceMods: Ref<InstanceMod[]>) {
   const isValidResource = (r: Resource) => {
     const useForge = !!runtime.value.forge
     const useFabric = !!runtime.value.fabricLoader

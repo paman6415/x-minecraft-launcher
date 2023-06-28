@@ -1,6 +1,6 @@
 import { PackMeta } from '@xmcl/resourcepack'
 import { GameOptions, isPersistedResource, packFormatVersionRange, Resource, ResourceDomain } from '@xmcl/runtime-api'
-import { computed, Ref } from 'vue'
+import { computed, Ref, InjectionKey } from 'vue'
 
 import unknownPack from '@/assets/unknown_pack.png'
 import { useDomainResources } from './resources'
@@ -40,6 +40,8 @@ export interface InstanceResourcePack extends PackMeta.Pack {
    */
   resource?: Resource
 }
+
+export const kInstanceResourcePacks: InjectionKey<ReturnType<typeof useInstanceResourcePacks>> = Symbol('InstanceResourcePacks')
 
 /**
  * The hook return a reactive resource pack array.

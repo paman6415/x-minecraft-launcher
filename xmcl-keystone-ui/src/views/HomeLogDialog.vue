@@ -73,7 +73,7 @@
 
 <script lang=ts setup>
 import { useService } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
 import { injection } from '@/util/inject'
 import { InstanceLogServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
@@ -92,7 +92,7 @@ const {
 const { isShown, hide } = useDialog('log')
 const { t } = useI18n()
 
-const { path } = injection(kInstanceContext)
+const { path } = injection(kInstance)
 
 const data = reactive({
   tab: null as any as number,

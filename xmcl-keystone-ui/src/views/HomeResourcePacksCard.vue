@@ -10,13 +10,13 @@
   />
 </template>
 <script lang="ts" setup>
-import { kInstanceContext } from '@/composables/instanceContext'
 import { injection } from '@/util/inject'
 import HomeCardBase from './HomeCardBase.vue'
+import { kInstanceResourcePacks } from '@/composables/instanceResourcePack'
 
 const props = defineProps<{ row: number; rowCount: number }>()
 
-const { resourcePacks: { enabled } } = injection(kInstanceContext)
+const { enabled } = injection(kInstanceResourcePacks)
 const resourcePackCount = computed(() => enabled.value?.length || 0)
 
 const icons = computed(() => {

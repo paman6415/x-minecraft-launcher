@@ -73,8 +73,8 @@ import { vSharedTooltip } from '@/directives/sharedTooltip'
 import { getColor } from '@/util/color'
 import { injection } from '@/util/inject'
 import { CompatibleDetail } from '@/util/modCompatible'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { ModItem } from '@/composables/instanceModItems'
+import { kInstanceModsContext } from '@/composables/instanceMods'
 
 defineProps<{
   source: ModItem
@@ -83,7 +83,7 @@ defineProps<{
   onDeleteTag(tag: string): void
 }>()
 
-const { mods: { modsIconsMap: icons } } = injection(kInstanceContext)
+const { modsIconsMap: icons } = injection(kInstanceModsContext)
 
 const { getTooltip } = useModCompatibleTooltip()
 

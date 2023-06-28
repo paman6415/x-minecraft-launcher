@@ -181,7 +181,6 @@ import { InstallServiceKey, LocalVersionHeader, versionCompare, VersionServiceKe
 import { useLocalVersions } from '../composables/version'
 import { useRefreshable, useService } from '@/composables'
 import { usePresence } from '@/composables/presence'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { injection } from '@/util/inject'
 
 const props = withDefaults(defineProps<{

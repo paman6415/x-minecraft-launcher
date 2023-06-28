@@ -3,14 +3,18 @@ import { injection } from '@/util/inject'
 import { BaseServiceKey, LaunchServiceKey, UserServiceKey } from '@xmcl/runtime-api'
 import { computed } from 'vue'
 import { DialogKey } from './dialog'
-import { kInstanceContext } from './instanceContext'
+import { kInstance } from './instance'
+import { kInstanceVersion } from './instanceVersion'
+import { kInstanceJava } from './instanceJava'
 
 export const LaunchStatusDialogKey: DialogKey<void> = 'launch-status'
 
 export function useLaunch() {
   const { state: userState, refreshUser } = useService(UserServiceKey)
   const { state: globalState, getMemoryStatus } = useService(BaseServiceKey)
-  const { path, resolvedVersion, instance, java: { java } } = injection(kInstanceContext)
+  const { path, instance } = injection(kInstance)
+  const { resolvedVersion } = injection(kInstanceVersion)
+  const { java } = injection(kInstanceJava)
   const { state, launch } = useService(LaunchServiceKey)
   const status = computed(() => state.status)
   const launchCount = computed(() => state.activeCount)

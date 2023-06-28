@@ -69,6 +69,7 @@ import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
 import { kDropHandler, useDropHandler } from '@/composables/dropHandler'
 import { useDefaultErrorHandler } from '@/composables/errorHandler'
 import { kImageDialog, useImageDialog } from '@/composables/imageDialog'
+import { useContext } from '@/composables/instanceContext'
 import { kModpacks, useModpacks } from '@/composables/modpack'
 import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 import { kUILayout, useUILayout } from '@/composables/uiLayout'
@@ -128,8 +129,8 @@ useAuthProfileImportNotification()
 useI18nSync()
 useThemeSync()
 useExternalRoute()
+useContext()
 provide(kUILayout, useUILayout())
-provide(kUserContext, useUserContext())
 provide(kModpacks, useModpacks())
 provide(kImageDialog, useImageDialog())
 provide(kSWRVConfig, useSWRVConfig())

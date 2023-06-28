@@ -12,13 +12,13 @@
 <script lang="ts" setup>
 import HomeCardBase from './HomeCardBase.vue'
 import { injection } from '@/util/inject'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstanceSave } from '@/composables/save'
 
 const props = defineProps<{ row: number; rowCount: number }>()
 
-const { saves } = injection(kInstanceContext)
-const savesLength = computed(() => saves.saves.value.length)
-const all = computed(() => saves.saves.value.map(s => ({ name: s.name, icon: s.icon?.replace(/\\/g, '\\\\') })))
+const { saves } = injection(kInstanceSave)
+const savesLength = computed(() => saves.value.length)
+const all = computed(() => saves.value.map(s => ({ name: s.name, icon: s.icon?.replace(/\\/g, '\\\\') })))
 const icons = computed(() => all.value.slice(0, props.row * props.rowCount))
 const { t } = useI18n()
 const { push } = useRouter()

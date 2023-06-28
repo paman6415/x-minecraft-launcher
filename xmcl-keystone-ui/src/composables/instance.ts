@@ -1,27 +1,30 @@
 import { useService } from '@/composables/service'
-import { Instance, InstanceData, InstanceServiceKey } from '@xmcl/runtime-api'
-import { Ref, computed } from 'vue'
+import { InstanceData, InstanceServiceKey } from '@xmcl/runtime-api'
+import { Ref, computed, InjectionKey } from 'vue'
 import { useLocalStorageCacheStringValue } from './cache'
 
-export function useInstanceIsServer(i: Ref<Instance>) {
-  return computed(() => i.value.server !== null)
-}
+export const kInstance: InjectionKey<ReturnType<typeof useInstance>> = Symbol('Instance')
 
 /**
  * Use the general info of the instance
  */
 export function useInstance() {
   const { state } = useService(InstanceServiceKey)
+  const runtime = computed(() => instance.value.runtime)
 
   const path = useLocalStorageCacheStringValue('selectedInstancePath', state.instances[0].path)
-  // const instance = computed(() => state.all[state.path])
   const instance = computed(() => state.all[path.value])
+  const name = computed(() => instance.value.name)
+  const isServer = computed(() => instance.value.server !== null)
   const select = (p: string) => {
     path.value = p
   }
 
   return {
     path,
+    runtime,
+    name,
+    isServer,
     select,
     instance,
     refreshing: computed(() => false),

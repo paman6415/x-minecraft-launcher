@@ -95,12 +95,13 @@
 <script lang=ts setup>
 import AvatarItem from '@/components/AvatarItem.vue'
 import FilterCombobox from '@/components/FilterCombobox.vue'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
+import { kInstanceModsContext } from '@/composables/instanceMods'
 import { kCompact } from '@/composables/scrollTop'
 import { injection } from '@/util/inject'
 
-const { mods: { enabledModCounts: modCount } } = injection(kInstanceContext)
-const { version } = injection(kInstanceContext)
+const { enabledModCounts: modCount } = injection(kInstanceModsContext)
+const { runtime: version } = injection(kInstance)
 const compact = injection(kCompact)
 const { t } = useI18n()
 const noModLoader = computed(() =>

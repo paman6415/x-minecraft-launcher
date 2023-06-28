@@ -115,12 +115,13 @@
 
 <script lang=ts setup>
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { injection } from '@/util/inject'
 import { InstanceServiceKey, JavaServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
 import { JavaIssueDialogKey, useJava } from '../composables/java'
 import { useNotifier } from '../composables/notifier'
+import { kInstanceJava } from '@/composables/instanceJava'
+import { kInstance } from '@/composables/instance'
 
 const { showOpenDialog } = windowController
 const { t } = useI18n()
@@ -131,7 +132,8 @@ const { installDefaultJava, refreshLocalJava } = useService(JavaServiceKey)
 const { subscribeTask } = useNotifier()
 const downloadingJava = useServiceBusy(JavaServiceKey, 'installDefaultJava')
 
-const { java } = injection(kInstanceContext)
+const { path } = injection(kInstance)
+const java = injection(kInstanceJava)
 
 const recommendation = java.recommendation
 
@@ -149,7 +151,7 @@ const { refresh, refreshing } = useRefreshable(async () => {
 })
 async function selectLocalJava() {
   if (recommendation.value?.recommendedVersion?.path) {
-    subscribeTask(editInstance({ java: recommendation.value.recommendedVersion.path }), t('java.modifyInstance'))
+    subscribeTask(editInstance({ instancePath: path.value, java: recommendation.value.recommendedVersion.path }), t('java.modifyInstance'))
     isShown.value = false
   }
 }
@@ -169,7 +171,7 @@ async function findLocalJava() {
   }
 
   const javas = await Promise.all(filePaths.map(add))
-  subscribeTask(editInstance({ java: javas.find((j) => !!j)!.path }), t('java.modifyInstance'))
+  subscribeTask(editInstance({ instancePath: path.value, java: javas.find((j) => !!j)!.path }), t('java.modifyInstance'))
   isShown.value = false
 }
 

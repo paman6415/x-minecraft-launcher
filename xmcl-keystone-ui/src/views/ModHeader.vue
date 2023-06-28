@@ -40,7 +40,7 @@
 </template>
 <script lang="ts" setup>
 import { useService } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
 import { injection } from '@/util/inject'
 import { InstanceModsServiceKey } from '@xmcl/runtime-api'
 
@@ -52,6 +52,6 @@ const { t } = useI18n()
 
 const { showDirectory } = useService(InstanceModsServiceKey)
 
-const { path } = injection(kInstanceContext)
+const { path } = injection(kInstance)
 
 </script>

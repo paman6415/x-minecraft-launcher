@@ -11,13 +11,13 @@
 </template>
 <script lang="ts" setup>
 import { useSemaphore } from '@/composables'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstanceModsContext } from '@/composables/instanceMods'
 import { injection } from '@/util/inject'
 import HomeCardBase from './HomeCardBase.vue'
 
 const props = defineProps<{ row: number; rowCount: number }>()
 
-const { mods: { mods, enabledModCounts } } = injection(kInstanceContext)
+const { mods, enabledModCounts } = injection(kInstanceModsContext)
 const icons = computed(() => mods.value.filter(i => i.enabled).map((m) => ({ name: m.name + ' (' + m.version + ')', icon: m.icon }))
   .slice(0, props.row * props.rowCount))
 const { push } = useRouter()

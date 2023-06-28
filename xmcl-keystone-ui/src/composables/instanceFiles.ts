@@ -1,7 +1,9 @@
 import { InstanceFile, InstanceInstallServiceKey } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { useRefreshable } from './refreshable'
 import { useService } from './service'
+
+export const kInstanceFiles: InjectionKey<ReturnType<typeof useInstanceFiles>> = Symbol('InstanceFiles')
 
 export function useInstanceFiles(instancePath: Ref<string>) {
   const files: Ref<InstanceFile[]> = ref([])

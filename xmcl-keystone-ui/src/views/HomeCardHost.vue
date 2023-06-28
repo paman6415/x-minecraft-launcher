@@ -111,15 +111,16 @@
 </template>
 <script lang="ts" setup>
 
-import { useInFocusMode } from '@/composables/uiLayout'
 import { useLocalStorageCache, useLocalStorageCacheBool } from '@/composables/cache'
-import { kInstanceContext } from '@/composables/instanceContext'
+import { kInstance } from '@/composables/instance'
 import { kUpstream } from '@/composables/instanceUpdate'
 import { useMojangNews } from '@/composables/mojangNews'
+import { useInFocusMode } from '@/composables/uiLayout'
 import { injection } from '@/util/inject'
 import debounce from 'lodash.debounce'
 import { GridItem, GridLayout } from 'vue-grid-layout'
 import CurseforgeProject from './CurseforgeProject.vue'
+import HomeFocus from './HomeFocus.vue'
 import HomeModCard from './HomeModCard.vue'
 import HomeNewsCard from './HomeNewsCard.vue'
 import HomeResourcePacksCard from './HomeResourcePacksCard.vue'
@@ -128,9 +129,8 @@ import HomeScreenshotCard from './HomeScreenshotCard.vue'
 import HomeServerStatusBar from './HomeServerStatusBar.vue'
 import HomeShaderPackCard from './HomeShaderPackCard.vue'
 import ModrinthProject from './ModrinthProject.vue'
-import HomeFocus from './HomeFocus.vue'
 
-const { instance, isServer } = injection(kInstanceContext)
+const { instance, isServer } = injection(kInstance)
 
 const isFocus = useInFocusMode()
 

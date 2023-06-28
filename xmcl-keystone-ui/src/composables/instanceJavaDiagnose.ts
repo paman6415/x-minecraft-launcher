@@ -1,10 +1,12 @@
 import { JavaRecord, JavaServiceKey } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { JavaRecommendation } from './instanceJava'
 import { JavaIssueDialogKey } from './java'
 import { useDialog } from './dialog'
 import { useService } from './service'
 import { LaunchMenuItem } from './launchButton'
+
+export const kInstanceJavaDiagnose: InjectionKey<ReturnType<typeof useInstanceJavaDiagnose>> = Symbol('InstanceJavaDiagnose')
 
 export function useInstanceJavaDiagnose(javaRecommendation: Ref<JavaRecommendation | undefined>) {
   const { t } = useI18n()

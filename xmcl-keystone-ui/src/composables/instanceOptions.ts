@@ -1,7 +1,9 @@
 import { Instance, InstanceOptionsServiceKey } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
+
+export const kInstanceOptions: InjectionKey<ReturnType<typeof useInstanceOptions>> = Symbol('InstanceOptions')
 
 export function useInstanceOptions(instance: Ref<Instance>) {
   const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)

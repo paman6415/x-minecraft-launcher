@@ -1,74 +1,51 @@
-import { InjectionKey } from 'vue'
-import { useInstance, useInstanceIsServer } from './instance'
-import { useInstanceJava } from './instanceJava'
+import { kInstance, useInstance } from './instance'
+import { kInstanceFiles, useInstanceFiles } from './instanceFiles'
+import { kInstanceFilesDiagnose, useInstanceFilesDiagnose } from './instanceFilesDiagnose'
+import { kInstanceJava, useInstanceJava } from './instanceJava'
+import { kInstanceJavaDiagnose, useInstanceJavaDiagnose } from './instanceJavaDiagnose'
 import { kInstanceModsContext, useInstanceMods } from './instanceMods'
-import { useInstanceOptions } from './instanceOptions'
-import { useInstanceVersion } from './instanceVersion'
-import { useLaunchTask } from './launchTask'
-import { useInstanceSaves } from './save'
-import { useInstanceResourcePacks } from './instanceResourcePack'
-import { useInstanceVersionDiagnose } from './instanceVersionDiagnose'
-import { useInstanceFilesDiagnose } from './instanceFilesDiagnose'
-import { useInstanceJavaDiagnose } from './instanceJavaDiagnose'
-import { useUserDiagnose } from './userDiagnose'
-import { useService } from './service'
-import { UserServiceKey } from '@xmcl/runtime-api'
-import { useInstanceFiles } from './instanceFiles'
+import { kInstanceOptions, useInstanceOptions } from './instanceOptions'
+import { kInstanceResourcePacks, useInstanceResourcePacks } from './instanceResourcePack'
+import { kInstanceVersion, useInstanceVersion } from './instanceVersion'
+import { kInstanceVersionDiagnose, useInstanceVersionDiagnose } from './instanceVersionDiagnose'
+import { kLaunchTask, useLaunchTask } from './launchTask'
+import { kInstanceSave, useInstanceSaves } from './save'
+import { kUserContext, useUserContext } from './user'
+import { kUserDiagnose, useUserDiagnose } from './userDiagnose'
 
 /**
  * The context to hold the instance related data. This is used to share data between different components.
  */
-export function useInstanceContext() {
-  const { path, instance, refreshing, select } = useInstance()
-  const name = computed(() => instance.value.name)
-  const { runtime, versionHeader, resolvedVersion, minecraft, forge, fabricLoader, folder, quiltLoader, isValidating: isRefreshingVersion } = useInstanceVersion(instance)
-  const isServer = useInstanceIsServer(instance)
-  const task = useLaunchTask(path, runtime, versionHeader)
-  const java = useInstanceJava(instance, resolvedVersion)
-
-  const options = useInstanceOptions(instance)
-  const saves = useInstanceSaves(instance)
+export function useContext() {
+  const user = useUserContext()
+  const instance = useInstance()
+  const instanceVersion = useInstanceVersion(instance.instance)
+  const java = useInstanceJava(instance.instance, instanceVersion.resolvedVersion)
+  const options = useInstanceOptions(instance.instance)
+  const saves = useInstanceSaves(instance.instance)
   const resourcePacks = useInstanceResourcePacks(options.gameOptions)
-  const mods = useInstanceMods(instance, java.java)
-  const files = useInstanceFiles(path)
+  const mods = useInstanceMods(instance.instance, java.java)
+  const files = useInstanceFiles(instance.path)
+  const task = useLaunchTask(instance.path, instance.runtime, instanceVersion.versionHeader)
 
-  provide(kInstanceModsContext, mods)
-
-  const versionDiagnose = useInstanceVersionDiagnose(runtime, resolvedVersion)
+  const versionDiagnose = useInstanceVersionDiagnose(instance.runtime, instanceVersion.resolvedVersion)
   const javaDiagnose = useInstanceJavaDiagnose(java.recommendation)
   const filesDiagnose = useInstanceFilesDiagnose(files.files, files.install)
-  const { state } = useService(UserServiceKey)
-  const userDiagnose = useUserDiagnose(computed(() => state.users[state.selectedUser.id]))
+  const userDiagnose = useUserDiagnose(user.userProfile)
 
-  return {
-    path,
-    name,
-    mods,
-    options,
-    java,
-    saves,
-    files,
-    resourcePacks,
-    version: runtime,
-    isRefreshingVersion,
-    resolvedVersion,
-    minecraft,
-    forge,
-    fabricLoader,
-    folder,
-    quiltLoader,
-    instance,
-    isServer,
-    refreshing,
-    select,
+  provide(kUserContext, user)
+  provide(kInstance, instance)
+  provide(kInstanceVersion, instanceVersion)
+  provide(kInstanceJava, java)
+  provide(kInstanceOptions, options)
+  provide(kInstanceSave, saves)
+  provide(kInstanceResourcePacks, resourcePacks)
+  provide(kInstanceModsContext, mods)
+  provide(kInstanceFiles, files)
+  provide(kLaunchTask, task)
 
-    task,
-
-    versionDiagnose,
-    javaDiagnose,
-    filesDiagnose,
-    userDiagnose,
-  }
+  provide(kInstanceVersionDiagnose, versionDiagnose)
+  provide(kInstanceJavaDiagnose, javaDiagnose)
+  provide(kInstanceFilesDiagnose, filesDiagnose)
+  provide(kUserDiagnose, userDiagnose)
 }
-
-export const kInstanceContext: InjectionKey<ReturnType<typeof useInstanceContext>> = Symbol('InstanceContext')

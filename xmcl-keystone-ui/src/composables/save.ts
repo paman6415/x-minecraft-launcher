@@ -1,7 +1,9 @@
 import { useService } from '@/composables'
 import { Instance, InstanceSavesServiceKey } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
+import { Ref, InjectionKey } from 'vue'
 import { useState } from './syncableState'
+
+export const kInstanceSave: InjectionKey<ReturnType<typeof useInstanceSaves>> = Symbol('InstanceSave')
 
 export function useInstanceSaves(instance: Ref<Instance>) {
   const { watch } = useService(InstanceSavesServiceKey)

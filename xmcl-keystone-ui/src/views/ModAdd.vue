@@ -176,8 +176,11 @@
 import ErrorView from '@/components/ErrorView.vue'
 import Hint from '@/components/Hint.vue'
 import SplitPane from '@/components/SplitPane.vue'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { kInstallList } from '@/composables/installList'
+import { kInstance } from '@/composables/instance'
+import { kInstanceModsContext } from '@/composables/instanceMods'
+import { kInstanceVersion } from '@/composables/instanceVersion'
+import { useModsSearch } from '@/composables/modSearch'
 import { ModListSearchItem, useModSearchItems } from '@/composables/modSearchItems'
 import { kCompact } from '@/composables/scrollTop'
 import { injection } from '@/util/inject'
@@ -189,9 +192,10 @@ import ModAddCurseforgeDetail from './ModAddCurseforgeDetail.vue'
 import ModAddModrinthDetail from './ModAddModrinthDetail.vue'
 import ModAddResourceDetail from './ModAddResourceDetail.vue'
 import ModAddSearchItem from './ModAddSearchItem.vue'
-import { useModsSearch } from '@/composables/modSearch'
 
-const { minecraft, fabricLoader, forge, quiltLoader, instance, version, mods: { mods: instanceMods } } = injection(kInstanceContext)
+const { instance, runtime: version } = injection(kInstance)
+const { minecraft, fabricLoader, forge, quiltLoader } = injection(kInstanceVersion)
+const { mods: instanceMods } = injection(kInstanceModsContext)
 
 const modSearch = useModsSearch(ref(''), version, instanceMods)
 const modSearchItems = useModSearchItems(modSearch.keyword, modSearch.modrinth, modSearch.curseforge, modSearch.mods, modSearch.existedMods)

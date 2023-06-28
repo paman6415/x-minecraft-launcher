@@ -50,19 +50,6 @@ export class InstanceState {
     this.instances = this.instances.filter(i => i.path !== path)
   }
 
-  instanceSelect(path: string) {
-    // let inst = this.instances.find(i => i.path === (path || this.path))
-    // if (inst) {
-    //   this.path = path
-    // } else if (this.path === '') {
-    //   this.path = Object.keys(this.all)[0]
-    // }
-    // inst = this.instances.find(i => i.path === (path || this.path))
-    // if (inst) {
-    //   inst.lastAccessDate = Date.now()
-    // }
-  }
-
   instanceMove({ from, to }: { from: string; to: string }) {
     const inst = this.instances.find(i => i.path === from)
     if (inst) {

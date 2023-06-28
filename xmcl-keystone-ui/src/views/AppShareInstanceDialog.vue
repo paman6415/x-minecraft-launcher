@@ -170,15 +170,15 @@ import InstanceManifestFileTree from '../components/InstanceManifestFileTree.vue
 import { useDialog } from '../composables/dialog'
 import { useNotifier } from '../composables/notifier'
 import { provideFileNodes, useInstanceFileNodesFromLocal } from '@/composables/instanceFileNodeData'
-import { kInstanceContext } from '@/composables/instanceContext'
 import { injection } from '@/util/inject'
+import { kInstance } from '@/composables/instance'
 
 const { isShown, dialog } = useDialog('share-instance')
 
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { getInstanceManifest } = useService(InstanceManifestServiceKey)
 const { shareInstance } = useService(PeerServiceKey)
-const { path } = injection(kInstanceContext)
+const { path } = injection(kInstance)
 const { t } = useI18n()
 const { subscribeTask } = useNotifier()
 
