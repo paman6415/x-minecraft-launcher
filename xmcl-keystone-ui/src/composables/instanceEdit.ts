@@ -10,7 +10,7 @@ export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanc
  * @param instance The instance to edit
  * @returns The instance edit data
  */
-export function useInstanceEdit(instance: Ref<Instance | undefined>) {
+export function useInstanceEdit(instance: Ref<Instance>) {
   const { editInstance: edit } = useService(InstanceServiceKey)
   const { state: baseState } = useService(BaseServiceKey)
 
@@ -207,12 +207,14 @@ export function useInstanceEdit(instance: Ref<Instance | undefined>) {
     if (!instance.value?.server) {
       await edit({
         ...payload,
+        instancePath: instance.value?.path,
         author: data.author,
         description: data.description,
       })
     } else {
       await edit({
         ...payload,
+        instancePath: instance.value?.path,
         server: {
           host: data.host,
           port: Number.parseInt(data.port, 10),

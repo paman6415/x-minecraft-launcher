@@ -2,6 +2,13 @@ import { injection } from '@/util/inject'
 import { TaskState } from '@xmcl/runtime-api'
 import { useDialog } from './dialog'
 import { LaunchStatusDialogKey, useLaunch } from './launch'
+import { kInstanceVersionDiagnose } from './instanceVersionDiagnose'
+import { kInstanceJavaDiagnose } from './instanceJavaDiagnose'
+import { kInstanceFilesDiagnose } from './instanceFilesDiagnose'
+import { kUserDiagnose } from './userDiagnose'
+import { kLaunchTask } from './launchTask'
+import { kInstanceFiles } from './instanceFiles'
+import { kInstanceVersion } from './instanceVersion'
 
 export interface LaunchMenuItem {
   title: string
@@ -16,15 +23,13 @@ export function useLaunchButton() {
   const { show: showLaunchStatusDialog } = useDialog(LaunchStatusDialogKey)
   const { show: showMultiInstanceDialog } = useDialog('multi-instance-launch')
 
-  const {
-    isRefreshingVersion,
-    files: { refreshing: refreshingFiles },
-    task: { status, pause, resume },
-    versionDiagnose: { issues: versionIssues, fix: fixVersionIssues, loading: loadingVersionIssues },
-    javaDiagnose: { issue: javaIssue, fix: fixJavaIssue },
-    filesDiagnose: { issue: filesIssue, fix: fixInstanceFileIssue },
-    userDiagnose: { issue: userIssue, fix: fixUserIssue },
-   } = injection(kInstanceContext)
+  const { issues: versionIssues, fix: fixVersionIssues, loading: loadingVersionIssues } = injection(kInstanceVersionDiagnose)
+  const { issue: javaIssue, fix: fixJavaIssue } = injection(kInstanceJavaDiagnose)
+  const { issue: filesIssue, fix: fixInstanceFileIssue } = injection(kInstanceFilesDiagnose)
+  const { issue: userIssue, fix: fixUserIssue } = injection(kUserDiagnose)
+  const { status, pause, resume } = injection(kLaunchTask)
+  const { refreshing: refreshingFiles } = injection(kInstanceFiles)
+  const { isValidating: isRefreshingVersion } = injection(kInstanceVersion)
 
   const { t } = useI18n()
   const launchButtonFacade = computed(() => {

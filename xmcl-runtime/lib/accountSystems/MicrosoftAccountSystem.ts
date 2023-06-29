@@ -1,12 +1,11 @@
 import { GameProfileAndTexture, LoginOptions, Skin, SkinPayload, UserException, UserProfile } from '@xmcl/runtime-api'
-import { Logger } from '../util/log'
-import { toRecord } from '../util/object'
-import { MicrosoftAuthenticator } from '../clients/MicrosoftAuthenticator'
+import { MicrosoftAuthenticator, MojangClient } from '@xmcl/user'
 import { MicrosoftOAuthClient } from '../clients/MicrosoftOAuthClient'
 import { XBoxResponse, normalizeSkinData } from '../entities/user'
 import { UserTokenStorage } from '../entities/userTokenStore'
+import { Logger } from '../util/log'
+import { toRecord } from '../util/object'
 import { UserAccountSystem } from './AccountSystem'
-import { MojangClient } from '@xmcl/user'
 
 export class MicrosoftAccountSystem implements UserAccountSystem {
   constructor(

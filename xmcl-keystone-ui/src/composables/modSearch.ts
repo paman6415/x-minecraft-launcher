@@ -1,15 +1,15 @@
 import { clientCurseforgeV1, clientModrinthV2 } from '@/util/clients'
-import { FileModLoaderType, Mod, ModsSearchSortField, Pagination } from '@xmcl/curseforge'
+import { Mod, getModItemFromResource } from '@/util/mod'
+import { Mod as CFMod, FileModLoaderType, ModsSearchSortField, Pagination } from '@xmcl/curseforge'
 import { SearchResult } from '@xmcl/modrinth'
 import { InstanceData, Resource } from '@xmcl/runtime-api'
 import { filter } from 'fuzzy'
 import debounce from 'lodash.debounce'
-import { Ref, InjectionKey } from 'vue'
-import { InstanceMod } from './instanceMods'
+import { InjectionKey, Ref } from 'vue'
 
 export const kModsSearch: InjectionKey<ReturnType<typeof useModsSearch>> = Symbol('ModsSearch')
 
-export function useModsSearch(keyword: Ref<string>, resources: Ref<Resource[]>, runtime: Ref<InstanceData['runtime']>, instanceMods: Ref<InstanceMod[]>) {
+export function useModsSearch(keyword: Ref<string>, resources: Ref<Resource[]>, runtime: Ref<InstanceData['runtime']>, instanceMods: Ref<Mod[]>) {
   const isValidResource = (r: Resource) => {
     const useForge = !!runtime.value.forge
     const useFabric = !!runtime.value.fabricLoader
@@ -19,11 +19,13 @@ export function useModsSearch(keyword: Ref<string>, resources: Ref<Resource[]>, 
     if (useQuilt) return !!r.metadata.quilt
     return false
   }
+
   const mods = computed(() => keyword.value
     ? filter(keyword.value, resources.value, {
       extract: (r) => `${r.name} ${r.fileName}`,
-    }).map((r) => r.original ? r.original : r as any as Resource).filter(isValidResource)
-    : resources.value.filter(isValidResource))
+    }).map((r) => r.original ? r.original : r as any as Resource)
+      .filter(isValidResource).map(getModItemFromResource)
+    : resources.value.filter(isValidResource).map(getModItemFromResource))
 
   const existedMods = computed(() =>
     keyword.value.length === 0
@@ -33,7 +35,7 @@ export function useModsSearch(keyword: Ref<string>, resources: Ref<Resource[]>, 
 
   const modrinth = ref(undefined as SearchResult | undefined)
   const curseforge = ref(undefined as {
-    data: Mod[]
+    data: CFMod[]
     pagination: Pagination
   } | undefined)
 

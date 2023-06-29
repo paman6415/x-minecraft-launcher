@@ -141,15 +141,13 @@
 import AvatarItem from '@/components/AvatarItem.vue'
 import { kInstance } from '@/composables/instance'
 import { kModsSearch } from '@/composables/modSearch'
+import { kModSearchItems } from '@/composables/modSearchItems'
 import { injection } from '@/util/inject'
 
 const { runtime: version } = injection(kInstance)
-const { modSearchItems } = injection(kInstanceContext)
 const { modrinth, curseforge, mods, keyword } = injection(kModsSearch)
-const { tab } = modSearchItems
+const { tab } = injection(kModSearchItems)
 const curseforgeCount = computed(() => curseforge.value ? curseforge.value.pagination.totalCount : 0)
 const modrinthCount = computed(() => modrinth.value ? modrinth.value.total_hits : 0)
-// const { state } = useService(InstanceModsServiceKey)
-// const modCount = computed(() => state.mods.filter(m => !m.path.endsWith('.disabled')).length)
 const { t } = useI18n()
 </script>

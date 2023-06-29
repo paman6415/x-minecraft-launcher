@@ -1,9 +1,9 @@
+import { Mod } from '@/util/mod'
 import { getDiceCoefficient } from '@/util/sort'
-import { Mod, Pagination } from '@xmcl/curseforge'
+import { Mod as CFMod, Pagination } from '@xmcl/curseforge'
 import { SearchResult, SearchResultHit } from '@xmcl/modrinth'
 import { Resource } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
-import { InstanceMod } from './instanceMods'
+import { InjectionKey, Ref } from 'vue'
 
 /**
  * Each search item represent a project of a mod
@@ -24,15 +24,17 @@ export interface ModListSearchItem {
   fabric?: boolean
   quilt?: boolean
 
-  curseforge?: Mod
+  curseforge?: CFMod
   modrinth?: SearchResultHit
   resource?: Resource[]
 }
 
+export const kModSearchItems: InjectionKey<ReturnType<typeof useModSearchItems>> = Symbol('ModSearchItems')
+
 export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResult | undefined>, curseforge: Ref<{
-  data: Mod[]
+  data: CFMod[]
   pagination: Pagination
-} | undefined>, mods: Ref<Resource[]>, instanceMods: Ref<InstanceMod[]>) {
+} | undefined>, localMods: Ref<Mod[]>, instanceMods: Ref<Mod[]>) {
   const tab = ref(0)
   const disableModrinth = computed(() => tab.value !== 0 && tab.value !== 3)
   const disableCurseforge = computed(() => tab.value !== 0 && tab.value !== 2)
@@ -65,7 +67,7 @@ export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResu
       }
     }
     const grouped: Record<string, ModListSearchItem> = {}
-    const getItemForResource = (m: InstanceMod) => {
+    const getItemForMod = (m: Mod) => {
       const description = m.description
       const name = m.name
       if (!grouped[name]) {
@@ -81,20 +83,20 @@ export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResu
         }
         return grouped[name]
       } else {
-        if (!grouped[name].resource?.find((r) => r.path === m.path || r.ino === m.ino || r.storedPath === m.storedPath)) {
-          grouped[name].resource?.push(m)
-          if (m.metadata.forge) grouped[name].forge = true
-          if (m.metadata.fabric) grouped[name].fabric = true
-          if (m.metadata.quilt) grouped[name].quilt = true
+        if (!grouped[name].resource?.find((r) => r.path === m.path || r.ino === m.resource.ino || r.storedPath === m.resource.storedPath)) {
+          grouped[name].resource?.push(m.resource)
+          if (m.resource.metadata.forge) grouped[name].forge = true
+          if (m.resource.metadata.fabric) grouped[name].fabric = true
+          if (m.resource.metadata.quilt) grouped[name].quilt = true
         }
       }
     }
     const prepend: ModListSearchItem[] = []
 
     for (const i of instanceMods.value) {
-      const item = getItemForResource(i)
+      const item = getItemForMod(i)
       if (item) {
-        item.installed = i
+        item.installed = i.resource
         prepend.push(item)
       }
     }
@@ -109,8 +111,8 @@ export function useModSearchItems(keyword: Ref<string>, modrinth: Ref<SearchResu
       })
     }
     if (!disableLocal.value) {
-      for (const m of mods.value) {
-        const i = getItemForResource(m)
+      for (const m of localMods.value) {
+        const i = getItemForMod(m)
         if (i) {
           results.push([i, getDiceCoefficient(keyword.value, m.name)])
         }

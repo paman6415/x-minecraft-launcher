@@ -9,6 +9,9 @@ import { kInstanceResourcePacks, useInstanceResourcePacks } from './instanceReso
 import { kInstanceVersion, useInstanceVersion } from './instanceVersion'
 import { kInstanceVersionDiagnose, useInstanceVersionDiagnose } from './instanceVersionDiagnose'
 import { kLaunchTask, useLaunchTask } from './launchTask'
+import { kModsSearch, useModsSearch } from './modSearch'
+import { kModSearchItems, useModSearchItems } from './modSearchItems'
+import { useMods } from './mods'
 import { kInstanceSave, useInstanceSaves } from './save'
 import { kUserContext, useUserContext } from './user'
 import { kUserDiagnose, useUserDiagnose } from './userDiagnose'
@@ -27,6 +30,10 @@ export function useContext() {
   const mods = useInstanceMods(instance.instance, java.java)
   const files = useInstanceFiles(instance.path)
   const task = useLaunchTask(instance.path, instance.runtime, instanceVersion.versionHeader)
+
+  const allMods = useMods()
+  const modsSearch = useModsSearch(ref(''), allMods.resources, instance.runtime, mods.mods)
+  const modSearchItems = useModSearchItems(modsSearch.keyword, modsSearch.modrinth, modsSearch.curseforge, modsSearch.mods, modsSearch.existedMods)
 
   const versionDiagnose = useInstanceVersionDiagnose(instance.runtime, instanceVersion.resolvedVersion)
   const javaDiagnose = useInstanceJavaDiagnose(java.recommendation)
@@ -48,4 +55,7 @@ export function useContext() {
   provide(kInstanceJavaDiagnose, javaDiagnose)
   provide(kInstanceFilesDiagnose, filesDiagnose)
   provide(kUserDiagnose, userDiagnose)
+
+  provide(kModsSearch, modsSearch)
+  provide(kModSearchItems, modSearchItems)
 }

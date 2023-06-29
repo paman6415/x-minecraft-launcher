@@ -47,6 +47,7 @@
         >
           <TemplateContent
             style="overflow: auto; max-height: 70vh; padding: 24px 24px 16px"
+            :loading="refreshing"
             :templates="templates"
             :value="selectedTemplate"
             @select="onSelect"
@@ -114,18 +115,20 @@ const { isShown, dialog, show: showAddInstance, hide } = useDialog(AddInstanceDi
 const { show } = useDialog('task')
 const { create, reset, data: creationData } = useInstanceCreation()
 const router = useRouter()
+
 const { on, removeListener } = useService(ResourceServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { t } = useI18n()
 const { notify } = useNotifier()
-const { templates } = useAllTemplate()
+const { templates, refreshing } = useAllTemplate()
 
 provide(CreateOptionKey, creationData)
 
 const valid = ref(false)
 const step = ref(2)
-const selectedTemplate: Ref<Template | undefined> = ref(undefined)
+const selectedTemplatePath = ref('')
 
+const selectedTemplate = computed(() => templates.value.find(f => f.filePath === selectedTemplatePath.value))
 const isModpackContentShown = computed(() => step.value === 3)
 const selectedTemplateName = computed(() => selectedTemplate.value?.name ?? '')
 
@@ -135,7 +138,7 @@ function quit() {
 }
 
 function onSelect(template: Template) {
-  selectedTemplate.value = template
+  selectedTemplatePath.value = template.filePath
 }
 
 watch(selectedTemplate, (t) => {
@@ -196,7 +199,7 @@ const { refreshing: creating, refresh: onCreate } = useRefreshable(async () => {
   hide()
 })
 
-let listener: any = undefined
+const listener: any = undefined
 onMounted(() => {
   on('resourceAdd', (r) => {
     if (r.domain === ResourceDomain.Modpacks) {
@@ -255,17 +258,15 @@ watch(isShown, (shown) => {
   }
   if (!shown) {
     setTimeout(() => {
-      selectedTemplate.value = undefined
+      selectedTemplatePath.value = ''
       reset()
     }, 500)
     return
   }
-  setup().then(() => {
-    const id = dialog.value.parameter
-    if (id) {
-      selectedTemplate.value = templates.value.find(t => t.filePath === id.toString())
-    }
-  })
+  const id = dialog.value.parameter
+  if (id) {
+    selectedTemplatePath.value = id
+  }
 
   step.value = 2
   valid.value = true

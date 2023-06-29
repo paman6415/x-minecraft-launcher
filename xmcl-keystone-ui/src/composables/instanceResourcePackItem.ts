@@ -5,27 +5,30 @@ import { useService } from '@/composables'
 import { isStringArrayEquals } from '@/util/equal'
 import debounce from 'lodash.debounce'
 import { InstanceResourcePack } from './instanceResourcePack'
+import { isRangeCompatible } from '@/util/rangeCompatibale'
 
 export interface ResourcePackItem {
   resourcePack: InstanceResourcePack
   name: string
   tags: string[]
+  compatible: boolean | 'maybe'
 }
 
 /**
  * The hook return a reactive resource pack array.
  */
-export function useInstanceResourcePackItem(instancePath: Ref<string>, enabledPacks: Ref<InstanceResourcePack[]>, disabledPacks: Ref<InstanceResourcePack[]>) {
+export function useInstanceResourcePackItem(instancePath: Ref<string>, minecraft: Ref<string>, enabledPacks: Ref<InstanceResourcePack[]>, disabledPacks: Ref<InstanceResourcePack[]>) {
   const { updateResources } = useService(ResourceServiceKey)
   const { editGameSetting } = useService(InstanceOptionsServiceKey)
   const { showDirectory } = useService(InstanceResourcePacksServiceKey)
 
   function getItemFromPack(pack: InstanceResourcePack): ResourcePackItem {
-    return {
+    return reactive({
       resourcePack: markRaw(pack),
+      compatible: computed(() => isRangeCompatible(pack.acceptingRange ?? '', minecraft.value)),
       name: pack.name,
       tags: [...pack.tags],
-    }
+    })
   }
 
   const enabled = computed(() => enabledPacks.value.map(getItemFromPack))

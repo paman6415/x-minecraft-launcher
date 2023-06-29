@@ -105,11 +105,11 @@ import HomeLaunchButton from './HomeLaunchButton.vue'
 import useSWRV from 'swrv'
 import { kInstance } from '@/composables/instance'
 import { kInstanceVersion } from '@/composables/instanceVersion'
+import { kLaunchTask } from '@/composables/launchTask'
 
-const { instance } = injection(kInstance)
-const { task, runtime: version } = injection(kInstanceVersion)
+const { instance, runtime: version } = injection(kInstance)
 const isInFocusMode = useInFocusMode()
-const { total, progress, status, name: taskName } = task
+const { total, progress, status, name: taskName } = injection(kLaunchTask)
 const { t } = useI18n()
 
 const compact = injection(kCompact)

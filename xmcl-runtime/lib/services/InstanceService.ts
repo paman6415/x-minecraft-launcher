@@ -83,7 +83,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           this.log('Cannot find any instances, try to init one default modpack.')
           await this.createAndMount({ name: 'Minecraft' })
         }
-      } else {
       }
 
       this.storeManager

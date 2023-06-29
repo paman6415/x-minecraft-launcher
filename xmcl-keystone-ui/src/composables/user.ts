@@ -26,9 +26,11 @@ export function useUserContext() {
   const userProfile: Ref<UserProfile> = computed(() => state.users[state.selectedUser.id] ?? NO_USER_PROFILE)
   const gameProfile: Ref<GameProfileAndTexture> = computed(() => userProfile.value.profiles[userProfile.value.selectedProfile] ?? NO_GAME_PROFILE)
   const users = computed(() => Object.values(state.users))
+  const select = (id: string) => {}
 
   return {
     users,
+    select,
     userProfile,
     gameProfile,
   }

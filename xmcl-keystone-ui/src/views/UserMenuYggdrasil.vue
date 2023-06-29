@@ -31,7 +31,7 @@
           text
           color="primary"
           :disabled="profile.id === user.selectedProfile"
-          @click="selectGameProfile(profile.id)"
+          @click="selectGameProfile(user.id, profile.id)"
         >
           <v-icon>
             {{ profile.id === user.selectedProfile ? 'check_circle' : 'done' }}

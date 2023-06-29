@@ -1,11 +1,11 @@
 /* eslint-disable quotes */
 import { DownloadTask } from '@xmcl/installer'
 import {
+  UserService as IUserService,
   LoginOptions,
   SaveSkinOptions, UploadSkinOptions,
   UserProfile,
   UserSchema,
-  UserService as IUserService,
   UserServiceKey,
   UserState,
 } from '@xmcl/runtime-api'
@@ -15,7 +15,7 @@ import { YggdrasilAccountSystem } from '../accountSystems/YggdrasilAccountSystem
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { loadYggdrasilApiProfile } from '../entities/user'
-import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
+import { UserTokenStorage, kUserTokenStorage } from '../entities/userTokenStore'
 import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { createSafeFile } from '../util/persistance'
@@ -64,18 +64,12 @@ export class UserService extends StatefulService<UserState> implements IUserServ
           }),
           loadYggdrasilApiProfile('https://authserver.ely.by/api/authlib-injector').then(api => {
             this.state.userYggdrasilServicePut(api)
-          })]).then(() => {
-            this.refreshUser()
-            if (this.state.selectedUser.id === '' && Object.keys(this.state.users).length > 0) {
-              const [userId, user] = Object.entries(this.state.users)[0]
-              this.selectUser(userId)
-            }
-          })
+          })])
       } else {
-        this.refreshUser()
+        // this.refreshUser()
         if (this.state.selectedUser.id === '' && Object.keys(this.state.users).length > 0) {
           const [userId, user] = Object.entries(this.state.users)[0]
-          this.selectUser(userId)
+          // this.selectUser(userId)
         }
       }
     })
@@ -206,8 +200,8 @@ export class UserService extends StatefulService<UserState> implements IUserServ
    * Refresh the current user login status
    */
   @Lock('refreshUser')
-  async refreshUser() {
-    const user = UserState.getUser(this.state)
+  async refreshUser(userId: string) {
+    const user = this.state.users[userId]
 
     if (!user) {
       this.log('Skip refresh user status as the user is empty.')
@@ -224,29 +218,9 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     this.state.userProfile(newUser)
   }
 
-  /**
-  * Switch user account.
-  */
-  @Lock('selectUser')
-  async selectUser(userId: string) {
-    requireString(userId)
-
-    if (userId === this.state.selectedUser.id) {
-      return
-    }
-
-    this.log(`Switch game profile ${this.state.selectedUser.id}->${userId}`)
-    this.state.userSelect(userId)
-    await this.refreshUser()
-  }
-
-  @Lock('selectGameProfile')
-  async selectGameProfile(profileId: string) {
-    requireString(profileId)
-
-    const user = UserState.getUser(this.state)
+  async selectGameProfile(userId: string, profileId: string) {
+    const user = this.state.users[userId]?.profiles?.[profileId]
     if (!user) {
-      this.warn(`No valid user`)
       return
     }
 

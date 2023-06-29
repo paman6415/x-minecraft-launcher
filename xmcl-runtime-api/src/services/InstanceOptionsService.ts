@@ -8,8 +8,6 @@ export interface EditGameSettingOptions extends GameSetting {
    * The instance to edit game setting.
    */
   instancePath: string
-
-  addResourcePack?: string[]
 }
 
 export interface EditShaderOptions extends ShaderOptions {

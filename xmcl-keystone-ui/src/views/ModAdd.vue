@@ -178,10 +178,9 @@ import Hint from '@/components/Hint.vue'
 import SplitPane from '@/components/SplitPane.vue'
 import { kInstallList } from '@/composables/installList'
 import { kInstance } from '@/composables/instance'
-import { kInstanceModsContext } from '@/composables/instanceMods'
 import { kInstanceVersion } from '@/composables/instanceVersion'
-import { useModsSearch } from '@/composables/modSearch'
-import { ModListSearchItem, useModSearchItems } from '@/composables/modSearchItems'
+import { kModsSearch } from '@/composables/modSearch'
+import { ModListSearchItem, kModSearchItems } from '@/composables/modSearchItems'
 import { kCompact } from '@/composables/scrollTop'
 import { injection } from '@/util/inject'
 import { File } from '@xmcl/curseforge'
@@ -193,15 +192,10 @@ import ModAddModrinthDetail from './ModAddModrinthDetail.vue'
 import ModAddResourceDetail from './ModAddResourceDetail.vue'
 import ModAddSearchItem from './ModAddSearchItem.vue'
 
-const { instance, runtime: version } = injection(kInstance)
+const { instance } = injection(kInstance)
 const { minecraft, fabricLoader, forge, quiltLoader } = injection(kInstanceVersion)
-const { mods: instanceMods } = injection(kInstanceModsContext)
-
-const modSearch = useModsSearch(ref(''), version, instanceMods)
-const modSearchItems = useModSearchItems(modSearch.keyword, modSearch.modrinth, modSearch.curseforge, modSearch.mods, modSearch.existedMods)
 
 const modLoaderFilters = ref([] as string[])
-const { tab } = modSearchItems
 
 onMounted(() => {
   const items = [] as string[]
@@ -221,8 +215,10 @@ const {
   modrinth, modrinthError, loadingModrinth,
   curseforge, curseforgeError, loadingCurseforge,
   loading,
-} = modSearch
-const { items: searchItems } = modSearchItems
+  loadMoreCurseforge,
+  loadMoreModrinth,
+} = injection(kModsSearch)
+const { items: searchItems, tab } = injection(kModSearchItems)
 const items = computed(() => {
   const all = searchItems.value
   const allowForge = modLoaderFilters.value.indexOf('forge') !== -1
@@ -296,10 +292,10 @@ const onScroll = (e: Event) => {
   const target = e.target as HTMLElement
   if (!target) return
   if (target.scrollTop + target.clientHeight >= target.scrollHeight - 100) {
-    if (modSearchItems.tab.value === 2) {
-      modSearch.loadMoreCurseforge()
-    } else if (modSearchItems.tab.value === 3) {
-      modSearch.loadMoreModrinth()
+    if (tab.value === 2) {
+      loadMoreCurseforge()
+    } else if (tab.value === 3) {
+      loadMoreModrinth()
     }
   }
 }

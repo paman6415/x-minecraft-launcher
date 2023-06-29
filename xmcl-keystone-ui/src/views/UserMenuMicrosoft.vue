@@ -204,9 +204,9 @@ const changed = computed(() => {
 const { refresh: save, refreshing: saving } = useRefreshable(
   async function save() {
     if (name.value !== gameProfile.value.name) {
-      const result = await checkNameAvailability(name.value)
+      const result = await checkNameAvailability(props.user, name.value)
       if (result === NameAvailability.AVAILABLE) {
-        await setName(name.value)
+        await setName(props.user, name.value)
       } else if (result === NameAvailability.DUPLICATE) {
         nameError.value = t('nameError.duplicate')
       } else if (result === NameAvailability.NOT_ALLOWED) {

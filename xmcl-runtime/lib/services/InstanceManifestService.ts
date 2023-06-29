@@ -167,13 +167,13 @@ export class InstanceManifestService extends AbstractService implements IInstanc
 
     return {
       files,
-      name: instance.name,
-      description: instance.description,
-      mcOptions: instance.mcOptions,
-      vmOptions: instance.vmOptions,
-      runtime: instance.runtime,
-      maxMemory: instance.maxMemory,
-      minMemory: instance.minMemory,
+      name: '', // instance.name,
+      description: '', // instance.description,
+      mcOptions: [], // instance.mcOptions,
+      vmOptions: [], // instance.vmOptions,
+      runtime: {} as any, // instance.runtime,
+      maxMemory: 0, // instance.maxMemory,
+      minMemory: 0, // instance.minMemory,
     }
   }
 }

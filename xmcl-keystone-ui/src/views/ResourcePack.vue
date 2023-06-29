@@ -131,6 +131,7 @@ import { useDialog } from '../composables/dialog'
 import ResourcePackCard from './ResourcePackCard.vue'
 import { kInstance } from '@/composables/instance'
 import { kInstanceResourcePacks } from '@/composables/instanceResourcePack'
+import { kInstanceVersion } from '@/composables/instanceVersion'
 
 function setupFilter(disabled: Ref<ResourcePackItem[]>, enabled: Ref<ResourcePackItem[]>) {
   function getFilterOptions(item: ResourcePackItem) {
@@ -166,8 +167,9 @@ const rightList: Ref<any> = ref(null)
 const leftList: Ref<any> = ref(null)
 
 const { path } = injection(kInstance)
+const { minecraft } = injection(kInstanceVersion)
 const resourcePacks = injection(kInstanceResourcePacks)
-const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, resourcePacks.enabled, resourcePacks.disabled)
+const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, minecraft, resourcePacks.enabled, resourcePacks.disabled)
 const { removeResources } = useService(ResourceServiceKey)
 const { push } = useRouter()
 const { t } = useI18n()

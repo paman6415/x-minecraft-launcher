@@ -9,7 +9,6 @@ import { isSystemError } from '../util/error'
 import { missing } from '../util/fs'
 import { requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
 
@@ -19,14 +18,14 @@ import { AbstractService, ExposeServiceKey } from './Service'
 @ExposeServiceKey(InstanceOptionsServiceKey)
 export class InstanceOptionsService extends AbstractService implements IInstanceOptionsService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
-    @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(ResourceService) resourceService: ResourceService,
   ) {
     super(app)
     resourceService.registerInstaller(ResourceDomain.ResourcePacks, async (resource, instancePath) => {
       await this.editGameSetting({
         instancePath,
-        addResourcePack: [relative(resource.path, instancePath)],
+        // TODO: implement this
+        // addResourcePack: [relative(resource.path, instancePath)],
       })
     })
 
@@ -134,54 +133,10 @@ export class InstanceOptionsService extends AbstractService implements IInstance
     const diff: Frame = {}
     for (const key of Object.keys(options)) {
       if (key === 'instancePath') continue
-      if (key === 'resourcePacks') continue
       if (key in current && (current as any)[key] !== (options as any)[key]) {
         (diff as any)[key] = (options as any)[key]
       }
     }
-    // resourcePacks:["vanilla","file/§lDefault§r..§l3D§r..Low§0§o.zip"]
-    if (options.resourcePacks) {
-      const mcversion = instance.runtime.minecraft
-      let resourcePacks: string[]
-      if ((isReleaseVersion(mcversion) && compareRelease(mcversion, '1.13.0') >= 0) ||
-        (isSnapshotPreview(mcversion) && compareSnapshot(mcversion, '17w43a') >= 0)) {
-        resourcePacks = options.resourcePacks
-          .map(r => (r !== 'vanilla' && !r.startsWith('file/') ? `file/${r}` : r))
-        if (resourcePacks.every((p) => p !== 'vanilla')) {
-          resourcePacks.unshift('vanilla')
-        }
-      } else {
-        resourcePacks = options.resourcePacks.filter(r => r !== 'vanilla')
-          .map(r => (r.startsWith('file/') ? r.substring(5) : r))
-      }
-      if (diff.resourcePacks?.length !== resourcePacks.length || diff.resourcePacks?.some((p, i) => p !== resourcePacks[i])) {
-        diff.resourcePacks = resourcePacks
-      }
-    }
-
-    if (diff.resourcePacks) {
-      const incompatibleResourcePacks = [] as string[]
-      for (const path of diff.resourcePacks) {
-        if (path === 'vanilla') {
-          continue
-        }
-        const resourceName = path.startsWith('file/') ? path.substring('file/'.length) : path
-        const resource = await this.resourceService.getResourceUnder({ domain: ResourceDomain.ResourcePacks, fileName: resourceName })
-        if (resource && resource.metadata.resourcepack?.pack_format) {
-          const format = resource.metadata.resourcepack.pack_format
-          const versionRange = packFormatVersionRange[format]
-          if (versionRange) {
-            if (!isCompatible(versionRange, instance.runtime.minecraft)) {
-              incompatibleResourcePacks.push(path)
-            } else {
-              continue
-            }
-          }
-        }
-        incompatibleResourcePacks.push(path)
-      }
-    }
-
     if (Object.keys(diff).length > 0) {
       this.log(`Edit gamesetting: ${JSON.stringify(diff, null, 4)} to ${instancePath}`)
       const optionsTxtPath = join(instancePath, 'options.txt')

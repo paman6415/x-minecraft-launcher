@@ -185,7 +185,7 @@ export interface UserService extends StatefulService<UserState>, GenericEventEmi
    *
    * @throw 'userAccessTokenExpired'
    */
-  refreshUser(): Promise<void>
+  refreshUser(userId: string): Promise<void>
   /**
    * Upload the skin to server. If the userId and profileId is not assigned,
    * it will use the selected user and selected profile.
@@ -201,15 +201,10 @@ export interface UserService extends StatefulService<UserState>, GenericEventEmi
    */
   saveSkin(options: SaveSkinOptions): Promise<void>
   /**
-   * Select user account.
-   * @param userId User to be select
-   */
-  selectUser(userId: string): Promise<void>
-  /**
    * Select a profile in current user
    * @param profileId The profile id
    */
-  selectGameProfile(profileId: string): Promise<void>
+  selectGameProfile(userId: string, profileId: string): Promise<void>
   /**
    * Remove the user profile. This will logout to the user
    */

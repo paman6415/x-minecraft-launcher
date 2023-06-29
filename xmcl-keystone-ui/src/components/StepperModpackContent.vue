@@ -22,7 +22,7 @@ const curseforgeFiles = computed(() => (props.modpack?.files ?? []).filter((v): 
 const { data: mods } = useSWRV(computed(() => `/curseforge/files?${curseforgeFiles.value.map(f => f.curseforge.projectId)}`),
   () => clientCurseforgeV1.getMods(curseforgeFiles.value.map(f => f.curseforge.projectId)))
 
-const nodes = useSWRV(computed(() => mods.value && `/modpack/preview/${props.modpack?.id ?? ''}`), async (v) => {
+const nodes = useSWRV(computed(() => mods.value && `/modpack/preview/${props.modpack?.filePath ?? ''}`), async (v) => {
   if (!v) return
   if (!props.modpack) return
   return props.modpack.files.map((f) => {

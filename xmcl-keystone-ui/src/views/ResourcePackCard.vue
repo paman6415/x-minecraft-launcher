@@ -4,7 +4,7 @@
     v-draggable-card
     v-context-menu="contextMenuItems"
     draggable
-    :class="{ incompatible: !compatible }"
+    :class="{ incompatible: !pack.compatible }"
     class="draggable-card cursor-pointer transition-all duration-150 invisible-scroll"
     @dragstart="onDragStart"
     @dragend.prevent="onDragEnd"
@@ -68,18 +68,17 @@
 <script lang=ts setup>
 import unknownPack from '@/assets/unknown_pack.png'
 import { useDragTransferItem, useService, useTags, useTheme } from '@/composables'
+import { ResourcePackItem } from '@/composables/instanceResourcePackItem'
 import { vSharedTooltip } from '@/directives/sharedTooltip'
 import { getColor } from '@/util/color'
 import { injection } from '@/util/inject'
-import { BaseServiceKey, InstanceServiceKey } from '@xmcl/runtime-api'
+import { BaseServiceKey } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
-import { useRangeCompatible } from '../composables/compatible'
 import { ContextMenuItem } from '../composables/contextMenu'
 import { kMarketRoute } from '../composables/useMarketRoute'
 import { vContextMenu } from '../directives/contextMenu'
 import { vDraggableCard } from '../directives/draggableCard'
 import { vFallbackImg } from '../directives/fallbackImage'
-import { ResourcePackItem } from '@/composables/instanceResourcePackItem'
 
 const props = defineProps<{
   pack: ResourcePackItem
@@ -96,7 +95,6 @@ const description = computed(() => props.pack.resourcePack.id === 'vanilla' ? t(
 
 const iconImage: Ref<any> = ref(null)
 
-const { compatible } = useRangeCompatible(computed(() => props.pack.resourcePack.acceptingRange ?? ''), computed(() => props.minecraft))
 const { searchInCurseforge, goCurseforgeProject, searchInModrinth, goModrinthProject } = injection(kMarketRoute)
 const { showItemInDirectory } = useService(BaseServiceKey)
 const card: Ref<any> = ref(null)
@@ -109,9 +107,8 @@ const { editTag, createTag, removeTag } = useTags(computed({
 const onDeleteTag = removeTag
 
 useDragTransferItem(computed(() => card.value?.$el as HTMLElement), props.pack.resourcePack.id, props.isSelected ? 'right' : 'left')
-const tags = ref([...props.pack.tags])
 
-const tooltip = computed(() => compatible.value
+const tooltip = computed(() => props.pack.compatible
   ? t('resourcepack.compatible', {
     format: props.pack.resourcePack.pack_format,
     version: props.minecraft,

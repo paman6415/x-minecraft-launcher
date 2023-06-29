@@ -16,11 +16,13 @@ export function useInstance() {
   const instance = computed(() => state.all[path.value])
   const name = computed(() => instance.value.name)
   const isServer = computed(() => instance.value.server !== null)
+  const instances = computed(() => state.instances)
   const select = (p: string) => {
     path.value = p
   }
 
   return {
+    instances,
     path,
     runtime,
     name,

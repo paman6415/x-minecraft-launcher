@@ -149,11 +149,8 @@ const oldResource = computed(() => dialog.value.parameter?.currentResource)
 const newResource = computed(() => dialog.value.parameter?.resource)
 const { getInstanceUpdateProfile } = useService(InstanceUpdateServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
-const { state, editInstance } = useService(InstanceServiceKey)
+const { editInstance } = useService(InstanceServiceKey)
 const { t } = useI18n()
-const { path: instancePath } = injection(kInstance)
-
-const oldRuntime = computed(() => state.instance.runtime)
 
 const upgrade = ref(undefined as undefined | {
   instance: EditInstanceOptions
@@ -216,6 +213,8 @@ watch(upgrade, (newVal) => {
 
 const { leaves } = provideFileNodes(result)
 
+const { runtime: oldRuntime, path: instancePath } = injection(kInstance)
+
 const { refresh, refreshing } = useRefreshable(async () => {
   const path = newResource.value?.path
   if (path) {
@@ -236,6 +235,7 @@ const confirm = async () => {
       files: files.filter(f => f.operation !== 'keep').map(f => ({ ...f.file, operation: f.operation as InstanceFileOperation })),
     })
     await editInstance({
+      instancePath: instancePath.value,
       runtime: {
         minecraft: instance.runtime?.minecraft || oldRuntime.value.minecraft,
         forge: instance.runtime?.forge,

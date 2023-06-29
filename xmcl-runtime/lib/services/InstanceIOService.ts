@@ -23,7 +23,6 @@ import { VersionService } from './VersionService'
 export class InstanceIOService extends AbstractService implements IInstanceIOService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstanceService) private instanceService: InstanceService,
-    @Inject(InstanceVersionService) private instanceVersionService: InstanceVersionService,
     @Inject(VersionService) private versionService: VersionService,
   ) {
     super(app)
@@ -43,7 +42,7 @@ export class InstanceIOService extends AbstractService implements IInstanceIOSer
     //   return
     // }
 
-    const version = options.version
+    const version = await this.versionService.resolveLocalVersion(options.version)
 
     const root = this.getPath()
     const from = src

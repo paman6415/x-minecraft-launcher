@@ -42,15 +42,15 @@ import { injection } from '@/util/inject'
 import { UserServiceKey } from '@xmcl/runtime-api'
 import UserMenu from './UserMenu.vue'
 
-const { users, userProfile: selectedUser, gameProfile: selectedUserGameProfile } = injection(kUserContext)
-const { selectUser, abortRefresh, refreshUser, removeUserProfile } = useService(UserServiceKey)
+const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile } = injection(kUserContext)
+const { abortRefresh, refreshUser, removeUserProfile } = useService(UserServiceKey)
 const { show: showLoginDialog } = useDialog(LoginDialog)
 const isShown = ref(false)
 
 const { t } = useI18n()
 const onSelectUser = (user: string) => {
   isShown.value = false
-  selectUser(user)
+  select(user)
 }
 watch(isShown, (show) => {
   if (show && users.value.length === 0) {
@@ -63,8 +63,8 @@ watch(isShown, (show) => {
 function onRefresh() {
   if (users.value.length === 0) {
     showLoginDialog()
-  } else {
-    refreshUser().catch(() => {
+  } else if (selectedUser.value?.id) {
+    refreshUser(selectedUser.value.id).catch(() => {
       showLoginDialog({ username: selectedUser.value?.username, service: selectedUser.value?.authService, error: t('login.userRelogin') })
     })
   }

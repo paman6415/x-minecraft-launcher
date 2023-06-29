@@ -1,9 +1,3 @@
-import { kServiceFactory } from '@/composables'
-import { injection } from '@/util/inject'
-import type { ResolvedVersion } from '@xmcl/core'
-import { BaseServiceKey, BaseState, CurseForgeServiceKey, EMPTY_VERSION, GameProfileAndTexture, ImportServiceKey, InstallServiceKey, InstanceInstallServiceKey, InstanceIOServiceKey, InstanceLogServiceKey, InstanceManifestServiceKey, InstanceModsServiceKey, InstanceModsState, InstanceOptionsServiceKey, InstanceOptionsState, InstanceResourcePacksServiceKey, InstanceSavesServiceKey, InstanceScreenshotServiceKey, InstanceServiceKey, InstanceShaderPacksServiceKey, InstanceState, InstanceUpdateServiceKey, InstanceVersionServiceKey, InstanceVersionState, LaunchServiceKey, LaunchState, LittleSkinUserServiceKey, LocalVersionHeader, ModpackServiceKey, ModrinthServiceKey, OfficialUserServiceKey, OfflineUserServiceKey, Resource, ResourcePackPreviewServiceKey, ResourceServiceKey, SaveState, ServerStatusServiceKey, UserProfile, UserServiceKey, UserState, VersionServiceKey, VersionState } from '@xmcl/runtime-api'
-import { GameProfile } from '@xmcl/user'
-import { del, set } from 'vue'
 
 // class ReactiveInstanceVersionState extends InstanceVersionState {
 //   versionHeader = EMPTY_VERSION

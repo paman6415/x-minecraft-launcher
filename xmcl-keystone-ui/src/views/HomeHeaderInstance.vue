@@ -181,7 +181,6 @@
           :progress="progress"
         />
         <HomeLaunchButton
-          :issue="issue"
           :compact="compact"
           :status="status"
           @pause="pause"

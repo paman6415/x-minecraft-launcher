@@ -10,7 +10,7 @@ export interface ExportInstanceOptions {
   /**
    * The version of the instance
    */
-  version: ResolvedVersion
+  version: string
   /**
    * The dest path of the exported instance
    */

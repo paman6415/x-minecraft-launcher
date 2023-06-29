@@ -4,18 +4,22 @@ import { BaseServiceKey, LaunchServiceKey, UserServiceKey } from '@xmcl/runtime-
 import { computed } from 'vue'
 import { DialogKey } from './dialog'
 import { kInstance } from './instance'
-import { kInstanceVersion } from './instanceVersion'
 import { kInstanceJava } from './instanceJava'
+import { kInstanceVersion } from './instanceVersion'
+import { kUserContext } from './user'
 
 export const LaunchStatusDialogKey: DialogKey<void> = 'launch-status'
 
 export function useLaunch() {
   const { state: userState, refreshUser } = useService(UserServiceKey)
   const { state: globalState, getMemoryStatus } = useService(BaseServiceKey)
+  const { state, launch } = useService(LaunchServiceKey)
+
   const { path, instance } = injection(kInstance)
   const { resolvedVersion } = injection(kInstanceVersion)
   const { java } = injection(kInstanceJava)
-  const { state, launch } = useService(LaunchServiceKey)
+  const { userProfile } = injection(kUserContext)
+
   const status = computed(() => state.status)
   const launchCount = computed(() => state.activeCount)
 
@@ -38,7 +42,7 @@ export function useLaunch() {
 
     if (!inst.fastLaunch) {
       try {
-        await refreshUser()
+        await refreshUser(userProfile.value.id)
       } catch (e) {
       }
     }
