@@ -140,8 +140,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
 
     const instance = createTemplate()
 
-    instance.author = instance.author || UserState.getGameProfile(this.userService.state)?.name || ''
-    instance.runtime.minecraft = this.installService.getLatestRelease()
+    instance.author = instance.author || ''
 
     assignShallow(instance, option)
     if (option.runtime) {
@@ -158,7 +157,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     }
 
     instance.runtime.minecraft = instance.runtime.minecraft || this.installService.getLatestRelease()
-    instance.author = instance.author || UserState.getGameProfile(this.userService.state)?.name || ''
     instance.upstream = option.upstream
     instance.playtime = option.playtime
     instance.lastPlayedDate = option.lastPlayedDate
@@ -217,7 +215,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     }
 
     instance.runtime.minecraft = instance.runtime.minecraft || this.installService.getLatestRelease()
-    instance.author = UserState.getGameProfile(this.userService.state)?.name ?? ''
     instance.creationDate = Date.now()
     instance.lastAccessDate = Date.now()
 

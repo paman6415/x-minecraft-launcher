@@ -32,10 +32,6 @@ class ReactiveUserState extends UserState {
   }
 
   userProfileRemove(userId: string) {
-    if (this.selectedUser.id === userId) {
-      this.selectedUser.id = ''
-    }
-
     del(this.users, userId)
   }
 

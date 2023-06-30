@@ -147,7 +147,7 @@ export interface PeerService extends StatefulService<PeerState>, GenericEventEmi
   /**
    * Join a group. Then the group will automatically handle your connection between peers
    */
-  joinGroup(id?: string): Promise<void>
+  joinGroup(id: string): Promise<void>
   /**
    * Leave the current group
    */

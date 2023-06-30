@@ -12,9 +12,11 @@ import { UserTokenStorage } from '../entities/userTokenStore'
  * @param input The loaded user data
  */
 export async function preprocessUserData(output: UserSchema, input: UserSchema, minecraftJsonPath: string, tokenStorage: UserTokenStorage) {
+  let mojangSelectedUserId = ''
   try {
     const minecraftProfile = await readFile(minecraftJsonPath, 'utf-8').then(JSON.parse).catch(() => undefined)
     fillData(output, input, minecraftProfile, tokenStorage)
+    mojangSelectedUserId = minecraftProfile?.selectedUser?.account || ''
   } catch {
     // Ignore
   }
@@ -33,15 +35,15 @@ export async function preprocessUserData(output: UserSchema, input: UserSchema, 
   }
 
   await Promise.all(Object.values(input.users).map(checkToken))
+
+  return { mojangSelectedUserId }
 }
 /**
  * Fit the user data from loaded user data and loaded launcher profile json
  */
 function fillData(output: UserSchema, input: UserSchema, launchProfile: LauncherProfile | undefined, tokenStorage: UserTokenStorage) {
   output.clientToken = input.clientToken || launchProfile?.clientToken || randomUUID().replace(/-/g, '')
-  output.selectedUser.id = input.selectedUser.id ?? output.selectedUser.id
   output.users = input.users
-  output.selectedUser.id = input.selectedUser.id || launchProfile?.selectedUser?.account || ''
 
   for (const user of Object.values(output.users)) {
     if (typeof user.expiredAt === 'undefined') {

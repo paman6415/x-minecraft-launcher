@@ -33,7 +33,7 @@ export interface UploadSkinOptions {
   /**
    * The user id of this skin
    */
-  userId?: string
+  userId: string
   /**
    * The player skin data.
    * - `undefined` means we don't want to change skin
@@ -89,29 +89,10 @@ export class UserState implements UserSchema {
    */
   yggdrasilServices: YggdrasilApi[] = []
 
-  selectedUser = {
-    id: '',
-  }
-
   clientToken = ''
-
-  static getUser(state: UserState) {
-    return state.users[state.selectedUser.id]
-  }
-
-  static getGameProfile(state: UserState) {
-    const user = UserState.getUser(state)
-    return user?.profiles[user.selectedProfile]
-  }
-
-  static isThirdPartyAuthentication(state: UserState) {
-    const user = UserState.getUser(state)
-    return user?.authService !== 'mojang' && user?.authService !== 'offline' && user?.authService !== 'microsoft'
-  }
 
   userData(data: UserSchema) {
     this.clientToken = data.clientToken
-    this.selectedUser.id = data.selectedUser.id
     this.users = data.users
     this.yggdrasilServices = data.yggdrasilServices
   }
@@ -130,9 +111,6 @@ export class UserState implements UserSchema {
   }
 
   userProfileRemove(userId: string) {
-    if (this.selectedUser.id === userId) {
-      this.selectedUser.id = ''
-    }
     delete this.users[userId]
   }
 
@@ -146,10 +124,6 @@ export class UserState implements UserSchema {
     } else {
       this.users[user.id] = user
     }
-  }
-
-  userSelect(id: string) {
-    this.selectedUser.id = id
   }
 
   userGameProfileSelect({ userId, profileId }: { userId: string; profileId: string }) {
@@ -201,18 +175,13 @@ export interface UserService extends StatefulService<UserState>, GenericEventEmi
    */
   saveSkin(options: SaveSkinOptions): Promise<void>
   /**
-   * Select a profile in current user
-   * @param profileId The profile id
-   */
-  selectGameProfile(userId: string, profileId: string): Promise<void>
-  /**
    * Remove the user profile. This will logout to the user
    */
-  removeUserProfile(userId: string): Promise<void>
+  removeUser(userId: string): Promise<void>
   /**
-   * Put a new user profile into storage
+   * Put/Update a user profile into storage
    */
-  setUserProfile(userProfile: UserProfile): Promise<void>
+  putUser(userProfile: UserProfile): Promise<void>
   /**
    * Add a third-party account system satisfy the authlib-injector format
    * @param url The account api url
@@ -235,6 +204,10 @@ export interface UserService extends StatefulService<UserState>, GenericEventEmi
    * Abort the refresh user operation
    */
   abortRefresh(): Promise<void>
+  /**
+   * Get mojang selected user id
+   */
+  getMojangSelectedUser(): Promise<string>
 }
 
 export const UserServiceKey: ServiceKey<UserService> = 'UserService'

@@ -444,6 +444,7 @@ import PlayerAvatar from '../components/PlayerAvatar.vue'
 import { useDialog } from '../composables/dialog'
 import MultiplayerDialogInitiate from './MultiplayerDialogInitiate.vue'
 import MultiplayerDialogReceive from './MultiplayerDialogReceive.vue'
+import { kUserContext } from '@/composables/user'
 
 const { show } = useDialog('peer-initiate')
 const { show: showShareInstance } = useDialog('share-instance')
@@ -568,15 +569,16 @@ const onCopy = (val: string) => {
     setTimeout(() => { copied.value = false }, 3_000)
   }
 }
+
+const { gameProfile } = injection(kUserContext)
 const onJoin = () => {
   if (!state.group) {
-    joinGroup(groupId.value)
+    const buf = new Uint16Array(1)
+    window.crypto.getRandomValues(buf)
+    joinGroup(groupId.value || (gameProfile.value.name + '@' + buf[0]))
   } else {
     leaveGroup()
   }
-}
-const onCreate = () => {
-  joinGroup()
 }
 
 </script>

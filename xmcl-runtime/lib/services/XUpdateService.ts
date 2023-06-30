@@ -72,7 +72,8 @@ export class XUpdateService extends AbstractService implements IXUpdateService {
       const start = Date.now()
       const allHeaders = headers ? { ...headers } : {}
       if (!allHeaders.Authorization) {
-        const token = this.getAccessToken(UserState.getUser(this.userService.state)?.id ?? '')
+        // TODO: impl this
+        const token = this.getAccessToken(/* UserState.getUser(this.userService.state)?.id ?? '' */ '')
         allHeaders.Authorization = `Bearer ${token}`
       }
 

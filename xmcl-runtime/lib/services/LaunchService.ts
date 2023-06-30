@@ -78,7 +78,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       if (yggdrasilHost) {
         this.state.launchStatus('injectingAuthLib')
         try {
-          const jar = await this.externalAuthSkinService.installAuthLibInjection()
+          const jar = await this.externalAuthSkinService.installAuthLibInjector()
           yggdrasilAgent = {
             jar,
             server: yggdrasilHost,
@@ -201,10 +201,8 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
 
       this.emit('minecraft-start', {
         pid: process.pid,
-        version: version.id,
         minecraft: version.minecraftVersion,
-        // forge: instance.runtime.forge ?? '',
-        // fabricLoader: instance.runtime.fabricLoader ?? '',
+        ...options,
       })
       const watcher = createMinecraftProcessWatcher(process)
       const errorLogs = [] as string[]
@@ -257,6 +255,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         Promise.all(errPromises).catch((e) => { this.error(e) }).finally(() => {
           this.emit('minecraft-exit', {
             pid: process.pid,
+            ...options,
             code,
             signal,
             crashReport,
@@ -267,7 +266,7 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         })
         this.launchedProcesses = this.launchedProcesses.filter(p => p !== process)
       }).on('minecraft-window-ready', () => {
-        this.emit('minecraft-window-ready', { pid: process.pid })
+        this.emit('minecraft-window-ready', { pid: process.pid, ...options })
       })
       process.unref()
       this.state.launchStatus('idle')

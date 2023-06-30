@@ -62,6 +62,14 @@ export interface LaunchOptions {
     port?: number
   }
   /**
+   * Hide launcher after game started
+   */
+  hideLauncher?: boolean
+  /**
+   * Show log window after game started
+   */
+  showLog?: boolean
+  /**
    * The launcher name
    */
   launcherName?: string

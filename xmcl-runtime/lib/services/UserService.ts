@@ -21,15 +21,25 @@ import { Inject } from '../util/objectRegistry'
 import { createSafeFile } from '../util/persistance'
 import { ensureLauncherProfile, preprocessUserData } from '../util/userData'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
+import debounce from 'lodash.debounce'
 
 @ExposeServiceKey(UserServiceKey)
 export class UserService extends StatefulService<UserState> implements IUserService {
   private userFile = createSafeFile(this.getAppDataPath('user.json'), UserSchema, this, [this.getPath('user.json')])
+  private saveUserFile = debounce(async () => {
+    const userData: UserSchema = {
+      users: this.state.users,
+      clientToken: this.state.clientToken,
+      yggdrasilServices: this.state.yggdrasilServices,
+    }
+    await this.userFile.write(userData)
+  }, 1000)
 
   private loginController: AbortController | undefined
   private refreshController: AbortController | undefined
   private setSkinController: AbortController | undefined
   private accountSystems: Record<string, UserAccountSystem | undefined> = {}
+  private mojangSelectedUserId = ''
 
   readonly yggdrasilAccountSystem: YggdrasilAccountSystem
 
@@ -39,16 +49,14 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       const data = await this.userFile.read()
       const userData: UserSchema = {
         users: {},
-        selectedUser: {
-          id: '',
-        },
         clientToken: '',
         yggdrasilServices: [],
       }
 
       const shouldRefillData = data.yggdrasilServices.length === 0 && Object.keys(data.users).length === 0
       // This will fill the user data
-      await preprocessUserData(userData, data, this.getMinecraftPath('launcher_profiles.json'), tokenStorage)
+      const { mojangSelectedUserId } = await preprocessUserData(userData, data, this.getMinecraftPath('launcher_profiles.json'), tokenStorage)
+      this.mojangSelectedUserId = mojangSelectedUserId
       // Ensure the launcher profile
       await ensureLauncherProfile(this.getPath())
 
@@ -65,12 +73,6 @@ export class UserService extends StatefulService<UserState> implements IUserServ
           loadYggdrasilApiProfile('https://authserver.ely.by/api/authlib-injector').then(api => {
             this.state.userYggdrasilServicePut(api)
           })])
-      } else {
-        // this.refreshUser()
-        if (this.state.selectedUser.id === '' && Object.keys(this.state.users).length > 0) {
-          const [userId, user] = Object.entries(this.state.users)[0]
-          // this.selectUser(userId)
-        }
       }
     })
 
@@ -100,18 +102,16 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       'userYggdrasilServices',
       'userYggdrasilServicePut',
     ], async () => {
-      const userData: UserSchema = {
-        users: this.state.users,
-        selectedUser: this.state.selectedUser,
-        clientToken: this.state.clientToken,
-        yggdrasilServices: this.state.yggdrasilServices,
-      }
-      await this.userFile.write(userData)
+      this.saveUserFile()
     })
 
     app.protocol.registerHandler('authlib-injector', ({ request, response }) => {
       this.addYggdrasilAccountSystem(request.url.pathname)
     })
+  }
+
+  async getMojangSelectedUser(): Promise<string> {
+    return this.mojangSelectedUserId
   }
 
   async addYggdrasilAccountSystem(url: string): Promise<void> {
@@ -142,11 +142,10 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       .finally(() => { this.loginController = undefined })
 
     this.state.userProfile(profile)
-    this.state.userSelect(profile.id)
     return profile
   }
 
-  async setUserProfile(userProfile: UserProfile): Promise<void> {
+  async putUser(userProfile: UserProfile): Promise<void> {
     this.state.userProfile(userProfile)
   }
 
@@ -164,7 +163,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
 
     const {
       gameProfileId,
-      userId = this.state.selectedUser.id,
+      userId,
       skin,
     } = options
     const user = this.state.users[userId]
@@ -224,22 +223,12 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       return
     }
 
-    this.state.userGameProfileSelect({ userId: this.state.selectedUser.id, profileId })
+    this.state.userGameProfileSelect({ userId, profileId })
   }
 
   @Singleton(id => id)
-  async removeUserProfile(userId: string) {
+  async removeUser(userId: string) {
     requireString(userId)
-    if (this.state.selectedUser.id === userId) {
-      const user = Object.values(this.state.users).find((u) => !!u.selectedProfile)
-      if (!user) {
-        this.warn(`No valid user after remove user profile ${userId}!`)
-      } else {
-        const userId = user.id
-        this.log(`Switch game profile ${userId}`)
-        this.state.userSelect(userId)
-      }
-    }
     this.state.userProfileRemove(userId)
   }
 

@@ -262,7 +262,7 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
   }
 
   @Lock('joinGroup')
-  async joinGroup(id?: string): Promise<void> {
+  async joinGroup(id: string): Promise<void> {
     if (this.group?.groupId && this.group.groupId === id) {
       return
     }
@@ -271,14 +271,6 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
       this.group.quit()
     }
 
-    if (!id) {
-      const buf = Buffer.alloc(2)
-      await new Promise<Buffer>((resolve, reject) => randomFill(buf, (err, buf) => {
-        if (err) reject(err)
-        else resolve(buf)
-      }))
-      id = `${UserState.getGameProfile(this.userService.state)?.name ?? 'Player'}@${buf.readUint16BE()}`
-    }
     const group = new PeerGroup(id, this.id)
 
     group.on('heartbeat', (sender) => {
@@ -382,7 +374,8 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
         }
       },
       getUserInfo: () => {
-        const user = UserState.getUser(this.userService.state)
+        // TODO: fix this
+        const user = Object.values(this.userService.state.users)[0]
         const profile = user?.profiles[user.selectedProfile]
         return {
           name: profile?.name ?? 'Player',

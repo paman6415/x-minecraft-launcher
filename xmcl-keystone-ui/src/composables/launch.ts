@@ -11,7 +11,7 @@ import { kUserContext } from './user'
 export const LaunchStatusDialogKey: DialogKey<void> = 'launch-status'
 
 export function useLaunch() {
-  const { state: userState, refreshUser } = useService(UserServiceKey)
+  const { refreshUser } = useService(UserServiceKey)
   const { state: globalState, getMemoryStatus } = useService(BaseServiceKey)
   const { state, launch } = useService(LaunchServiceKey)
 
@@ -59,7 +59,7 @@ export function useLaunch() {
       gameDirectory: path.value,
       version: instance.value.version || ver.id,
       java: javaRec.path,
-      user: userState.users[userState.selectedUser.id],
+      user: userProfile.value,
       minMemory,
       maxMemory,
       vmOptions,

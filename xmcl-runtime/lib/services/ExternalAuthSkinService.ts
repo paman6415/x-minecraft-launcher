@@ -1,6 +1,6 @@
 import { LibraryInfo, MinecraftFolder } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { ExternalAuthSkinServiceKey, ExternalAuthSkinService as IExternalAuthSkinService, IssueReportBuilder, MissingAuthLibInjectorIssue, UserState } from '@xmcl/runtime-api'
+import { ExternalAuthSkinServiceKey, ExternalAuthSkinService as IExternalAuthSkinService } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
@@ -8,9 +8,7 @@ import { LauncherAppKey } from '../app/utils'
 import { validateSha256 } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
-import { DiagnoseService } from './DiagnoseService'
-import { AbstractService, ExposeServiceKey, Lock } from './Service'
-import { UserService } from './UserService'
+import { AbstractService, ExposeServiceKey } from './Service'
 
 const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 
@@ -20,22 +18,9 @@ const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 @ExposeServiceKey(ExternalAuthSkinServiceKey)
 export class ExternalAuthSkinService extends AbstractService implements IExternalAuthSkinService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(DiagnoseService) private diagnoseService: DiagnoseService,
-    @Inject(UserService) private userService: UserService,
     @Inject(BaseService) private baseService: BaseService,
   ) {
     super(app)
-    diagnoseService.register(
-      {
-        id: MissingAuthLibInjectorIssue,
-        fix: async () => { await this.installAuthLibInjection() },
-      })
-
-    this.storeManager.subscribeAll(['userGameProfileSelect', 'userProfile'], async () => {
-      const builder = new IssueReportBuilder()
-      this.diagnoseAuthLibInjector(builder)
-      this.diagnoseService.report(builder.build())
-    })
 
     this.networkManager.registerDispatchInterceptor((options) => {
       const origin = options.origin instanceof URL ? options.origin : new URL(options.origin!)
@@ -49,7 +34,7 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
     })
   }
 
-  async installAuthLibInjection(): Promise<string> {
+  async installAuthLibInjector(): Promise<string> {
     const jsonPath = this.getPath('authlib-injection.json')
     const root = this.getPath()
     const mc = new MinecraftFolder(root)
@@ -96,39 +81,16 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
       }
     }
 
-    const builder = new IssueReportBuilder()
-    this.diagnoseAuthLibInjector(builder)
-    this.diagnoseService.report(builder.build())
-
     return path
   }
 
-  @Lock('diagnoseAuthLibInjector')
-  async diagnoseAuthLibInjector(builder: IssueReportBuilder) {
-    this.up('diagnose')
-    builder.set(MissingAuthLibInjectorIssue)
-    const doesAuthLibInjectionExisted = async () => {
-      const jsonPath = this.getPath('authlib-injection.json')
-      const content = await readFile(jsonPath, 'utf-8').then(JSON.parse).catch(() => undefined)
-      if (!content) return false
-      const info = LibraryInfo.resolve(`${AUTHLIB_ORG_NAME}:${content.version}`)
-      const mc = new MinecraftFolder(this.getPath())
-      const libPath = mc.getLibraryByPath(info.path)
-      return validateSha256(libPath, content.checksums.sha256)
-    }
-    try {
-      const user = this.userService.state.users[this.userService.state.selectedUser.id]
-
-      if (user) {
-        this.log(`Diagnose user ${user.username}`)
-        if (UserState.isThirdPartyAuthentication(this.userService.state)) {
-          if (!await doesAuthLibInjectionExisted()) {
-            builder.set(MissingAuthLibInjectorIssue, undefined)
-          }
-        }
-      }
-    } finally {
-      this.down('diagnose')
-    }
+  async isAuthLibInjectorReady() {
+    const jsonPath = this.getPath('authlib-injection.json')
+    const content = await readFile(jsonPath, 'utf-8').then(JSON.parse).catch(() => undefined)
+    if (!content) return false
+    const info = LibraryInfo.resolve(`${AUTHLIB_ORG_NAME}:${content.version}`)
+    const mc = new MinecraftFolder(this.getPath())
+    const libPath = mc.getLibraryByPath(info.path)
+    return validateSha256(libPath, content.checksums.sha256)
   }
 }
