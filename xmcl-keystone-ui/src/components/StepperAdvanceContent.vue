@@ -312,7 +312,7 @@
 <script lang=ts setup>
 import { useLocalVersions } from '@/composables/version'
 import { CreateOptionKey } from '../composables/instanceCreation'
-import { useJava } from '../composables/java'
+import { kJavaState } from '../composables/java'
 import { VersionMenuItem, useFabricVersionList, useForgeVersionList, useMinecraftVersionList, useOptifineVersionList, useQuiltVersionList } from '../composables/versionList'
 import VersionMenu from './VersionMenu.vue'
 
@@ -347,7 +347,7 @@ watch(release, (r) => {
   }
 })
 
-const { all: javas } = useJava()
+const { all: javas } = injection(kJavaState)
 const javaItems = computed(() => javas.value.map(java => ({
   text: `Java ${java.majorVersion} (${java.version})`,
   value: java.path,

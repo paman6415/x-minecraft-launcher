@@ -1,8 +1,7 @@
-import { computed } from 'vue'
 import { injection } from '@/util/inject'
+import { computed } from 'vue'
+import { kSettingsState } from './setting'
 import { kVuetify } from './vuetify'
-import { useService } from './service'
-import { BaseServiceKey } from '@xmcl/runtime-api'
 
 export function useTheme() {
   const vuetify = injection(kVuetify)
@@ -31,7 +30,7 @@ export function usePreferDark() {
 
 export function useThemeSync() {
   const framework = injection(kVuetify)
-  const { state } = useService(BaseServiceKey)
+  const { state } = injection(kSettingsState)
   const preferDark = usePreferDark()
 
   const updateTheme = (theme: 'dark' | 'system' | 'light') => {
@@ -44,10 +43,10 @@ export function useThemeSync() {
     }
   }
 
-  watch(computed(() => state.theme), (newValue: string, oldValue: string) => {
+  watch(computed(() => state.value?.theme ?? 'system'), (newValue: string, oldValue: string) => {
     console.log(`Theme changed ${oldValue} -> ${newValue}`)
     updateTheme(newValue as any)
   })
 
-  updateTheme(state.theme)
+  updateTheme(state.value?.theme || 'system')
 }

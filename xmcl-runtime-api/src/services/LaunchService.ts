@@ -1,6 +1,4 @@
-import { JavaRecord } from '../entities/java'
 import { Exception } from '../entities/exception'
-import { Instance } from '../entities/instance'
 import { LaunchStatus } from '../entities/launch'
 import { UserProfile } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
@@ -43,7 +41,7 @@ export interface LaunchOptions {
    */
   version: string
   /**
-   * The game directory
+   * The game directory of the minecraft
    */
   gameDirectory: string
   /**
@@ -73,23 +71,29 @@ export interface LaunchOptions {
    * The launcher name
    */
   launcherName?: string
-
+  /**
+   * The launcher brand
+   */
   launcherBrand?: string
-
+  /**
+   * The maximum memory to allocate
+   */
   maxMemory?: number
-
+  /**
+   * The minimum memory to allocate
+   */
   minMemory?: number
   /**
-   * Skip the issue checker
+   * Skip assets check before launch
    */
-  force?: boolean
-
-  ignoreUserStatus?: boolean
-
   skipAssetsCheck?: boolean
-
+  /**
+   * The extra arguments for java vm
+   */
   vmOptions?: string[]
-
+  /**
+   * The extra arguments for minecraft
+   */
   mcOptions?: string[]
 }
 
@@ -97,7 +101,7 @@ export interface LaunchService extends StatefulService<LaunchState>, GenericEven
   /**
    * Generate useable launch arguments for current profile
    */
-  generateArguments(): Promise<string[]>
+  generateArguments(options: LaunchOptions): Promise<string[]>
   /**
    * Launch the current selected instance. This will return a boolean promise indicate whether launch is success.
    * @returns Does this launch request success?

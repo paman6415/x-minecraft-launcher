@@ -1,16 +1,25 @@
 import { useService, useServiceBusy } from '@/composables'
-import { BaseServiceKey } from '@xmcl/runtime-api'
+import { injection } from '@/util/inject'
+import { BaseServiceKey, Environment } from '@xmcl/runtime-api'
+import { InjectionKey, Ref } from 'vue'
 import { useLocalStorageCacheBool } from './cache'
+import { useState } from './syncableState'
 
 export function useUpdateSettings() {
-  const { state, checkUpdate } = useService(BaseServiceKey)
-
-  const updateStatus = computed(() => state.updateStatus)
+  const { checkUpdate, getEnvironment } = useService(BaseServiceKey)
+  const env: Ref<Environment | undefined> = ref(undefined)
+  const { state } = injection(kSettingsState)
+  getEnvironment().then(v => {
+    env.value = v
+  })
+  const updateStatus = computed(() => state.value?.updateStatus)
   const checkingUpdate = useServiceBusy(BaseServiceKey, 'checkUpdate')
   const downloadingUpdate = useServiceBusy(BaseServiceKey, 'downloadUpdate')
-  const updateInfo = computed(() => state.updateInfo)
+  const updateInfo = computed(() => state.value?.updateInfo)
+  const version = computed(() => env.value?.version ?? '0.0.0')
 
   return {
+    version,
     checkUpdate,
     updateStatus,
     checkingUpdate,
@@ -18,13 +27,42 @@ export function useUpdateSettings() {
     updateInfo,
   }
 }
+export const kSettingsState: InjectionKey<ReturnType<typeof useSettingsState>> = Symbol('SettingState')
+
+export function useSettingsState() {
+  const { getSettings } = useService(BaseServiceKey)
+  return useState(ref('settings'), getSettings)
+}
+
+export function useGlobalSettings() {
+  const { state } = injection(kSettingsState)
+  const globalAssignMemory = computed(() => state.value?.globalAssignMemory ?? false)
+  const globalMinMemory = computed(() => state.value?.globalMinMemory ?? 0)
+  const globalMaxMemory = computed(() => state.value?.globalMaxMemory ?? 0)
+  const globalVmOptions = computed(() => state.value?.globalVmOptions ?? [])
+  const globalMcOptions = computed(() => state.value?.globalMcOptions ?? [])
+  const globalFastLaunch = computed(() => state.value?.globalFastLaunch ?? false)
+  const globalHideLauncher = computed(() => state.value?.globalHideLauncher ?? false)
+  const globalShowLog = computed(() => state.value?.globalShowLog ?? false)
+
+  return {
+    globalAssignMemory,
+    globalMinMemory,
+    globalMaxMemory,
+    globalVmOptions,
+    globalMcOptions,
+    globalFastLaunch,
+    globalHideLauncher,
+    globalShowLog,
+  }
+}
 
 export function useSettings() {
-  const { state } = useService(BaseServiceKey)
   const hideNews = useLocalStorageCacheBool('hideNews', false)
+  const { state, error, isValidating } = injection(kSettingsState)
 
   const getProxy = () => {
-    const proxy = state.httpProxy
+    const proxy = state.value?.httpProxy || ''
     try {
       const url = new URL(proxy)
       return {
@@ -39,48 +77,48 @@ export function useSettings() {
     }
   }
 
-  const root = computed(() => state.root)
-  const locales = computed(() => state.locales || [])
+  const root = computed(() => state.value?.root)
+  const locales = computed(() => state.value?.locales || [])
   const selectedLocale = computed({
-    get: () => locales.value.find(l => l.locale === state.locale)?.locale || 'en',
-    set: v => state.localeSet(v),
+    get: () => locales.value.find(l => l.locale === state.value?.locale)?.locale || 'en',
+    set: v => state.value?.localeSet(v),
   })
-  const allowPrerelease = computed({
-    get: () => state.allowPrerelease,
-    set: v => state.allowPrereleaseSet(v),
-  })
-  const autoInstallOnAppQuit = computed({
-    get: () => state.autoInstallOnAppQuit,
-    set: v => state.autoInstallOnAppQuitSet(v),
-  })
-  const autoDownload = computed({
-    get: () => state.autoDownload,
-    set: v => state.autoDownloadSet(v),
-  })
+  // const allowPrerelease = computed({
+  //   get: () => state.allowPrerelease,
+  //   set: v => state.allowPrereleaseSet(v),
+  // })
+  // const autoInstallOnAppQuit = computed({
+  //   get: () => state.autoInstallOnAppQuit,
+  //   set: v => state.autoInstallOnAppQuitSet(v),
+  // })
+  // const autoDownload = computed({
+  //   get: () => state.autoDownload,
+  //   set: v => state.autoDownloadSet(v),
+  // })
   const apiSetsPreference = computed({
-    get: () => state.apiSetsPreference,
-    set: v => state.apiSetsPreferenceSet(v),
+    get: () => state.value?.apiSetsPreference ?? '',
+    set: v => state.value?.apiSetsPreferenceSet(v),
   })
-  const maxSockets = ref(state.maxSockets)
-  const maxAPISockets = ref(state.maxAPISockets)
+  const maxSockets = ref(state.value?.maxSockets)
+  const maxAPISockets = ref(state.value?.maxAPISockets)
   const proxy = ref(getProxy())
   const httpProxyEnabled = computed({
-    get: () => state.httpProxyEnabled,
-    set: v => state.httpProxyEnabledSet(v),
+    get: () => state.value?.httpProxyEnabled ?? false,
+    set: v => state.value?.httpProxyEnabledSet(v),
   })
   const developerMode = computed({
-    get: () => state.developerMode,
-    set: v => state.developerModeSet(v),
+    get: () => state.value?.developerMode ?? false,
+    set: v => state.value?.developerModeSet(v),
   })
   const disableTelemetry = computed({
-    get: () => state.disableTelemetry,
-    set: v => state.disableTelemetrySet(v),
+    get: () => state.value?.disableTelemetry ?? false,
+    set: v => state.value?.disableTelemetrySet(v),
   })
   const enableDiscord = computed({
-    get: () => state.discordPresence,
-    set: (v) => state.discordPresenceSet(v),
+    get: () => state.value?.discordPresence ?? false,
+    set: (v) => state.value?.discordPresenceSet(v),
   })
-  const apiSets = computed(() => state.apiSets)
+  const apiSets = computed(() => state.value?.apiSets || [])
 
   onMounted(() => {
     const p = getProxy()
@@ -88,7 +126,7 @@ export function useSettings() {
     proxy.value.port = p.port
   })
 
-  watch(computed(() => state.httpProxy), () => {
+  watch(computed(() => state.value?.httpProxy), () => {
     const p = getProxy()
     proxy.value.host = p.host
     proxy.value.port = p.port
@@ -100,14 +138,14 @@ export function useSettings() {
       !p.host && !p.port
         ? ''
         : `http://${p.host}:${p.port}`
-    if (newValue !== state.httpProxy) {
-      state.httpProxySet(newValue)
+    if (newValue !== state.value?.httpProxy) {
+      state.value?.httpProxySet(newValue)
     }
-    if (state.maxSockets !== maxSockets.value) {
-      state.maxSocketsSet(Number(maxSockets.value))
+    if (state.value?.maxSockets !== maxSockets.value) {
+      state.value?.maxSocketsSet(Number(maxSockets.value))
     }
-    if (state.maxAPISockets !== maxAPISockets.value) {
-      state.maxAPISocketsSet(Number(maxAPISockets.value))
+    if (state.value?.maxAPISockets !== maxAPISockets.value) {
+      state.value?.maxAPISocketsSet(Number(maxAPISockets.value))
     }
   })
 
@@ -121,22 +159,11 @@ export function useSettings() {
     locales,
     proxy,
     selectedLocale,
-    allowPrerelease,
-    autoDownload,
-    autoInstallOnAppQuit,
     apiSetsPreference,
     apiSets,
     disableTelemetry,
     hideNews,
-  }
-}
-
-export function useLauncherVersion() {
-  const { state } = useService(BaseServiceKey)
-  const version = computed(() => state.version)
-  const build = computed(() => state.build)
-  return {
-    version,
-    build,
+    error,
+    isValidating,
   }
 }

@@ -1,6 +1,7 @@
 import { InjectionKey, Ref, set } from 'vue'
 import { BaseServiceKey, Instance, InstanceServiceKey, RuntimeVersions } from '@xmcl/runtime-api'
 import { useService } from '@/composables'
+import { useGlobalSettings } from './setting'
 
 export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanceEdit>> = Symbol('InstanceEdit')
 
@@ -12,7 +13,10 @@ export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanc
  */
 export function useInstanceEdit(instance: Ref<Instance>) {
   const { editInstance: edit } = useService(InstanceServiceKey)
-  const { state: baseState } = useService(BaseServiceKey)
+  const {
+    globalAssignMemory, globalFastLaunch, globalHideLauncher, globalMaxMemory,
+    globalMcOptions, globalMinMemory, globalShowLog, globalVmOptions,
+  } = useGlobalSettings()
 
   const data = reactive({
     name: instance.value?.name ?? '',
@@ -83,35 +87,35 @@ export function useInstanceEdit(instance: Ref<Instance>) {
   }
 
   const assignMemory = computed({
-    get: () => data.assignMemory ?? baseState.globalAssignMemory,
+    get: () => data.assignMemory ?? globalAssignMemory.value,
     set: (v) => { data.assignMemory = v },
   })
   const minMemory = computed({
-    get: () => data.minMemory ?? baseState.globalMinMemory,
+    get: () => data.minMemory ?? globalMinMemory.value,
     set: (v) => { data.minMemory = v },
   })
   const maxMemory = computed({
-    get: () => data.maxMemory ?? baseState.globalMaxMemory,
+    get: () => data.maxMemory ?? globalMaxMemory.value,
     set: (v) => { data.maxMemory = v },
   })
   const vmOptions = computed({
-    get: () => data.vmOptions ?? baseState.globalVmOptions.join(' '),
+    get: () => data.vmOptions ?? globalVmOptions.value.join(' '),
     set: (v) => { data.vmOptions = v },
   })
   const mcOptions = computed({
-    get: () => data.mcOptions ?? baseState.globalMcOptions.join(' '),
+    get: () => data.mcOptions ?? globalMcOptions.value.join(' '),
     set: (v) => { data.mcOptions = v },
   })
   const fastLaunch = computed({
-    get: () => data.fastLaunch ?? baseState.globalFastLaunch,
+    get: () => data.fastLaunch ?? globalFastLaunch.value,
     set: (v) => { data.fastLaunch = v },
   })
   const hideLauncher = computed({
-    get: () => data.hideLauncher ?? baseState.globalHideLauncher,
+    get: () => data.hideLauncher ?? globalHideLauncher.value,
     set: (v) => { data.hideLauncher = v },
   })
   const showLog = computed({
-    get: () => data.showLog ?? baseState.globalShowLog,
+    get: () => data.showLog ?? globalShowLog.value,
     set: (v) => { data.showLog = v },
   })
 

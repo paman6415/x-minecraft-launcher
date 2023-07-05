@@ -1,4 +1,4 @@
-import { BaseState } from './services/BaseService'
+import { SettingState } from './services/BaseService'
 import { DiagnoseState } from './services/DiagnoseService'
 import { GameOptionsState } from './services/InstanceOptionsService'
 import { InstanceModsState } from './services/InstanceModsService'
@@ -20,7 +20,7 @@ export type StateOfServiceKey<K> = K extends ServiceKey<infer Serv>
   : never
 
 export type AllServiceMutations =
-  Mutations<BaseState>
+  Mutations<SettingState>
   & Mutations<DiagnoseState>
   & Mutations<InstanceState>
   & Mutations<InstanceModsState>
@@ -41,7 +41,7 @@ export type Mutations<T> = {
 }
 
 export const AllStates = [
-  BaseState,
+  SettingState,
   DiagnoseState,
   InstanceState,
   InstanceModsState,

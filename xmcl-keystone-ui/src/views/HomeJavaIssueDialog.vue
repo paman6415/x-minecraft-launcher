@@ -115,20 +115,19 @@
 
 <script lang=ts setup>
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
+import { kInstance } from '@/composables/instance'
+import { kInstanceJava } from '@/composables/instanceJava'
 import { injection } from '@/util/inject'
 import { InstanceServiceKey, JavaServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
-import { JavaIssueDialogKey, useJava } from '../composables/java'
+import { JavaIssueDialogKey } from '../composables/java'
 import { useNotifier } from '../composables/notifier'
-import { kInstanceJava } from '@/composables/instanceJava'
-import { kInstance } from '@/composables/instance'
 
 const { showOpenDialog } = windowController
 const { t } = useI18n()
 const { isShown } = useDialog(JavaIssueDialogKey)
-const { add } = useJava()
 const { editInstance } = useService(InstanceServiceKey)
-const { installDefaultJava, refreshLocalJava } = useService(JavaServiceKey)
+const { installDefaultJava, refreshLocalJava, resolveJava: add } = useService(JavaServiceKey)
 const { subscribeTask } = useNotifier()
 const downloadingJava = useServiceBusy(JavaServiceKey, 'installDefaultJava')
 

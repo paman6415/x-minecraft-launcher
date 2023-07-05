@@ -1,9 +1,10 @@
-import { Platform } from '../entities/platform'
 import { Exception } from '../entities/exception'
+import { LauncherProfile } from '../entities/launcherProfile'
+import { Platform } from '../entities/platform'
 import { SettingSchema } from '../entities/setting.schema'
 import { ReleaseInfo } from '../entities/update'
-import { ServiceKey, StatefulService } from './Service'
-import { LauncherProfile } from '../entities/launcherProfile'
+import { MutableState } from '../util/WatchSource'
+import { ServiceKey } from './Service'
 
 export interface MigrateOptions {
   destination: string
@@ -17,7 +18,22 @@ export class LauncherProfileState implements LauncherProfile {
   selectedUser = {}
 }
 
-export class BaseState implements SettingSchema {
+export interface Environment extends Platform {
+  /**
+   * The container of the launcher. Will be raw if the launcher is just installed on system. Will be appx if it's appx.
+   */
+  env: 'raw' | 'appx' | 'appimage'
+  /**
+   * The version of the launcher
+   */
+  version: string
+  /**
+   * The current build number
+   */
+  build: number
+}
+
+export class SettingState implements SettingSchema {
   globalMinMemory = 0
   globalMaxMemory = 0
   globalAssignMemory: 'auto' | boolean = false
@@ -55,19 +71,6 @@ export class BaseState implements SettingSchema {
   autoDownload = false
   apiSetsPreference: 'mojang' | 'mcbbs' | 'bmcl' | '' = ''
   apiSets = [{ name: 'mcbbs', url: 'https://download.mcbbs.net' }, { name: 'bmcl', url: 'https://bmclapi2.bangbang93.com' }]
-
-  /**
-   * The container of the launcher. Will be raw if the launcher is just installed on system. Will be appx if it's appx.
-   */
-  env: 'raw' | 'appx' | 'appimage' = 'raw'
-  /**
-   * The version of the launcher
-   */
-  version = ''
-  /**
-   * The current build number
-   */
-  build = 0
   /**
     * launcher root data folder path
     */
@@ -76,14 +79,6 @@ export class BaseState implements SettingSchema {
    * Is current environment connecting to internet?
    */
   online = false
-  /**
-   * The current operating system platform
-   */
-  platform: Platform = {
-    name: 'unknown',
-    version: '',
-    arch: '',
-  }
 
   httpProxy = ''
 
@@ -228,7 +223,12 @@ export class BaseState implements SettingSchema {
   }
 }
 
-export interface BaseService extends StatefulService<BaseState> {
+export interface BaseService {
+  getSettings(): Promise<MutableState<SettingState>>
+  /**
+   * Get the environment of the launcher
+   */
+  getEnvironment(): Promise<Environment>
   /**
    * let the launcher to handle a url open. The url can be xmcl:// protocol
    */

@@ -1,31 +1,23 @@
-import { computed } from 'vue'
-import { BaseServiceKey, JavaRecord, JavaServiceKey } from '@xmcl/runtime-api'
+import { useService, useServiceBusy } from '@/composables'
+import { JavaRecord, JavaServiceKey, JavaState } from '@xmcl/runtime-api'
+import { computed, InjectionKey } from 'vue'
 import { DialogKey } from './dialog'
-import { useServiceBusy, useService } from '@/composables'
-
-export function useJavaService() {
-  return useService(JavaServiceKey)
-}
+import { useState } from './syncableState'
 
 export const JavaIssueDialogKey: DialogKey<void> = 'java-issue'
+export const kJavaState: InjectionKey<ReturnType<typeof useJavaState>> = Symbol('JavaState')
 
-export function useJava() {
-  const { state, resolveJava, installDefaultJava: installJava, refreshLocalJava } = useJavaService()
-  const all = computed(() => state.all)
-  const missing = computed(() => state.all.length === 0)
-  const refreshing = useServiceBusy(JavaServiceKey, 'refreshLocalJava')
-  function remove(java: JavaRecord) {
-    state.javaRemove(java)
-  }
+export function useJavaState() {
+  const { getJavaState } = useService(JavaServiceKey)
+  const { state, isValidating, error } = useState<JavaState>(ref('java'), getJavaState)
+  const all = computed(() => state.value?.all ?? [])
+  const missing = computed(() => state.value?.all.length === 0)
 
   return {
-    all,
-    remove,
-    add: resolveJava,
-    installDefault: installJava,
-    refreshLocalJava,
-    refreshing,
+    isValidating,
     missing,
-    openJavaSite: () => window.open('https://www.java.com/download/', 'browser'),
+    all,
+    error,
+    remove: (java: JavaRecord) => state.value?.javaRemove(java),
   }
 }

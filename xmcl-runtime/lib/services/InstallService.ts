@@ -1,4 +1,4 @@
-import { diagnose, diagnoseLibraries, LibraryIssue, MinecraftFolder, ResolvedLibrary, ResolvedVersion, Version } from '@xmcl/core'
+import { MinecraftFolder, ResolvedLibrary, ResolvedVersion, Version } from '@xmcl/core'
 import { parse as parseForge } from '@xmcl/forge-site-parser'
 import { DEFAULT_FORGE_MAVEN, DEFAULT_RESOURCE_ROOT_URL, DEFAULT_VERSION_MANIFEST_URL, DownloadTask, FabricArtifactVersion, installAssetsTask, installByProfileTask, installFabric, InstallForgeOptions, installForgeTask, InstallJarTask, installLibrariesTask, installLiteloaderTask, installOptifineTask, InstallProfile, installQuiltVersion, installResolvedAssetsTask, installResolvedLibrariesTask, installVersionTask, LiteloaderVersion, MinecraftVersion, MinecraftVersionList, Options, QuiltArtifactVersion } from '@xmcl/installer'
 import { InstallForgeOptions as _InstallForgeOptions, Asset, FabricVersions, ForgeVersion, GetQuiltVersionListOptions, InstallService as IInstallService, InstallableLibrary, InstallFabricOptions, InstallOptifineOptions, InstallQuiltOptions, InstallServiceKey, isFabricLoaderLibrary, isForgeLibrary, LiteloaderVersions, LockKey, MinecraftVersions, OptifineVersion, ResourceDomain } from '@xmcl/runtime-api'
@@ -10,13 +10,13 @@ import { URL } from 'url'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { assertErrorWithCache, kCacheKey } from '../dispatchers/cacheDispatcher'
+import { AnyError } from '../util/error'
 import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
 import { JavaService } from './JavaService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Lock, Singleton } from './Service'
 import { VersionService } from './VersionService'
-import { AnyError } from '../util/error'
 
 /**
  * Version install service provide some functions to install Minecraft/Forge/Liteloader, etc. version
