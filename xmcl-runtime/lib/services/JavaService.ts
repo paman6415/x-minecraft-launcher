@@ -44,6 +44,10 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     })
   }
 
+  async getJavaState(): Promise<JavaState> {
+    return this.state
+  }
+
   getInternalJavaLocation(version: JavaVersion) {
     return this.app.platform.name === 'osx'
       ? this.getPath('jre', version.component, 'jre.bundle', 'Contents', 'Home', 'bin', 'java')

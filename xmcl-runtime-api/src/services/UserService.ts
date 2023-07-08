@@ -3,6 +3,7 @@ import { Exception } from '../entities/exception'
 import { GameProfileAndTexture, UserProfile, UserSchema, YggdrasilApi } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
 import { ServiceKey, StatefulService } from './Service'
+import { MutableState } from 'src/util/WatchSource'
 
 export interface RefreshSkinOptions {
   gameProfileId?: string
@@ -149,7 +150,8 @@ export class UserState implements UserSchema {
 
 export const BUILTIN_USER_SERVICES = ['microsoft', 'mojang', 'offline']
 
-export interface UserService extends StatefulService<UserState>, GenericEventEmitter<UserServiceEventMap> {
+export interface UserService extends GenericEventEmitter<UserServiceEventMap> {
+  getUserState(): Promise<MutableState<UserState>>
   /**
    * Refresh the current user login status.
    *

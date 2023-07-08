@@ -106,7 +106,7 @@ export class OfflineUserService extends AbstractService implements IOfflineUserS
   }
 
   async isAllowed(): Promise<boolean> {
-    return Object.values(this.userService.state.users).some(u => u.authService === 'microsoft')
+    return !!this.userService.getOfficialUserProfile()
   }
 
   async removeGameProfile(name: string): Promise<void> {

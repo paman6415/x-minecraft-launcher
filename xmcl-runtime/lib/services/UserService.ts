@@ -3,6 +3,7 @@ import { DownloadTask } from '@xmcl/installer'
 import {
   UserService as IUserService,
   LoginOptions,
+  MutableState,
   SaveSkinOptions, UploadSkinOptions,
   UserProfile,
   UserSchema,
@@ -108,6 +109,10 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     app.protocol.registerHandler('authlib-injector', ({ request, response }) => {
       this.addYggdrasilAccountSystem(request.url.pathname)
     })
+  }
+
+  async getUserState(): Promise<MutableState<UserState>> {
+    return this.state
   }
 
   async getMojangSelectedUser(): Promise<string> {

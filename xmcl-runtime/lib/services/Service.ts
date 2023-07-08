@@ -1,4 +1,4 @@
-import { getServiceSemaphoreKey, ServiceKey, State } from '@xmcl/runtime-api'
+import { getServiceSemaphoreKey, MutableState, ServiceKey, State } from '@xmcl/runtime-api'
 import { Task } from '@xmcl/task'
 import { join } from 'path'
 import { EventEmitter } from 'stream'
@@ -275,7 +275,7 @@ export abstract class AbstractService extends EventEmitter {
 }
 
 export abstract class StatefulService<M extends State<M>> extends AbstractService {
-  state: M
+  state: MutableState<M>
 
   constructor(app: LauncherApp, createState: () => M, initializer?: () => Promise<void>) {
     super(app, initializer)

@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-redeclare */
-import { MinecraftJarIssue, ResolvedVersion, AssetIndexIssue, LibraryIssue, AssetIssue } from '@xmcl/core'
-import { RuntimeVersions } from '../entities/instance.schema'
-import { IssueKey } from '../entities/issue'
-import { GenericEventEmitter } from '../events'
+import { AssetIndexIssue, AssetIssue, LibraryIssue, MinecraftJarIssue, ResolvedVersion } from '@xmcl/core'
+import { InstallProfileIssueReport } from '@xmcl/installer'
 import { Exception } from '../entities/exception'
-import { ServiceKey, StatefulService } from './Service'
-import { InstallProfile, InstallProfileIssueReport } from '@xmcl/installer'
+import { ServiceKey } from './Service'
 import { LocalVersionHeader } from './VersionService'
 
 export class InstanceVersionState {
