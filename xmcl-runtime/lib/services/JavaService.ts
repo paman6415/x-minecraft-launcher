@@ -1,6 +1,6 @@
 import { JavaVersion } from '@xmcl/core'
 import { fetchJavaRuntimeManifest, installJavaRuntimeTask, parseJavaVersion, resolveJava, scanLocalJava } from '@xmcl/installer'
-import { Java, JavaRecord, JavaSchema, JavaService as IJavaService, JavaServiceKey, JavaState } from '@xmcl/runtime-api'
+import { Java, JavaRecord, JavaSchema, JavaService as IJavaService, JavaServiceKey, JavaState, MutableState } from '@xmcl/runtime-api'
 import { ensureFile } from 'fs-extra/esm'
 import { chmod, readFile } from 'fs/promises'
 import { dirname, join } from 'path'
@@ -44,15 +44,15 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     })
   }
 
-  async getJavaState(): Promise<JavaState> {
+  async getJavaState(): Promise<MutableState<JavaState>> {
     return this.state
   }
 
   getInternalJavaLocation(version: JavaVersion) {
-    return this.app.platform.name === 'osx'
+    return this.app.platform.os === 'osx'
       ? this.getPath('jre', version.component, 'jre.bundle', 'Contents', 'Home', 'bin', 'java')
       : this.getPath('jre', version.component, 'bin',
-        this.app.platform.name === 'windows' ? 'java.exe' : 'java')
+        this.app.platform.os === 'windows' ? 'java.exe' : 'java')
   }
 
   getJavaForVersion(javaVersion: JavaVersion, validOnly = false) {
@@ -106,7 +106,7 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     }).setName('installJre')
     await ensureFile(location)
     await this.submit(task)
-    if (this.app.platform.name !== 'windows') {
+    if (this.app.platform.os !== 'windows') {
       await chmod(location, 0o765)
     }
     this.log(`Successfully install java internally ${location}`)
@@ -189,7 +189,7 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     if (this.state.all.length === 0 || force) {
       this.log('Force update or no local cache found. Scan java through the disk.')
       const commonLocations = [] as string[]
-      if (this.app.platform.name === 'windows') {
+      if (this.app.platform.os === 'windows') {
         let files = await readdirIfPresent('C:\\Program Files\\Java')
         files = files.map(f => join('C:\\Program Files\\Java', f, 'bin', 'java.exe'))
         commonLocations.push(...files)

@@ -79,7 +79,7 @@ export class LauncherApp extends EventEmitter {
   readonly semaphoreManager: SemaphoreManager
   readonly launcherAppManager: LauncherAppManager
 
-  readonly platform: Platform = getPlatform()
+  readonly platform: Platform
 
   readonly build: number = Number.parseInt(process.env.BUILD_NUMBER ?? '0', 10)
 
@@ -140,8 +140,14 @@ export class LauncherApp extends EventEmitter {
     this.temporaryPath = ''
     const appData = host.getPath('appData')
 
+    const plat = getPlatform()
+    this.platform = {
+      os: plat.name,
+      osRelease: plat.version,
+      arch: plat.arch,
+    }
     this.appDataPath = join(appData, LAUNCHER_NAME)
-    this.minecraftDataPath = join(appData, this.platform.name === 'osx' ? 'minecraft' : '.minecraft')
+    this.minecraftDataPath = join(appData, this.platform.os === 'osx' ? 'minecraft' : '.minecraft')
 
     this.logManager = new LogManager(this)
     this.registry.register(LauncherAppKey, this)

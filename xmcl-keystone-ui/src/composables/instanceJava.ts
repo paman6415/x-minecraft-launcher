@@ -1,7 +1,7 @@
 import type { JavaVersion, ResolvedVersion } from '@xmcl/core'
 import { Instance, Java, JavaRecord, JavaServiceKey, parseVersion } from '@xmcl/runtime-api'
 import useSWRV from 'swrv'
-import { Ref, InjectionKey } from 'vue'
+import { InjectionKey, Ref } from 'vue'
 import { useService } from './service'
 
 export enum JavaCompatibleState {
@@ -25,17 +25,17 @@ export interface JavaRecommendation {
 
 export const kInstanceJava: InjectionKey<ReturnType<typeof useInstanceJava>> = Symbol('InstanceJava')
 
-export function useInstanceJava(instance: Ref<Instance>, version: Ref<ResolvedVersion | undefined>) {
-  const { resolveJava, state } = useService(JavaServiceKey)
+export function useInstanceJava(instance: Ref<Instance>, version: Ref<ResolvedVersion | undefined>, all: Ref<JavaRecord[]>) {
+  const { resolveJava } = useService(JavaServiceKey)
 
   const { data, mutate, isValidating, error } = useSWRV(`/instance/${instance.value.path}/java-version?version=${version.value?.id}`, async () => {
-    return await computeJava(state.all, resolveJava, instance.value, version.value)
+    return await computeJava(all.value, resolveJava, instance.value, version.value)
   })
 
   const java = computed(() => data.value?.java)
   const recommendation = computed(() => data.value?.recomendation)
 
-  watch(computed(() => state.all), () => {
+  watch(all, () => {
     mutate()
   })
 

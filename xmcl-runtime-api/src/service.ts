@@ -1,6 +1,6 @@
 /* eslint-disable no-dupe-class-members */
 import { GenericEventEmitter } from './events'
-import { ServiceKey, StatefulService } from './services/Service'
+import { ServiceKey } from './services/Service'
 
 interface SyncableEventMap {
   commit: {
@@ -20,11 +20,6 @@ export interface SyncableStateChannel<T> extends GenericEventEmitter<SyncableEve
  */
 export type ServiceChannel<T> = {
   readonly key: ServiceKey<T>
-  /**
-   * Send request to the service to get the latest state of the service.
-   * @param id The commit total order
-   */
-  sync(id?: number): Promise<{ state: T extends StatefulService<infer S> ? S : void; length: number }>
   /**
    * Commit a mutation to service state.
    * @param key The mutation name

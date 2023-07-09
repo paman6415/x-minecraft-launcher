@@ -128,7 +128,7 @@
 <script lang="ts" setup>
 import InstanceManifestFileTree from '@/components/InstanceManifestFileTree.vue'
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
-import { kInstance } from '@/composables/instance'
+import { kInstance, kInstances } from '@/composables/instance'
 import { InstanceFileNode, provideFileNodes } from '@/composables/instanceFileNodeData'
 import { InstanceInstallDialog } from '@/composables/instanceUpdate'
 import { useVuetifyColor } from '@/composables/vuetify'
@@ -149,7 +149,8 @@ const oldResource = computed(() => dialog.value.parameter?.currentResource)
 const newResource = computed(() => dialog.value.parameter?.resource)
 const { getInstanceUpdateProfile } = useService(InstanceUpdateServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
-const { editInstance } = useService(InstanceServiceKey)
+
+const { edit } = injection(kInstances)
 const { t } = useI18n()
 
 const upgrade = ref(undefined as undefined | {
@@ -234,7 +235,7 @@ const confirm = async () => {
       path: instancePath.value,
       files: files.filter(f => f.operation !== 'keep').map(f => ({ ...f.file, operation: f.operation as InstanceFileOperation })),
     })
-    await editInstance({
+    await edit({
       instancePath: instancePath.value,
       runtime: {
         minecraft: instance.runtime?.minecraft || oldRuntime.value.minecraft,

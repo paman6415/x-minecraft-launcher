@@ -141,11 +141,12 @@ import { Ref } from 'vue'
 import { isException, OfficialUserServiceKey, UserException, UserServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
 import { LoginDialog, useAccountSystemHistory } from '../composables/login'
-import { useLoginValidation } from '../composables/user'
+import { kUserContext, useLoginValidation } from '../composables/user'
 import Hint from '@/components/Hint.vue'
 import { useBusy, useRefreshable, useService } from '@/composables'
 import AppLoginDialogAccountSystemSelect from './AppLoginDialogAccountSystemSelect.vue'
 import AppLoginDialogBackground from './AppLoginDialogBackground.vue'
+import { injection } from '@/util/inject'
 
 const props = defineProps<{
   inside: boolean
@@ -153,7 +154,8 @@ const props = defineProps<{
 
 const { hide, isShown, dialog } = useDialog(LoginDialog)
 const { t } = useI18n()
-const { login, abortLogin, state: userState } = useService(UserServiceKey)
+const { yggdrasilServices } = injection(kUserContext)
+const { login, abortLogin } = useService(UserServiceKey)
 const { on } = useService(OfficialUserServiceKey)
 
 const data = reactive({
@@ -182,7 +184,7 @@ const { authService, history } = useAccountSystemHistory()
 const signUpLink = computed(() => {
   if (authService.value === 'microsoft') return 'https://account.live.com/registration'
   if (authService.value === 'mojang') return 'https://my.minecraft.net/en-us/store/minecraft/#register'
-  const api = userState.yggdrasilServices.find(a => new URL(a.url).host === authService.value)
+  const api = yggdrasilServices.value.find(a => new URL(a.url).host === authService.value)
   const url = api?.authlibInjector?.meta.links.register
   return url || ''
 })

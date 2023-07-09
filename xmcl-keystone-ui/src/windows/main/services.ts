@@ -1,7 +1,7 @@
 import { kServiceFactory } from '@/composables'
 import { injection } from '@/util/inject'
 import type { ResolvedVersion } from '@xmcl/core'
-import { BaseServiceKey, BaseState, CurseForgeServiceKey, DiagnoseServiceKey, DiagnoseState, EMPTY_VERSION, GameProfileAndTexture, ImportServiceKey, InstallServiceKey, InstanceInstallServiceKey, InstanceIOServiceKey, InstanceLogServiceKey, InstanceManifestServiceKey, InstanceModsServiceKey, InstanceModsState, InstanceOptionsServiceKey, InstanceResourcePacksServiceKey, InstanceSavesServiceKey, InstanceSchema, InstanceScreenshotServiceKey, InstanceServerInfoServiceKey, InstanceServiceKey, InstanceShaderPacksServiceKey, InstanceState, InstanceUpdateServiceKey, InstanceVersionServiceKey, InstanceVersionState, JavaServiceKey, JavaState, LaunchServiceKey, LaunchState, LittleSkinUserServiceKey, LocalVersionHeader, ModpackServiceKey, ModrinthServiceKey, NatDeviceInfo, NatServiceKey, NatState, OfficialUserServiceKey, OfflineUserServiceKey, PeerServiceKey, PeerState, Resource, ResourcePackPreviewServiceKey, ResourceServiceKey, ServerStatusServiceKey, UserProfile, UserServiceKey, UserState, VersionServiceKey, VersionState } from '@xmcl/runtime-api'
+import { EMPTY_VERSION, GameProfileAndTexture, InstanceModsState, InstanceSchema, InstanceState, InstanceVersionState, LocalVersionHeader, NatDeviceInfo, NatState, Resource, UserProfile, UserState } from '@xmcl/runtime-api'
 import { DeepPartial } from '@xmcl/runtime-api/src/util/object'
 import { GameProfile } from '@xmcl/user'
 import { del, set } from 'vue'

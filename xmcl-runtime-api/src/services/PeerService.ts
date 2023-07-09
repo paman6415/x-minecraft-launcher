@@ -1,7 +1,8 @@
 import { GenericEventEmitter } from '../events'
 import { InstanceManifest } from '../entities/instanceManifest.schema'
-import { ServiceKey, StatefulService } from './Service'
+import { ServiceKey } from './Service'
 import { GameProfileAndTexture } from '../entities/user.schema'
+import { MutableState } from '../util/WatchSource'
 
 export interface RTCSessionDescription {
   sdp: string
@@ -143,7 +144,8 @@ interface PeerServiceEvents {
   share: { id: string; manifest?: InstanceManifest }
 }
 
-export interface PeerService extends StatefulService<PeerState>, GenericEventEmitter<PeerServiceEvents> {
+export interface PeerService extends GenericEventEmitter<PeerServiceEvents> {
+  getPeerState(): Promise<MutableState<PeerState>>
   /**
    * Join a group. Then the group will automatically handle your connection between peers
    */

@@ -12,7 +12,6 @@ export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanc
  * @returns The instance edit data
  */
 export function useInstanceEdit(instance: Ref<Instance>) {
-  const { editInstance: edit } = useService(InstanceServiceKey)
   const {
     globalAssignMemory, globalFastLaunch, globalHideLauncher, globalMaxMemory,
     globalMcOptions, globalMinMemory, globalShowLog, globalVmOptions,

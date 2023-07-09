@@ -9,7 +9,6 @@ import { JavaValidation } from '../entities/java'
 import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
 import { UTF8 } from '../util/encoding'
 import { Inject } from '../util/objectRegistry'
-import { ExternalAuthSkinService } from './ExternalAuthSkinService'
 import { InstallService } from './InstallService'
 import { InstanceService } from './InstanceService'
 import { JavaService } from './JavaService'
@@ -25,7 +24,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
   private launchedProcesses: ChildProcess[] = []
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(ExternalAuthSkinService) private externalAuthSkinService: ExternalAuthSkinService,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstallService) private installService: InstallService,
     @Inject(JavaService) private javaService: JavaService,
@@ -55,38 +53,10 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
    */
   async launch(options: LaunchOptions) {
     try {
-      if (this.state.status !== 'idle') {
-        return false
-      }
-
-      this.state.launchStatus('checkingProblems')
-
       const user = options.user
       const gameProfile = user.profiles[user.selectedProfile]
       const javaPath = options.java
-
-      if (this.state.status === 'idle') { // check if we have cancel (set to ready) this launch
-        return false
-      }
-
-      const yggdrasilHost = user
-        ? this.userService.getAccountSystem(user?.authService)?.getYggdrasilAuthHost?.(user?.authService) ??
-        this.userService.yggdrasilAccountSystem.getYggdrasilAuthHost(user?.authService)
-        : undefined
-      let yggdrasilAgent: LaunchOption['yggdrasilAgent']
-
-      if (yggdrasilHost) {
-        this.state.launchStatus('injectingAuthLib')
-        try {
-          const jar = await this.externalAuthSkinService.installAuthLibInjector()
-          yggdrasilAgent = {
-            jar,
-            server: yggdrasilHost,
-          }
-        } catch (e) {
-          this.error(new Error('Fail to install authlib-injection', { cause: e }))
-        }
-      }
+      const yggdrasilAgent = options.yggdrasilAgent
 
       const minecraftFolder = new MinecraftFolder(options.gameDirectory)
 
@@ -129,8 +99,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
           }),
         ])
       }
-
-      this.state.launchStatus('launching')
 
       this.log(`Will launch with ${version.id} version.`)
 
@@ -209,10 +177,10 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       const startTime = Date.now()
 
       // TODO: move this to plugin system
-      this.instanceService.editInstance({
-        instancePath: options.gameDirectory,
-        lastPlayedDate: startTime,
-      })
+      // this.instanceService.editInstance({
+      //   instancePath: options.gameDirectory,
+      //   lastPlayedDate: startTime,
+      // })
 
       const processError = async (buf: Buffer) => {
         const encoding = await this.encoder.guessEncodingByBuffer(buf).catch(e => { })
@@ -243,10 +211,10 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         const playTime = endTime - startTime
 
         // TODO: move this to plugin system
-        this.instanceService.editInstance({
-          instancePath: options.gameDirectory,
-          // playtime: instance.playtime + playTime,
-        })
+        // this.instanceService.editInstance({
+        //   instancePath: options.gameDirectory,
+        //   // playtime: instance.playtime + playTime,
+        // })
 
         this.log(`Minecraft exit: ${code}, signal: ${signal}`)
         if (crashReportLocation) {
@@ -269,12 +237,9 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
         this.emit('minecraft-window-ready', { pid: process.pid, ...options })
       })
       process.unref()
-      this.state.launchStatus('idle')
 
       return true
     } catch (e) {
-      this.state.launchStatus('idle')
-
       if (e instanceof LaunchException) {
         throw e
       }

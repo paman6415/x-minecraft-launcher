@@ -2,8 +2,8 @@ import { GameProfile } from '@xmcl/user'
 import { Exception } from '../entities/exception'
 import { GameProfileAndTexture, UserProfile, UserSchema, YggdrasilApi } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
-import { ServiceKey, StatefulService } from './Service'
-import { MutableState } from 'src/util/WatchSource'
+import { MutableState } from '../util/WatchSource'
+import { ServiceKey } from './Service'
 
 export interface RefreshSkinOptions {
   gameProfileId?: string
@@ -122,6 +122,7 @@ export class UserState implements UserSchema {
       current.expiredAt = user.expiredAt
       current.profiles = user.profiles
       current.username = user.username
+      current.selectedProfile = user.selectedProfile
     } else {
       this.users[user.id] = user
     }
@@ -188,12 +189,12 @@ export interface UserService extends GenericEventEmitter<UserServiceEventMap> {
    * Add a third-party account system satisfy the authlib-injector format
    * @param url The account api url
    */
-  addYggdrasilAccountSystem(url: string): Promise<void>
+  addYggdrasilService(url: string): Promise<void>
   /**
    * Remove a third-party account system satisfy the authlib-injector format
    * @param url The account api url
    */
-  removeYggdrasilAccountSystem(url: string): Promise<void>
+  removeYggdrasilService(url: string): Promise<void>
   /**
    * Login new user account.
    */

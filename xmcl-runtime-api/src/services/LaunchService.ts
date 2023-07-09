@@ -1,22 +1,17 @@
+import { MutableState } from 'src/util/WatchSource'
 import { Exception } from '../entities/exception'
 import { LaunchStatus } from '../entities/launch'
 import { UserProfile } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
-import { ServiceKey, StatefulService } from './Service'
+import { ServiceKey } from './Service'
 import { UserExceptions } from './UserService'
 
 export class LaunchState {
-  status = 'idle' as LaunchStatus
-
   activeCount = 0
 
   launchCount(count: number) {
     if (count < 0) count = 0
     this.activeCount = count
-  }
-
-  launchStatus(status: LaunchStatus) {
-    this.status = status
   }
 }
 
@@ -60,6 +55,23 @@ export interface LaunchOptions {
     port?: number
   }
   /**
+   * Support yushi's yggdrasil agent https://github.com/to2mbn/authlib-injector/wiki
+   */
+  yggdrasilAgent?: {
+    /**
+     * The jar file path of the authlib-injector
+     */
+    jar: string
+    /**
+     * The auth server host
+     */
+    server: string
+    /**
+     * The prefetched base64
+     */
+    prefetched?: string
+  }
+  /**
    * Hide launcher after game started
    */
   hideLauncher?: boolean
@@ -97,7 +109,7 @@ export interface LaunchOptions {
   mcOptions?: string[]
 }
 
-export interface LaunchService extends StatefulService<LaunchState>, GenericEventEmitter<LaunchServiceEventMap> {
+export interface LaunchService extends GenericEventEmitter<LaunchServiceEventMap> {
   /**
    * Generate useable launch arguments for current profile
    */

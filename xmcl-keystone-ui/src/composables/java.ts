@@ -5,9 +5,9 @@ import { DialogKey } from './dialog'
 import { useState } from './syncableState'
 
 export const JavaIssueDialogKey: DialogKey<void> = 'java-issue'
-export const kJavaState: InjectionKey<ReturnType<typeof useJavaState>> = Symbol('JavaState')
+export const kJavaContext: InjectionKey<ReturnType<typeof useJavaContext>> = Symbol('JavaContext')
 
-export function useJavaState() {
+export function useJavaContext() {
   const { getJavaState } = useService(JavaServiceKey)
   const { state, isValidating, error } = useState<JavaState>(ref('java'), getJavaState)
   const all = computed(() => state.value?.all ?? [])

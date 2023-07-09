@@ -125,7 +125,7 @@ export class ElectronUpdater implements LauncherAppUpdater {
       incremental: true,
     }
     updateInfo.newUpdate = `v${app.version}` !== updateInfo.name
-    const platformString = app.platform.name === 'windows' ? 'win' : app.platform.name === 'osx' ? 'mac' : 'linux'
+    const platformString = app.platform.os === 'windows' ? 'win' : app.platform.os === 'osx' ? 'mac' : 'linux'
     const version = updateInfo.name.startsWith('v') ? updateInfo.name.substring(1) : updateInfo.name
     updateInfo.incremental = updateInfo.files.some(f => f.name === `app-${version}-${platformString}.asar`)
     app.log(`Got incremental=${updateInfo.incremental} update from selfhost`)
@@ -137,8 +137,8 @@ export class ElectronUpdater implements LauncherAppUpdater {
     const appAsarPath = dirname(__dirname)
     const updateAsarPath = join(this.app.appDataPath, 'pending_update')
 
-    this.logger.log(`Install asar on ${this.app.platform.name} ${appAsarPath}`)
-    if (this.app.platform.name === 'windows') {
+    this.logger.log(`Install asar on ${this.app.platform.os} ${appAsarPath}`)
+    if (this.app.platform.os === 'windows') {
       const elevatePath = await ensureElevateExe(this.app.appDataPath)
 
       if (!existsSync(updateAsarPath)) {

@@ -62,7 +62,7 @@ export const trayPlugin: ControllerPlugin = function (this: Controller) {
         },
       },
     ]
-    if (app.platform.name === 'osx') {
+    if (app.platform.os === 'osx') {
       const show = () => {
         const window = this.mainWin
         window?.show()
@@ -78,7 +78,7 @@ export const trayPlugin: ControllerPlugin = function (this: Controller) {
 
   const getTrayImage = (dark: string, light: string) => {
     const path = nativeTheme.shouldUseDarkColors ? dark : light
-    if (this.app.platform.name === 'osx') {
+    if (this.app.platform.os === 'osx') {
       const icon = nativeImage.createFromPath(path)
       return icon.resize({ width: 20, height: 20 })
     }
@@ -87,7 +87,7 @@ export const trayPlugin: ControllerPlugin = function (this: Controller) {
 
   this.app.once('engine-ready', () => {
     const tray = new Tray(getTrayImage(darkTray, lightTray))
-    if (this.app.platform.name === 'windows') {
+    if (this.app.platform.os === 'windows') {
       tray.on('double-click', () => {
         const window = this.mainWin
         if (window) {

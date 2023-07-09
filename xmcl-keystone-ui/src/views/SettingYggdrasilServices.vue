@@ -61,10 +61,12 @@
 </template>
 <script setup lang="ts">
 import { useService } from '@/composables'
+import { kUserContext } from '@/composables/user'
+import { injection } from '@/util/inject'
 import { UserServiceKey, YggdrasilApi } from '@xmcl/runtime-api'
 
-const { state, addYggdrasilAccountSystem, removeYggdrasilAccountSystem } = useService(UserServiceKey)
-const services = computed(() => state.yggdrasilServices)
+const { addYggdrasilService, removeYggdrasilService } = useService(UserServiceKey)
+const { yggdrasilServices: services } = injection(kUserContext)
 const container = ref([...services.value.map(s => ({ ...s }))] as (YggdrasilApi & { new?: boolean })[])
 watch(services, (newVal) => {
   container.value = [...newVal.map(s => ({ ...s }))]
@@ -89,9 +91,9 @@ const urlsRules = [
 ]
 
 const save = (api: YggdrasilApi) => {
-  addYggdrasilAccountSystem(api.url)
+  addYggdrasilService(api.url)
 }
 const remove = (api: YggdrasilApi) => {
-  removeYggdrasilAccountSystem(api.url)
+  removeYggdrasilService(api.url)
 }
 </script>

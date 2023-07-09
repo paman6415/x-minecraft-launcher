@@ -4,6 +4,7 @@ import { injection } from '@/util/inject'
 import { CachedFTBModpackVersionManifest, InstanceManifest, JavaServiceKey, ModpackInstallProfile, ModpackServiceKey, PeerServiceKey, RawModpackResource, Resource, RuntimeVersions } from '@xmcl/runtime-api'
 import { DialogKey } from './dialog'
 import { kModpacks } from './modpack'
+import { kJavaContext } from './java'
 
 export const AddInstanceDialogKey: DialogKey<string> = 'add-instance-dialog'
 
@@ -15,7 +16,7 @@ export interface Template extends ModpackInstallProfile {
 }
 
 export function useAllTemplate() {
-  const { state: javaState } = useService(JavaServiceKey)
+  const { all } = injection(kJavaContext)
   const { state: peerState } = useService(PeerServiceKey)
   const { t } = useI18n()
   const { getModpackInstallProfile } = useService(ModpackServiceKey)
@@ -136,7 +137,7 @@ export function useAllTemplate() {
         if (!parsedVersion) {
           return
         }
-        const majorMatched = javaState.all.filter(v => v.majorVersion === parsedVersion.majorVersion)
+        const majorMatched = all.value.filter(v => v.majorVersion === parsedVersion.majorVersion)
         let selectedRecord = majorMatched[0]
         for (const v of majorMatched.slice(1)) {
           const currentPatch = getVersion(v.version)?.patch

@@ -37,7 +37,7 @@ const app = new Vue(defineComponent({
   setup(props, context) {
     provide(kVuetify, vuetify.framework)
 
-    baseService.sync().then(({ state }) => {
+    baseService.call('getSettings').then(state => state).then(state => {
       i18n.locale = state.locale
       updateTheme(state.theme)
     })

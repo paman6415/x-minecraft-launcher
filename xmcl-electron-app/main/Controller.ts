@@ -56,7 +56,7 @@ export default class Controller implements LauncherAppController {
           vibrancy: man.vibrancy ? 'sidebar' : undefined, // or popover
           icon: nativeTheme.shouldUseDarkColors ? man.iconSets.darkIcon : man.iconSets.icon,
           titleBarStyle: this.getTitlebarStyle(),
-          trafficLightPosition: this.app.platform.name === 'osx' ? { x: 14, y: 10 } : undefined,
+          trafficLightPosition: this.app.platform.os === 'osx' ? { x: 14, y: 10 } : undefined,
           minWidth: 600,
           minHeight: 600,
           width: 1024,
@@ -112,7 +112,7 @@ export default class Controller implements LauncherAppController {
   constructor(protected app: ElectronLauncherApp) {
     plugins.forEach(p => p.call(this))
 
-    if (app.platform.name === 'windows') {
+    if (app.platform.os === 'windows') {
       this.windowsVersion = app.windowsUtils?.getWindowsVersion()
     }
 
@@ -184,7 +184,7 @@ export default class Controller implements LauncherAppController {
   }
 
   private setWindowBlurEffect(browser: BrowserWindow) {
-    const isWin = this.app.platform.name === 'windows'
+    const isWin = this.app.platform.os === 'windows'
     if (isWin && this.app.windowsUtils) {
       const handle = browser.getNativeWindowHandle()
       const windowsVersion = this.windowsVersion
@@ -369,7 +369,7 @@ export default class Controller implements LauncherAppController {
     const minWidth = man.minWidth ?? 800
     const minHeight = man.minHeight ?? 600
 
-    if (this.app.platform.name === 'linux') {
+    if (this.app.platform.os === 'linux') {
       if (!this.isFirstLaunch) {
         this.baseServiceSignal = createPromiseSignal()
         this.baseServiceSignal.accept(this.app.serviceManager.get(BaseService).initialize())
@@ -388,7 +388,7 @@ export default class Controller implements LauncherAppController {
       vibrancy: man.vibrancy ? 'sidebar' : undefined, // or popover
       icon: nativeTheme.shouldUseDarkColors ? man.iconSets.darkIcon : man.iconSets.icon,
       titleBarStyle: this.getTitlebarStyle(),
-      trafficLightPosition: this.app.platform.name === 'osx' ? { x: 14, y: 10 } : undefined,
+      trafficLightPosition: this.app.platform.os === 'osx' ? { x: 14, y: 10 } : undefined,
       webPreferences: {
         preload: indexPreload,
         session: restoredSession,
@@ -493,7 +493,7 @@ export default class Controller implements LauncherAppController {
   }
 
   private getFrameOption() {
-    if (this.app.platform.name === 'linux') {
+    if (this.app.platform.os === 'linux') {
       return this.app.serviceManager.get(BaseService).state.linuxTitlebar
     } else {
       return true
@@ -501,7 +501,7 @@ export default class Controller implements LauncherAppController {
   }
 
   private getTitlebarStyle() {
-    return this.app.platform.name === 'linux' &&
+    return this.app.platform.os === 'linux' &&
       this.app.serviceManager.get(BaseService).state.linuxTitlebar
       ? 'default'
       : 'hidden'

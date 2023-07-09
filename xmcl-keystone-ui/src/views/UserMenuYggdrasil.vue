@@ -31,7 +31,7 @@
           text
           color="primary"
           :disabled="profile.id === user.selectedProfile"
-          @click="selectGameProfile(user.id, profile.id)"
+          @click="selectGameProfile(user, profile.id)"
         >
           <v-icon>
             {{ profile.id === user.selectedProfile ? 'check_circle' : 'done' }}
@@ -51,8 +51,11 @@ const props = defineProps<{
 }>()
 
 const { removeGameProfile } = useService(OfflineUserServiceKey)
+const { putUser } = useService(UserServiceKey)
 const offline = computed(() => props.user.authService === 'offline')
-const { selectGameProfile } = useService(UserServiceKey)
+const selectGameProfile = (userProfile: UserProfile, id: string) => {
+  putUser({ ...userProfile, selectedProfile: id })
+}
 const container = ref(null)
 const { onWheel } = useScrollRight(container)
 

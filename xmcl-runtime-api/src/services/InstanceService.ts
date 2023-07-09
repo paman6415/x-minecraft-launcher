@@ -1,8 +1,9 @@
+import { MutableState } from '../util/WatchSource'
 import { Exception } from '../entities/exception'
-import { DEFAULT_PROFILE, Instance } from '../entities/instance'
+import { Instance } from '../entities/instance'
 import { InstanceSchema } from '../entities/instance.schema'
 import { DeepPartial } from '../util/object'
-import { ServiceKey, StatefulService } from './Service'
+import { ServiceKey } from './Service'
 
 export type CreateInstanceOption = Partial<Omit<InstanceSchema, 'lastAccessDate' | 'creationDate'>> & {
   path?: string
@@ -151,7 +152,8 @@ export class InstanceState {
 /**
  * Provide instance splitting service. It can split the game into multiple environment and dynamically deploy the resource to run.
  */
-export interface InstanceService extends StatefulService<InstanceState> {
+export interface InstanceService {
+  getSharedInstancesState(): Promise<MutableState<InstanceState>>
   /**
    * Create a managed instance (either a modpack or a server) under the managed folder.
    * @param option The creation option

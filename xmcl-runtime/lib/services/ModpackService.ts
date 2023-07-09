@@ -307,7 +307,8 @@ export class ModpackService extends AbstractService implements IModpackService {
 
     try {
       await this.submit(zipTask)
-      this.instanceService.editInstance({ instancePath, modpackVersion: version })
+      // TODO: move this to client
+      // this.instanceService.editInstance({ instancePath, modpackVersion: version })
       this.baseService.showItemInDirectory(destinationPath)
     } finally {
       // TODO: handle

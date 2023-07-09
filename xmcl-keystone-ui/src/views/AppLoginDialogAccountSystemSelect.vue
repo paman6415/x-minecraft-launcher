@@ -27,6 +27,9 @@
 </template>
 <script setup lang="ts">
 import { useService } from '@/composables'
+import { kSettingsState } from '@/composables/setting'
+import { kUserContext } from '@/composables/user'
+import { injection } from '@/util/inject'
 import { BaseServiceKey, UserServiceKey } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
 
@@ -41,10 +44,10 @@ interface ServiceItem {
   value: string
 }
 
-const { state } = useService(UserServiceKey)
-const { state: baseState } = useService(BaseServiceKey)
+const { users, yggdrasilServices } = injection(kUserContext)
+const { state: setting } = injection(kSettingsState)
 const { t } = useI18n()
-const hasMicrosoft = computed(() => Object.values(state.users)?.some(u => u.authService === 'microsoft'))
+const hasMicrosoft = computed(() => Object.values(users.value)?.some(u => u.authService === 'microsoft'))
 
 const items: Ref<ServiceItem[]> = computed(() => {
   const items = [
@@ -60,13 +63,13 @@ const items: Ref<ServiceItem[]> = computed(() => {
     },
   ] as ServiceItem[]
 
-  if (baseState.developerMode || hasMicrosoft) {
+  if (setting.value?.developerMode || hasMicrosoft) {
     items.push({
       value: 'offline',
       text: t('userServices.offline.name'),
       icon: 'mdi-account-off',
     })
-    for (const api of state.yggdrasilServices) {
+    for (const api of yggdrasilServices.value) {
       try {
         const host = new URL(api.url).host
         items.push({

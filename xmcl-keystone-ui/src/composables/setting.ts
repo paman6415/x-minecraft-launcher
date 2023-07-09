@@ -4,14 +4,12 @@ import { BaseServiceKey, Environment } from '@xmcl/runtime-api'
 import { InjectionKey, Ref } from 'vue'
 import { useLocalStorageCacheBool } from './cache'
 import { useState } from './syncableState'
+import { useEnvironment } from './environment'
 
 export function useUpdateSettings() {
-  const { checkUpdate, getEnvironment } = useService(BaseServiceKey)
-  const env: Ref<Environment | undefined> = ref(undefined)
+  const { checkUpdate } = useService(BaseServiceKey)
+  const env: Ref<Environment | undefined> = useEnvironment()
   const { state } = injection(kSettingsState)
-  getEnvironment().then(v => {
-    env.value = v
-  })
   const updateStatus = computed(() => state.value?.updateStatus)
   const checkingUpdate = useServiceBusy(BaseServiceKey, 'checkUpdate')
   const downloadingUpdate = useServiceBusy(BaseServiceKey, 'downloadUpdate')
@@ -44,6 +42,18 @@ export function useGlobalSettings() {
   const globalFastLaunch = computed(() => state.value?.globalFastLaunch ?? false)
   const globalHideLauncher = computed(() => state.value?.globalHideLauncher ?? false)
   const globalShowLog = computed(() => state.value?.globalShowLog ?? false)
+  const setGlobalSettings = (setting: {
+    globalMinMemory: number
+    globalMaxMemory: number
+    globalAssignMemory: boolean | 'auto'
+    globalVmOptions: string[]
+    globalMcOptions: string[]
+    globalFastLaunch: boolean
+    globalHideLauncher: boolean
+    globalShowLog: boolean
+  }) => {
+    state.value?.globalInstanceSetting(setting)
+  }
 
   return {
     globalAssignMemory,
@@ -54,6 +64,7 @@ export function useGlobalSettings() {
     globalFastLaunch,
     globalHideLauncher,
     globalShowLog,
+    setGlobalSettings,
   }
 }
 
@@ -77,7 +88,7 @@ export function useSettings() {
     }
   }
 
-  const root = computed(() => state.value?.root)
+  const root = computed(() => state.value?.root ?? '')
   const locales = computed(() => state.value?.locales || [])
   const selectedLocale = computed({
     get: () => locales.value.find(l => l.locale === state.value?.locale)?.locale || 'en',

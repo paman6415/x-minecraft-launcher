@@ -8,6 +8,7 @@ import { kInstanceOptions, useInstanceOptions } from './instanceOptions'
 import { kInstanceResourcePacks, useInstanceResourcePacks } from './instanceResourcePack'
 import { kInstanceVersion, useInstanceVersion } from './instanceVersion'
 import { kInstanceVersionDiagnose, useInstanceVersionDiagnose } from './instanceVersionDiagnose'
+import { kJavaContext, useJavaContext } from './java'
 import { kLaunchTask, useLaunchTask } from './launchTask'
 import { kModsSearch, useModsSearch } from './modSearch'
 import { kModSearchItems, useModSearchItems } from './modSearchItems'
@@ -21,13 +22,14 @@ import { kUserDiagnose, useUserDiagnose } from './userDiagnose'
  */
 export function useContext() {
   const user = useUserContext()
+  const java = useJavaContext()
   const instance = useInstance()
   const instanceVersion = useInstanceVersion(instance.instance)
-  const java = useInstanceJava(instance.instance, instanceVersion.resolvedVersion)
+  const instanceJava = useInstanceJava(instance.instance, instanceVersion.resolvedVersion, java.all)
   const options = useInstanceOptions(instance.instance)
   const saves = useInstanceSaves(instance.instance)
   const resourcePacks = useInstanceResourcePacks(options.gameOptions)
-  const mods = useInstanceMods(instance.instance, java.java)
+  const mods = useInstanceMods(instance.instance, instanceJava.java)
   const files = useInstanceFiles(instance.path)
   const task = useLaunchTask(instance.path, instance.runtime, instanceVersion.versionHeader)
 
@@ -36,14 +38,15 @@ export function useContext() {
   const modSearchItems = useModSearchItems(modsSearch.keyword, modsSearch.modrinth, modsSearch.curseforge, modsSearch.mods, modsSearch.existedMods)
 
   const versionDiagnose = useInstanceVersionDiagnose(instance.runtime, instanceVersion.resolvedVersion)
-  const javaDiagnose = useInstanceJavaDiagnose(java.recommendation)
+  const javaDiagnose = useInstanceJavaDiagnose(instanceJava.recommendation)
   const filesDiagnose = useInstanceFilesDiagnose(files.files, files.install)
   const userDiagnose = useUserDiagnose(user.userProfile)
 
   provide(kUserContext, user)
+  provide(kJavaContext, java)
   provide(kInstance, instance)
   provide(kInstanceVersion, instanceVersion)
-  provide(kInstanceJava, java)
+  provide(kInstanceJava, instanceJava)
   provide(kInstanceOptions, options)
   provide(kInstanceSave, saves)
   provide(kInstanceResourcePacks, resourcePacks)

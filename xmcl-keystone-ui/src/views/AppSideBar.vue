@@ -221,7 +221,7 @@
               <v-badge
                 right
                 overlap
-                :value="state.updateStatus !== 'none'"
+                :value="state?.updateStatus !== 'none'"
               >
                 <template #badge>
                   <span>{{ 1 }}</span>
@@ -251,11 +251,12 @@ import { kUILayout } from '../composables/uiLayout'
 import AppSideBarContentFocus from './AppSideBarContentFocus.vue'
 import AppSideBarContentNext from './AppSideBarContentNext.vue'
 import { kMarketRoute } from '@/composables/useMarketRoute'
+import { kSettingsState } from '@/composables/setting'
 
-const { state } = useService(BaseServiceKey)
 const { blurSidebar } = useBarBlur()
 const layout = injection(kUILayout)
 const useFocus = computed(() => layout.value === 'focus')
+const { state } = injection(kSettingsState)
 
 const sideBarShowCurseforge = useLocalStorageCacheBool('sideBarShowCurseforge', true)
 const sideBarShowModrinth = useLocalStorageCacheBool('sideBarShowModrinth', true)

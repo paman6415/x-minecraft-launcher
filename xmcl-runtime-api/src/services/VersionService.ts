@@ -1,5 +1,6 @@
 import type { ResolvedVersion } from '@xmcl/core'
-import { ServiceKey, StatefulService } from './Service'
+import { ServiceKey } from './Service'
+import { MutableState } from '../util/WatchSource'
 
 export interface LocalVersionHeader {
   path: string
@@ -59,7 +60,8 @@ export class VersionState {
 /**
  * The local version service maintains the installed versions on disk
  */
-export interface VersionService extends StatefulService<VersionState> {
+export interface VersionService {
+  getLocalVersions(): Promise<MutableState<VersionState>>
   /**
    * Scan .minecraft folder and copy libraries/assets/versions files from it to launcher managed place.
    *

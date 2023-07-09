@@ -43,7 +43,7 @@ import { UserServiceKey } from '@xmcl/runtime-api'
 import UserMenu from './UserMenu.vue'
 
 const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile } = injection(kUserContext)
-const { abortRefresh, refreshUser, removeUserProfile } = useService(UserServiceKey)
+const { abortRefresh, refreshUser, removeUser } = useService(UserServiceKey)
 const { show: showLoginDialog } = useDialog(LoginDialog)
 const isShown = ref(false)
 
@@ -71,7 +71,7 @@ function onRefresh() {
 }
 async function onRemoveUser() {
   const isLastOne = users.value.length <= 0
-  await removeUserProfile(selectedUser.value.id)
+  await removeUser(selectedUser.value.id)
   if (isLastOne) {
     showLoginDialog()
   }

@@ -233,7 +233,7 @@ const { openDirectory } = useService(BaseServiceKey)
 
 const {
   root,
-  proxy, httpProxyEnabled, apiSets, allowPrerelease,
+  proxy, httpProxyEnabled, apiSets,
   developerMode,
   apiSetsPreference,
   selectedLocale,
@@ -266,7 +266,9 @@ const locales = computed(() => rawLocales.value.map(({ locale, name }) => ({ tex
 const { show } = useDialog('migration')
 
 function showRootDir() {
-  openDirectory(root.value)
+  if (root.value) {
+    openDirectory(root.value)
+  }
 }
 async function browseRootDir() {
   show()

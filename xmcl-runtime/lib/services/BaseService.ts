@@ -1,4 +1,4 @@
-import { BaseService as IBaseService, BaseServiceException, BaseServiceKey, BaseState, MigrateOptions, SettingSchema } from '@xmcl/runtime-api'
+import { BaseService as IBaseService, BaseServiceException, BaseServiceKey, SettingState, MigrateOptions, SettingSchema, Environment, MutableState } from '@xmcl/runtime-api'
 import { readdir, rename, rm, stat } from 'fs/promises'
 import os, { freemem, totalmem } from 'os'
 import { join } from 'path'
@@ -15,7 +15,7 @@ import { ExposeServiceKey, Singleton, StatefulService } from './Service'
 import { AggregateExecutor } from '../util/aggregator'
 
 @ExposeServiceKey(BaseServiceKey)
-export class BaseService extends StatefulService<BaseState> implements IBaseService {
+export class BaseService extends StatefulService<SettingState> implements IBaseService {
   private settingFile = createSafeFile(this.getAppDataPath('setting.json'), SettingSchema, this, [this.getPath('setting.json')])
   private saver = new AggregateExecutor<void, void>(() => { }, () => this.settingFile.write({
     locale: this.state.locale,
@@ -46,11 +46,7 @@ export class BaseService extends StatefulService<BaseState> implements IBaseServ
     @Inject(LauncherAppKey) app: LauncherApp,
   ) {
     super(app, () => {
-      const state = new BaseState()
-      state.version = app.version
-      state.platform = app.platform
-      state.build = app.build
-      state.env = app.env
+      const state = new SettingState()
       state.root = app.gameDataPath
       return state
     }, async () => {
@@ -81,6 +77,21 @@ export class BaseService extends StatefulService<BaseState> implements IBaseServ
     ], () => {
       this.saver.push()
     })
+  }
+
+  async getSettings(): Promise<MutableState<SettingState>> {
+    return this.state
+  }
+
+  async getEnvironment(): Promise<Environment> {
+    return {
+      os: this.app.platform.os,
+      arch: this.app.platform.arch,
+      osRelease: this.app.platform.osRelease,
+      env: this.app.env,
+      version: this.app.version,
+      build: this.app.build,
+    }
   }
 
   async handleUrl(url: string) {

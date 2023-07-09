@@ -113,7 +113,7 @@ import { useService, useServiceBusy } from '@/composables'
 import { injection } from '@/util/inject'
 import { JavaRecord, JavaServiceKey } from '@xmcl/runtime-api'
 import { InstanceEditInjectionKey } from '../composables/instanceEdit'
-import { kJavaState } from '../composables/java'
+import { kJavaContext } from '../composables/java'
 import BaseSettingGlobalLabel from './BaseSettingGlobalLabel.vue'
 import JavaList from './BaseSettingJavaList.vue'
 import SettingJavaMemory from './SettingJavaMemory.vue'
@@ -121,7 +121,7 @@ import SettingJavaMemoryAssign from './SettingJavaMemoryAssign.vue'
 
 const { t } = useI18n()
 const { showOpenDialog } = windowController
-const { all: javas, remove: removeJava } = injection(kJavaState)
+const { all: javas, remove: removeJava } = injection(kJavaContext)
 const { resolveJava: add, refreshLocalJava } = useService(JavaServiceKey)
 const refreshingLocalJava = useServiceBusy(JavaServiceKey, 'refreshLocalJava')
 

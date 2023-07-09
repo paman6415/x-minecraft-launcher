@@ -85,7 +85,7 @@ export function useAppDropHandler() {
     if (previews.value.length === 0) cancel()
   })
   const { resolveResources } = useService(ResourceServiceKey)
-  const { addYggdrasilAccountSystem } = useService(UserServiceKey)
+  const { addYggdrasilService } = useService(UserServiceKey)
   const { previewUrl, importFile } = useService(ImportServiceKey)
 
   const iconMap: Record<string, string> = {
@@ -176,7 +176,7 @@ export function useAppDropHandler() {
         })
         promises.push(promise)
       } else if (preview.type === 'Yggdrasil') {
-        addYggdrasilAccountSystem(preview.id).then(() => {
+        addYggdrasilService(preview.id).then(() => {
           preview.status = 'saved'
         }, (e) => {
           console.log(e)

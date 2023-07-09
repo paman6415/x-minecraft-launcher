@@ -107,7 +107,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     })
 
     app.protocol.registerHandler('authlib-injector', ({ request, response }) => {
-      this.addYggdrasilAccountSystem(request.url.pathname)
+      this.addYggdrasilService(request.url.pathname)
     })
   }
 
@@ -119,7 +119,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     return this.mojangSelectedUserId
   }
 
-  async addYggdrasilAccountSystem(url: string): Promise<void> {
+  async addYggdrasilService(url: string): Promise<void> {
     if (url.startsWith('authlib-injector:')) url = url.substring('authlib-injector:'.length)
     if (url.startsWith('yggdrasil-server:')) url = url.substring('yggdrasil-server:'.length)
     url = decodeURIComponent(url)
@@ -132,7 +132,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     this.state.userYggdrasilServicePut(api)
   }
 
-  async removeYggdrasilAccountSystem(url: string): Promise<void> {
+  async removeYggdrasilService(url: string): Promise<void> {
     const all = this.state.yggdrasilServices
     this.state.userYggdrasilServices(all.filter(a => a.url !== url))
   }

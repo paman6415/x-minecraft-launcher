@@ -3,6 +3,7 @@ import { GameProfileAndTexture, OfficialUserServiceKey, UserProfile, UserService
 
 import { useService, useServiceBusy } from '@/composables'
 import { useLocalStorageCacheStringValue } from './cache'
+import { useState } from './syncableState'
 
 const NO_USER_PROFILE: UserProfile = Object.freeze({
   selectedProfile: '',
@@ -23,15 +24,20 @@ const NO_GAME_PROFILE: GameProfileAndTexture = Object.freeze({
 export const kUserContext: InjectionKey<ReturnType<typeof useUserContext>> = Symbol('UserContext')
 
 export function useUserContext() {
-  const { state } = useService(UserServiceKey)
+  const { getUserState } = useService(UserServiceKey)
+  const { state, isValidating, error } = useState(ref('user'), getUserState)
   const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '')
-  const userProfile: Ref<UserProfile> = computed(() => state.users[selectedUserId.value] ?? NO_USER_PROFILE)
+  const userProfile: Ref<UserProfile> = computed(() => state.value?.users[selectedUserId.value] ?? NO_USER_PROFILE)
   const gameProfile: Ref<GameProfileAndTexture> = computed(() => userProfile.value.profiles[userProfile.value.selectedProfile] ?? NO_GAME_PROFILE)
-  const users = computed(() => Object.values(state.users))
+  const users = computed(() => Object.values(state.value?.users || {}))
+  const yggdrasilServices = computed(() => state.value?.yggdrasilServices || [])
   const select = (id: string) => {}
 
   return {
     users,
+    yggdrasilServices,
+    isValidating,
+    error,
     select,
     userProfile,
     gameProfile,

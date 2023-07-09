@@ -1,5 +1,5 @@
 import { ResolvedVersion, Version } from '@xmcl/core'
-import { CreateInstanceOption, EditInstanceOptions, InstanceService as IInstanceService, Instance, InstanceException, InstanceSchema, InstanceServiceKey, InstanceState, InstancesSchema, RuntimeVersions, createTemplate, filterForgeVersion, filterOptifineVersion, getExpectVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary } from '@xmcl/runtime-api'
+import { CreateInstanceOption, EditInstanceOptions, InstanceService as IInstanceService, Instance, InstanceException, InstanceSchema, InstanceServiceKey, InstanceState, InstancesSchema, MutableState, RuntimeVersions, createTemplate, filterForgeVersion, filterOptifineVersion, getExpectVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary } from '@xmcl/runtime-api'
 import filenamify from 'filenamify'
 import { existsSync } from 'fs'
 import { ensureDir } from 'fs-extra/esm'
@@ -16,7 +16,6 @@ import { Inject } from '../util/objectRegistry'
 import { createSafeFile, createSafeIO } from '../util/persistance'
 import { InstallService } from './InstallService'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
-import { UserService } from './UserService'
 
 const INSTANCES_FOLDER = 'instances'
 
@@ -29,7 +28,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
   protected readonly instanceFile = createSafeIO(InstanceSchema, this)
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(UserService) private userService: UserService,
     @Inject(InstallService) private installService: InstallService,
     @Inject(kResourceWorker) private worker: ResourceWorker,
     @Inject(ImageStorage) private imageStore: ImageStorage,
@@ -97,6 +95,10 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           this.log(`Saved instance ${path}`)
         })
     })
+  }
+
+  async getSharedInstancesState(): Promise<MutableState<InstanceState>> {
+    return this.state
   }
 
   protected getPathUnder(...ps: string[]) {
@@ -242,33 +244,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
 
     const path = await this.createInstance(payload)
     return path
-  }
-
-  /**
-   * Mount the instance as the current active instance.
-   * @param path the instance path
-   */
-  @Lock('mountInstance')
-  async mountInstance(path: string) {
-    // if (path === this.state.path) {
-    //   return
-    // }
-
-    // requireString(path)
-
-    // if (!isAbsolute(path)) {
-    //   path = this.getPathUnder(path)
-    // }
-
-    // if (path === this.state.instance.path) { return }
-
-    // const missed = await missing(path)
-    // if (missed) {
-    //   this.log(`Cannot mount instance ${path}, either the directory not exist or the launcher has no permission.`)
-    //   return
-    // }
-
-    // this.log(`Try to mount instance ${path}`)
   }
 
   /**

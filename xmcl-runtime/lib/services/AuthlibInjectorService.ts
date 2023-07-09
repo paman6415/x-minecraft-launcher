@@ -1,6 +1,6 @@
 import { LibraryInfo, MinecraftFolder } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { ExternalAuthSkinServiceKey, ExternalAuthSkinService as IExternalAuthSkinService } from '@xmcl/runtime-api'
+import { AuthlibInjectorServiceKey, AuthlibInjectorService as IAuthlibInjectorService, UserProfile } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
@@ -9,16 +9,18 @@ import { validateSha256 } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { UserService } from './UserService'
 
 const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 
 /**
  * Majorly support the third party skin using authlib injector
  */
-@ExposeServiceKey(ExternalAuthSkinServiceKey)
-export class ExternalAuthSkinService extends AbstractService implements IExternalAuthSkinService {
+@ExposeServiceKey(AuthlibInjectorServiceKey)
+export class AuthlibInjectorService extends AbstractService implements IAuthlibInjectorService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(BaseService) private baseService: BaseService,
+    @Inject(UserService) private userService: UserService,
   ) {
     super(app)
 
@@ -34,7 +36,7 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
     })
   }
 
-  async installAuthLibInjector(): Promise<string> {
+  async getOrInstallAuthlibInjector(): Promise<string> {
     const jsonPath = this.getPath('authlib-injection.json')
     const root = this.getPath()
     const mc = new MinecraftFolder(root)
@@ -84,7 +86,7 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
     return path
   }
 
-  async isAuthLibInjectorReady() {
+  async isAuthlibInjectorReady() {
     const jsonPath = this.getPath('authlib-injection.json')
     const content = await readFile(jsonPath, 'utf-8').then(JSON.parse).catch(() => undefined)
     if (!content) return false
@@ -92,5 +94,13 @@ export class ExternalAuthSkinService extends AbstractService implements IExterna
     const mc = new MinecraftFolder(this.getPath())
     const libPath = mc.getLibraryByPath(info.path)
     return validateSha256(libPath, content.checksums.sha256)
+  }
+
+  async getYggdrasilAuthHost(user: UserProfile) {
+    const yggdrasilHost = user
+      ? this.userService.getAccountSystem(user?.authService)?.getYggdrasilAuthHost?.(user?.authService) ??
+      this.userService.yggdrasilAccountSystem.getYggdrasilAuthHost(user?.authService)
+      : undefined
+    return yggdrasilHost
   }
 }

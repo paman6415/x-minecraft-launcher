@@ -1,9 +1,8 @@
-import { JavaRecord, JavaServiceKey } from '@xmcl/runtime-api'
-import { Ref, InjectionKey } from 'vue'
-import { JavaRecommendation } from './instanceJava'
-import { JavaIssueDialogKey } from './java'
+import { injection } from '@/util/inject'
+import { InjectionKey, Ref } from 'vue'
 import { useDialog } from './dialog'
-import { useService } from './service'
+import { JavaRecommendation } from './instanceJava'
+import { JavaIssueDialogKey, kJavaContext } from './java'
 import { LaunchMenuItem } from './launchButton'
 
 export const kInstanceJavaDiagnose: InjectionKey<ReturnType<typeof useInstanceJavaDiagnose>> = Symbol('InstanceJavaDiagnose')
@@ -11,7 +10,7 @@ export const kInstanceJavaDiagnose: InjectionKey<ReturnType<typeof useInstanceJa
 export function useInstanceJavaDiagnose(javaRecommendation: Ref<JavaRecommendation | undefined>) {
   const { t } = useI18n()
   const issue: Ref<LaunchMenuItem | undefined> = computed(() => {
-    if (state.all.length === 0) {
+    if (all.value.length === 0) {
       return {
         title: t('diagnosis.missingJava.name'),
         description: t('diagnosis.missingJava.message'),
@@ -24,11 +23,11 @@ export function useInstanceJavaDiagnose(javaRecommendation: Ref<JavaRecommendati
       }
     }
   })
-  const { state } = useService(JavaServiceKey)
+  const { all } = injection(kJavaContext)
   const { show: showJavaDialog } = useDialog(JavaIssueDialogKey)
 
   function fix() {
-    if (javaRecommendation.value || state.all.length === 0) {
+    if (javaRecommendation.value || all.value.length === 0) {
       showJavaDialog()
     }
   }

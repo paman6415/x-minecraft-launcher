@@ -1,27 +1,17 @@
 import { SettingState } from './services/BaseService'
-import { DiagnoseState } from './services/DiagnoseService'
-import { GameOptionsState } from './services/InstanceOptionsService'
 import { InstanceModsState } from './services/InstanceModsService'
+import { GameOptionsState } from './services/InstanceOptionsService'
 import { SaveState } from './services/InstanceSavesService'
 import { InstanceState } from './services/InstanceService'
+import { InstanceVersionState } from './services/InstanceVersionService'
 import { JavaState } from './services/JavaService'
 import { LaunchState } from './services/LaunchService'
+import { PeerState } from './services/PeerService'
 import { UserState } from './services/UserService'
 import { VersionState } from './services/VersionService'
-import { ServiceKey, StatefulService } from './services/Service'
-import { PeerState } from './services/PeerService'
-import { InstanceVersionState } from './services/InstanceVersionService'
-
-export type StateOfService<Serv> = Serv extends StatefulService<infer State>
-  ? State : undefined
-
-export type StateOfServiceKey<K> = K extends ServiceKey<infer Serv>
-  ? StateOfService<Serv>
-  : never
 
 export type AllServiceMutations =
   Mutations<SettingState>
-  & Mutations<DiagnoseState>
   & Mutations<InstanceState>
   & Mutations<InstanceModsState>
   & Mutations<GameOptionsState>
@@ -42,7 +32,6 @@ export type Mutations<T> = {
 
 export const AllStates = [
   SettingState,
-  DiagnoseState,
   InstanceState,
   InstanceModsState,
   GameOptionsState,
