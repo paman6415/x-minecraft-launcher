@@ -71,7 +71,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           try {
             await this.addExternalInstance(initial)
             const instance = Object.values(state.all)[0]
-            await this.mountInstance(instance.path)
+            // await this.mountInstance(instance.path)
             await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(instance.path) })
           } catch (e) {
             this.error(new Error(`Fail to initialize to ${initial}`, { cause: e }))

@@ -110,17 +110,30 @@ import { AddInstanceDialogKey, Template, useAllTemplate } from '../composables/i
 import { CreateOptionKey, useInstanceCreation } from '../composables/instanceCreation'
 import { useNotifier } from '../composables/notifier'
 import { useRefreshable, useService } from '@/composables'
+import { kJavaContext } from '@/composables/java'
+import { injection } from '@/util/inject'
+import { kModpacks } from '@/composables/modpack'
+import { kUserContext } from '@/composables/user'
+import { kLocalVersions } from '@/composables/versionLocal'
+import { kInstances } from '@/composables/instance'
+import { kPeerState } from '@/composables/peers'
 
 const { isShown, dialog, show: showAddInstance, hide } = useDialog(AddInstanceDialogKey)
 const { show } = useDialog('task')
-const { create, reset, data: creationData } = useInstanceCreation()
+const { gameProfile } = injection(kUserContext)
+const { versions } = injection(kLocalVersions)
+const { instances } = injection(kInstances)
+const { create, reset, data: creationData } = useInstanceCreation(gameProfile, versions, instances)
 const router = useRouter()
 
 const { on, removeListener } = useService(ResourceServiceKey)
 const { installInstanceFiles } = useService(InstanceInstallServiceKey)
 const { t } = useI18n()
 const { notify } = useNotifier()
-const { templates, refreshing } = useAllTemplate()
+const { all } = injection(kJavaContext)
+const { resources } = injection(kModpacks)
+const { connections } = injection(kPeerState)
+const { templates, refreshing } = useAllTemplate(all, resources, connections)
 
 provide(CreateOptionKey, creationData)
 
@@ -226,11 +239,11 @@ const onModpackAdded = ({ path, name }: { path: string; name: string }) => {
   }, 100)
 }
 
-const { on: onPeerService, state: peerState } = useService(PeerServiceKey)
+const { on: onPeerService } = useService(PeerServiceKey)
 
 onPeerService('share', (event) => {
   if (event.manifest) {
-    const conn = peerState.connections.find(c => c.id === event.id)
+    const conn = connections.value.find(c => c.id === event.id)
     if (conn) {
       notify({
         level: 'info',

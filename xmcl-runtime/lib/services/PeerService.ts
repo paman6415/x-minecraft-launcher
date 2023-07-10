@@ -1,6 +1,6 @@
 import { MinecraftLanDiscover } from '@xmcl/client'
 import { ChecksumNotMatchError } from '@xmcl/file-transfer'
-import { InstanceManifest, PeerService as IPeerService, PeerServiceKey, PeerState, ShareInstanceOptions, UpnpMapOptions, UserState } from '@xmcl/runtime-api'
+import { InstanceManifest, PeerService as IPeerService, MutableState, PeerServiceKey, PeerState, ShareInstanceOptions, UpnpMapOptions, UserState } from '@xmcl/runtime-api'
 import { AbortableTask, BaseTask } from '@xmcl/task'
 import { randomFill, randomUUID } from 'crypto'
 import { createWriteStream } from 'fs'
@@ -209,6 +209,10 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
         conn.send(MessageLan, info)
       }
     })
+  }
+
+  async getPeerState(): Promise<MutableState<PeerState>> {
+    return this.state
   }
 
   async leaveGroup(): Promise<void> {

@@ -16,6 +16,7 @@ export function useInstanceEdit(instance: Ref<Instance>) {
     globalAssignMemory, globalFastLaunch, globalHideLauncher, globalMaxMemory,
     globalMcOptions, globalMinMemory, globalShowLog, globalVmOptions,
   } = useGlobalSettings()
+  const { editInstance: edit } = useService(InstanceServiceKey)
 
   const data = reactive({
     name: instance.value?.name ?? '',

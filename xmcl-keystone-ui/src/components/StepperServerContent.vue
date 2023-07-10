@@ -143,6 +143,7 @@ import VersionMenu from './VersionMenu.vue'
 import unknownServer from '@/assets/unknown_server.png'
 
 import { injection } from '@/util/inject'
+import { kLocalVersions } from '@/composables/versionLocal'
 
 const props = defineProps<{
   status: ServerStatus
@@ -153,7 +154,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:valid'])
 const { t } = useI18n()
-const { items, refreshing } = useMinecraftVersionList(computed(() => content.runtime.minecraft))
+const { versions } = injection(kLocalVersions)
+const { items, refreshing } = useMinecraftVersionList(computed(() => content.runtime.minecraft), versions)
 const content = injection(CreateOptionKey)
 const server = computed(() => content.server ?? { host: '', port: undefined })
 const serverField = ref('')

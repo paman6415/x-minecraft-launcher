@@ -1,5 +1,5 @@
 import type { ResolvedVersion } from '@xmcl/core'
-import { InstallServiceKey, InstanceVersionServiceKey, RuntimeVersions, getExpectVersion } from '@xmcl/runtime-api'
+import { InstallServiceKey, InstanceVersionServiceKey, LocalVersionHeader, RuntimeVersions, getExpectVersion } from '@xmcl/runtime-api'
 import { Ref, InjectionKey } from 'vue'
 import { useInstanceVersionInstall } from './instanceVersionInstall'
 import { useService } from './service'
@@ -7,12 +7,12 @@ import { LaunchMenuItem } from './launchButton'
 
 export const kInstanceVersionDiagnose: InjectionKey<ReturnType<typeof useInstanceVersionDiagnose>> = Symbol('InstanceVersionDiagnose')
 
-export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolvedVersion: Ref<ResolvedVersion | undefined>) {
+export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolvedVersion: Ref<ResolvedVersion | undefined>, versions: Ref<LocalVersionHeader[]>) {
   const { diagnoseAssetIndex, diagnoseAssets, diagnoseJar, diagnoseLibraries, diagnoseProfile } = useService(InstanceVersionServiceKey)
   const issueItems = ref([] as LaunchMenuItem[])
   let operation = undefined as undefined | (() => Promise<void>)
   const { t } = useI18n()
-  const { install } = useInstanceVersionInstall()
+  const { install } = useInstanceVersionInstall(versions)
   const { installAssetsForVersion, installAssets, installLibraries, installDependencies, installByProfile } = useService(InstallServiceKey)
   let abortController = new AbortController()
 

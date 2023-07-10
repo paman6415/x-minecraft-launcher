@@ -3,7 +3,7 @@
     lazy-validation
     style="height: 100%;"
     :value="valid"
-    @input="$emit('update:valid', $event)"
+    @input="emit('update:valid', $event)"
   >
     <v-list
       three-line
@@ -54,33 +54,24 @@
   </v-form>
 </template>
 
-<script lang=ts>
-import { InstanceServiceKey } from '@xmcl/runtime-api'
+<script lang=ts setup>
 import { CreateOptionKey } from '../composables/instanceCreation'
-
-import { useService } from '@/composables'
+import { kInstances } from '@/composables/instance'
+import { injection } from '@/util/inject'
 import { required } from '@/util/props'
-export default defineComponent({
-  props: {
-    valid: required(Boolean),
-  },
-  emits: ['update:valid'],
-  setup() {
-    const { t } = useI18n()
-    const content = inject(CreateOptionKey)
-    const { state } = useService(InstanceServiceKey)
-    if (!content) {
-      throw new Error('Cannot use without providing CreateOption!')
-    }
-    const nameRules = computed(() => [
-      (v: any) => !!v || t('instance.requireName'),
-      (v: any) => !state.instances.some(i => i.name === v) || t('instance.duplicatedName'),
-    ])
-    return {
-      nameRules,
-      t,
-      content,
-    }
-  },
+
+defineProps({
+  valid: required(Boolean),
 })
+const emit = defineEmits(['update:valid'])
+const { t } = useI18n()
+const content = inject(CreateOptionKey)
+const { instances } = injection(kInstances)
+if (!content) {
+  throw new Error('Cannot use without providing CreateOption!')
+}
+const nameRules = computed(() => [
+  (v: any) => !!v || t('instance.requireName'),
+  (v: any) => !instances.value.some(i => i.name === v) || t('instance.duplicatedName'),
+])
 </script>

@@ -445,13 +445,14 @@ import { useDialog } from '../composables/dialog'
 import MultiplayerDialogInitiate from './MultiplayerDialogInitiate.vue'
 import MultiplayerDialogReceive from './MultiplayerDialogReceive.vue'
 import { kUserContext } from '@/composables/user'
+import { kPeerState } from '@/composables/peers'
 
 const { show } = useDialog('peer-initiate')
 const { show: showShareInstance } = useDialog('share-instance')
 const { show: showReceive } = useDialog('peer-receive')
 const { show: showDelete } = useDialog('deletion')
-const { state, joinGroup, leaveGroup, drop } = useService(PeerServiceKey)
-const connections = computed(() => state.connections)
+const { joinGroup, leaveGroup, drop } = useService(PeerServiceKey)
+const { connections, group } = injection(kPeerState)
 const { t } = useI18n()
 const { handleUrl } = useService(BaseServiceKey)
 const isLoadingNetwork = useServiceBusy(NatServiceKey, 'refreshNatType')
@@ -505,14 +506,14 @@ const tNatType = computed(() => ({
   Unknown: t('natType.unknown'),
 }))
 
-const groupId = ref(state.group)
+const groupId = ref(group.value)
 const deleting = ref('')
-const deletingName = computed(() => state.connections.find(c => c.id === deleting.value)?.userInfo.name)
+const deletingName = computed(() => connections.value.find(c => c.id === deleting.value)?.userInfo.name)
 const copied = ref(false)
 
 const joiningGroup = useBusy('joinGroup')
 
-watch(computed(() => state.group), (newVal) => {
+watch(group, (newVal) => {
   groupId.value = newVal
 })
 
@@ -540,7 +541,7 @@ const startUnmap = (m: MappingInfo) => {
 
 }
 const edit = (id: string, init: boolean) => {
-  const conn = state.connections.find(c => c.id === id)
+  const conn = connections.value.find(c => c.id === id)
   if (conn) {
     if (init) {
       show(id)
@@ -572,7 +573,7 @@ const onCopy = (val: string) => {
 
 const { gameProfile } = injection(kUserContext)
 const onJoin = () => {
-  if (!state.group) {
+  if (!group.value) {
     const buf = new Uint16Array(1)
     window.crypto.getRandomValues(buf)
     joinGroup(groupId.value || (gameProfile.value.name + '@' + buf[0]))

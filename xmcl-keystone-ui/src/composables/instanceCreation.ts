@@ -1,20 +1,18 @@
 import { useService } from '@/composables'
-import { injection } from '@/util/inject'
-import { InstanceData, InstanceServiceKey, RuntimeVersions } from '@xmcl/runtime-api'
-import { InjectionKey, reactive } from 'vue'
-import { kUserContext } from './user'
-import { useMinecraftVersions } from './version'
 import { generateDistinctName } from '@/util/instanceName'
+import { Instance, InstanceData, InstanceServiceKey, LocalVersionHeader, RuntimeVersions } from '@xmcl/runtime-api'
+import type { GameProfile } from '@xmcl/user'
+import { InjectionKey, Ref, reactive } from 'vue'
+import { useMinecraftVersions } from './version'
 
 export const CreateOptionKey: InjectionKey<InstanceData> = Symbol('CreateOption')
 
 /**
  * Hook to create a general instance
  */
-export function useInstanceCreation() {
-  const { gameProfile } = injection(kUserContext)
-  const { createAndMount: createAndSelect, state } = useService(InstanceServiceKey)
-  const { release } = useMinecraftVersions()
+export function useInstanceCreation(gameProfile: Ref<GameProfile>, versions: Ref<LocalVersionHeader[]>, instances: Ref<Instance[]>) {
+  const { createAndMount: createAndSelect } = useService(InstanceServiceKey)
+  const { release } = useMinecraftVersions(versions)
   const data = reactive<InstanceData>({
     name: '',
     runtime: { forge: '', minecraft: release.value?.id || '', liteloader: '', fabricLoader: '', yarn: '' } as RuntimeVersions,
@@ -45,7 +43,7 @@ export function useInstanceCreation() {
      */
     create() {
       if (!data.name) {
-        data.name = generateDistinctName(state.instances.map(i => i.name), data.runtime)
+        data.name = generateDistinctName(instances.value.map(i => i.name), data.runtime)
       }
       return createAndSelect(data)
     },

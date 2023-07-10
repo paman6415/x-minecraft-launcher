@@ -165,11 +165,6 @@ export interface InstanceService {
    */
   createAndMount(payload: CreateInstanceOption): Promise<string>
   /**
-   * Mount the instance as the current active instance.
-   * @param path the instance path
-   */
-  mountInstance(path: string): Promise<void>
-  /**
    * Delete the managed instance from the disk
    * @param path The instance path
    */

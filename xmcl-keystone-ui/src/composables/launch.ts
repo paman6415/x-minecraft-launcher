@@ -78,12 +78,12 @@ export function useLaunchOption() {
 
 export function useLaunch() {
   const { refreshUser } = useService(UserServiceKey)
-  const { state, launch } = useService(LaunchServiceKey)
+  const { launch } = useService(LaunchServiceKey)
   const { userProfile } = injection(kUserContext)
   const { generateLaunchOptions } = useLaunchOption()
 
-  const status = computed(() => state.status)
-  const launchCount = computed(() => state.activeCount)
+  const status = computed(() => '')
+  const launchCount = computed(() => 0)
 
   async function launchGame() {
     const options = await generateLaunchOptions()

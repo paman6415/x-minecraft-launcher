@@ -1,10 +1,8 @@
 import { useRefreshable, useService } from '@/composables'
 import { getFTBPath } from '@/util/ftb'
-import { injection } from '@/util/inject'
-import { CachedFTBModpackVersionManifest, InstanceManifest, JavaServiceKey, ModpackInstallProfile, ModpackServiceKey, PeerServiceKey, RawModpackResource, Resource, RuntimeVersions } from '@xmcl/runtime-api'
+import { CachedFTBModpackVersionManifest, InstanceManifest, JavaRecord, ModpackInstallProfile, ModpackServiceKey, PeerConnection, PeerServiceKey, Resource } from '@xmcl/runtime-api'
+import { Ref } from 'vue'
 import { DialogKey } from './dialog'
-import { kModpacks } from './modpack'
-import { kJavaContext } from './java'
 
 export const AddInstanceDialogKey: DialogKey<string> = 'add-instance-dialog'
 
@@ -15,14 +13,11 @@ export interface Template extends ModpackInstallProfile {
   description: string
 }
 
-export function useAllTemplate() {
-  const { all } = injection(kJavaContext)
-  const { state: peerState } = useService(PeerServiceKey)
+export function useAllTemplate(javas: Ref<JavaRecord[]>, modpackResources: Ref<Resource[]>, peers: Ref<PeerConnection[]>) {
   const { t } = useI18n()
   const { getModpackInstallProfile } = useService(ModpackServiceKey)
 
   const templates = shallowRef([] as Array<Template>)
-  const { resources } = injection(kModpacks)
 
   const getResourceInstallProfile = async (modpack: Resource): Promise<ModpackInstallProfile> => {
     if (modpack.metadata.instance) {
@@ -45,10 +40,10 @@ export function useAllTemplate() {
   const { refresh, refreshing } = useRefreshable(async () => {
     const all = [] as Array<Template>
 
-    const profiles = await Promise.all(resources.value.map(getResourceInstallProfile))
+    const profiles = await Promise.all(modpackResources.value.map(getResourceInstallProfile))
 
     for (const [i, profile] of profiles.entries()) {
-      const modpack = resources.value[i]
+      const modpack = modpackResources.value[i]
       const type = modpack.metadata['modrinth-modpack']
       ? 'modrinth'
       : modpack.metadata['curseforge-modpack']
@@ -69,7 +64,7 @@ export function useAllTemplate() {
       all.push(result)
     }
 
-    for (const c of peerState.connections) {
+    for (const c of peers.value) {
       if (c.sharing) {
         all.push(getPeerTemplate(c.id, c.userInfo.name, c.sharing))
       }
@@ -77,7 +72,7 @@ export function useAllTemplate() {
     templates.value = all
   })
 
-  watch([resources, peerState], () => {
+  watch([modpackResources, peers], () => {
     refresh()
   })
 
@@ -137,7 +132,7 @@ export function useAllTemplate() {
         if (!parsedVersion) {
           return
         }
-        const majorMatched = all.value.filter(v => v.majorVersion === parsedVersion.majorVersion)
+        const majorMatched = javas.value.filter(v => v.majorVersion === parsedVersion.majorVersion)
         let selectedRecord = majorMatched[0]
         for (const v of majorMatched.slice(1)) {
           const currentPatch = getVersion(v.version)?.patch

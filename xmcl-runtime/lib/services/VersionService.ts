@@ -1,5 +1,5 @@
 import { ResolvedVersion, Version } from '@xmcl/core'
-import { filterForgeVersion, filterOptifineVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary, isQuiltLibrary, LocalVersionHeader, VersionService as IVersionService, VersionServiceKey, VersionState } from '@xmcl/runtime-api'
+import { filterForgeVersion, filterOptifineVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary, isQuiltLibrary, LocalVersionHeader, VersionService as IVersionService, VersionServiceKey, VersionState, MutableState } from '@xmcl/runtime-api'
 import { task } from '@xmcl/task'
 import { FSWatcher } from 'fs'
 import { ensureDir } from 'fs-extra/esm'
@@ -58,6 +58,10 @@ export class VersionService extends StatefulService<VersionState> implements IVe
         }
       })
     })
+  }
+
+  async getLocalVersions(): Promise<MutableState<VersionState>> {
+    return this.state
   }
 
   async dispose() {

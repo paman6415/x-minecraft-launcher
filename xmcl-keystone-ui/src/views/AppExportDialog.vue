@@ -300,7 +300,6 @@ import { InstanceIOServiceKey, InstanceFile, ModpackServiceKey, ExportFileDirect
 import { inc } from 'semver'
 import { useDialog, useModrinthFilter, useZipFilter } from '../composables/dialog'
 import { AppExportDialogKey } from '../composables/instanceExport'
-import { useLocalVersions } from '../composables/version'
 import { useRefreshable, useService } from '@/composables'
 import { getExpectedSize } from '@/util/size'
 import InstanceManifestFileTree from '../components/InstanceManifestFileTree.vue'
@@ -308,6 +307,7 @@ import { kInstance } from '@/composables/instance'
 import { injection } from '@/util/inject'
 import { kInstanceVersion } from '@/composables/instanceVersion'
 import { InstanceFileExportData, provideFileNodes, useInstanceFileNodesFromLocal } from '@/composables/instanceFileNodeData'
+import { kLocalVersions } from '@/composables/versionLocal'
 
 const { isShown, hide: cancel } = useDialog(AppExportDialogKey)
 const { exportInstance } = useService(InstanceIOServiceKey)
@@ -319,7 +319,8 @@ const { t } = useI18n()
 // base data
 const { instance } = injection(kInstance)
 const { folder } = injection(kInstanceVersion)
-const { localVersions: _locals } = useLocalVersions()
+const { versions: _locals } = injection(kLocalVersions)
+
 const name = computed(() => instance.value.name)
 const author = computed(() => instance.value.author)
 const modpackVersion = computed(() => instance.value.modpackVersion)

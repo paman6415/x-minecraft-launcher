@@ -1,4 +1,4 @@
-import { EMPTY_VERSION, Instance, VersionServiceKey, getResolvedVersion } from '@xmcl/runtime-api'
+import { EMPTY_VERSION, Instance, LocalVersionHeader, VersionServiceKey, getResolvedVersion } from '@xmcl/runtime-api'
 import useSWRV from 'swrv'
 import { Ref, InjectionKey } from 'vue'
 import { useService } from './service'
@@ -17,9 +17,9 @@ function useInstanceVersionBase(instance: Ref<Instance>) {
 }
 export const kInstanceVersion: InjectionKey<ReturnType<typeof useInstanceVersion>> = Symbol('InstanceVersion')
 
-export function useInstanceVersion(instance: Ref<Instance>) {
-  const { state, resolveLocalVersion } = useService(VersionServiceKey)
-  const versionHeader = computed(() => getResolvedVersion(state.local,
+export function useInstanceVersion(instance: Ref<Instance>, local: Ref<LocalVersionHeader[]>) {
+  const { resolveLocalVersion } = useService(VersionServiceKey)
+  const versionHeader = computed(() => getResolvedVersion(local.value,
     instance.value.version,
     instance.value.runtime.minecraft,
     instance.value.runtime.forge,

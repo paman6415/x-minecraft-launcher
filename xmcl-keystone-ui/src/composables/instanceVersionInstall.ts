@@ -1,11 +1,11 @@
 import { injection } from '@/util/inject'
-import { InstallServiceKey, RuntimeVersions, VersionServiceKey } from '@xmcl/runtime-api'
+import { InstallServiceKey, LocalVersionHeader, RuntimeVersions, VersionServiceKey } from '@xmcl/runtime-api'
 import { useService } from './service'
 import { kSWRVConfig } from './swrvConfig'
+import { Ref } from 'vue'
 
-export function useInstanceVersionInstall() {
+export function useInstanceVersionInstall(versions: Ref<LocalVersionHeader[]>) {
   const { cache } = injection(kSWRVConfig)
-  const { state } = useService(VersionServiceKey)
   const {
     getMinecraftVersionList,
     getForgeVersionList,
@@ -28,7 +28,7 @@ export function useInstanceVersionInstall() {
   async function install(runtime: RuntimeVersions) {
     const { minecraft, forge, fabricLoader, quiltLoader, optifine } = runtime
     const mcVersions = await getCacheOrFetch('/minecraft-versions', () => getMinecraftVersionList())
-    const local = state.local
+    const local = versions.value
     if (!local.find(v => v.id === minecraft)) {
       const metadata = mcVersions.versions.find(v => v.id === minecraft)!
       await installMinecraft(metadata)

@@ -4,6 +4,7 @@ import { InjectionKey, Ref, computed, ref, set, watch } from 'vue'
 import { useService, useSeverStatusAcceptVersion } from '@/composables'
 import { useLocalStorageCache } from '@/composables/cache'
 import { injection } from '@/util/inject'
+import { kInstances } from './instance'
 
 export const kServerStatusCache: InjectionKey<Ref<Record<string, ServerStatus>>> = Symbol('ServerStatusCache')
 
@@ -72,7 +73,7 @@ function usePingServer() {
 }
 
 export function useInstancesServerStatus() {
-  const { state } = useService(InstanceServiceKey)
+  const { instances } = injection(kInstances)
   const cache = injection(kServerStatusCache)
   const pingServer = usePingServer()
   const pinging = ref(false)
@@ -89,7 +90,7 @@ export function useInstancesServerStatus() {
   }
   function refresh() {
     pinging.value = true
-    return Promise.all(state.instances.map(i => i.server).filter(<T>(v: T | null): v is T => !!v).map(refreshOne)).finally(() => { pinging.value = false })
+    return Promise.all(instances.value.map(i => i.server).filter(<T>(v: T | null): v is T => !!v).map(refreshOne)).finally(() => { pinging.value = false })
   }
   return {
     pinging,
