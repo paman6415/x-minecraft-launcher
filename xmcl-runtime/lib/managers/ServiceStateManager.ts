@@ -69,7 +69,7 @@ export default class ServiceStateManager extends Manager {
       this.logger,
     )
     this.containers[id] = container
-    Object.defineProperty(state, kStateKey, id)
+    Object.defineProperty(state, kStateKey, { value: id })
     return Object.assign(state, {
       dispose: () => {
         delete this.containers[id]
