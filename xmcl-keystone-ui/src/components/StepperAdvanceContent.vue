@@ -310,7 +310,7 @@
 </template>
 
 <script lang=ts setup>
-import { CreateOptionKey } from '../composables/instanceCreation'
+import { kInstanceCreation } from '../composables/instanceCreation'
 import { kJavaContext } from '../composables/java'
 import { VersionMenuItem, useFabricVersionList, useForgeVersionList, useMinecraftVersionList, useOptifineVersionList, useQuiltVersionList } from '../composables/versionList'
 import VersionMenu from './VersionMenu.vue'
@@ -329,7 +329,7 @@ defineProps({
   },
 })
 
-const content = injection(CreateOptionKey)
+const content = injection(kInstanceCreation)
 const minecraft = computed(() => content.runtime.minecraft)
 const { t } = useI18n()
 const { versions } = injection(kLocalVersions)

@@ -8,7 +8,7 @@ import { kInstanceOptions, useInstanceOptions } from './instanceOptions'
 import { kInstanceResourcePacks, useInstanceResourcePacks } from './instanceResourcePack'
 import { kInstanceVersion, useInstanceVersion } from './instanceVersion'
 import { kInstanceVersionDiagnose, useInstanceVersionDiagnose } from './instanceVersionDiagnose'
-import { useInstances } from './instances'
+import { kInstances, useInstances } from './instances'
 import { kJavaContext, useJavaContext } from './java'
 import { kLaunchTask, useLaunchTask } from './launchTask'
 import { kModsSearch, useModsSearch } from './modSearch'
@@ -17,7 +17,7 @@ import { useMods } from './mods'
 import { kInstanceSave, useInstanceSaves } from './save'
 import { kUserContext, useUserContext } from './user'
 import { kUserDiagnose, useUserDiagnose } from './userDiagnose'
-import { useLocalVersions } from './versionLocal'
+import { kLocalVersions, useLocalVersions } from './versionLocal'
 
 /**
  * The context to hold the instance related data. This is used to share data between different components.
@@ -48,7 +48,10 @@ export function useContext() {
 
   provide(kUserContext, user)
   provide(kJavaContext, java)
+  provide(kInstances, instances)
   provide(kInstance, instance)
+  provide(kLocalVersions, localVersions)
+
   provide(kInstanceVersion, instanceVersion)
   provide(kInstanceJava, instanceJava)
   provide(kInstanceOptions, options)

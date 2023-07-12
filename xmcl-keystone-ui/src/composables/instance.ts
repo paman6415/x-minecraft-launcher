@@ -1,7 +1,6 @@
-import { useService } from '@/composables/service'
-import { Instance, InstanceServiceKey } from '@xmcl/runtime-api'
+import { Instance } from '@xmcl/runtime-api'
 import { InjectionKey, Ref, computed } from 'vue'
-import { useLocalStorageCache, useLocalStorageCacheStringValue } from './cache'
+import { useLocalStorageCacheStringValue } from './cache'
 
 export const kInstance: InjectionKey<ReturnType<typeof useInstance>> = Symbol('Instance')
 
@@ -27,28 +26,5 @@ export function useInstance(instances: Ref<Instance[]>) {
     select,
     instance,
     refreshing: computed(() => false),
-  }
-}
-export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol('Instances')
-
-/**
- * Hook of a view of all instances & some deletion/selection functions
- */
-export function useInstances() {
-  const { getSharedInstancesState } = useService(InstanceServiceKey)
-  const instances: Ref<Instance[]> = useLocalStorageCache('instances', () => [], JSON.stringify, JSON.parse)
-  getSharedInstancesState().then(state => {
-    // state.
-  })
-  function create() {
-
-  }
-  function edit() {
-
-  }
-  return {
-    instances,
-    edit,
-    create,
   }
 }

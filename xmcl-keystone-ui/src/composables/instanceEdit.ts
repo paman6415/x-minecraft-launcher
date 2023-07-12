@@ -1,6 +1,5 @@
+import { EditInstanceOptions, Instance, RuntimeVersions } from '@xmcl/runtime-api'
 import { InjectionKey, Ref, set } from 'vue'
-import { BaseServiceKey, Instance, InstanceServiceKey, RuntimeVersions } from '@xmcl/runtime-api'
-import { useService } from '@/composables'
 import { useGlobalSettings } from './setting'
 
 export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanceEdit>> = Symbol('InstanceEdit')
@@ -11,12 +10,11 @@ export const InstanceEditInjectionKey: InjectionKey<ReturnType<typeof useInstanc
  * @param instance The instance to edit
  * @returns The instance edit data
  */
-export function useInstanceEdit(instance: Ref<Instance>) {
+export function useInstanceEdit(instance: Ref<Instance>, edit: (instance: EditInstanceOptions & { instancePath: string }) => Promise<void>) {
   const {
     globalAssignMemory, globalFastLaunch, globalHideLauncher, globalMaxMemory,
     globalMcOptions, globalMinMemory, globalShowLog, globalVmOptions,
   } = useGlobalSettings()
-  const { editInstance: edit } = useService(InstanceServiceKey)
 
   const data = reactive({
     name: instance.value?.name ?? '',

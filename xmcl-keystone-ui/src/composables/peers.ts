@@ -11,9 +11,11 @@ export function usePeerState() {
   const { state } = useState(ref('peer'), getPeerState)
   const connections = computed(() => state.value?.connections || [])
   const group = computed(() => state.value?.group ?? '')
+  const groupState = computed(() => state.value?.groupState ?? 'closed')
 
   return {
     connections,
+    groupState,
     group,
   }
 }

@@ -55,17 +55,17 @@
 </template>
 
 <script lang=ts setup>
-import { CreateOptionKey } from '../composables/instanceCreation'
-import { kInstances } from '@/composables/instance'
+import { kInstances } from '@/composables/instances'
 import { injection } from '@/util/inject'
 import { required } from '@/util/props'
+import { kInstanceCreation } from '../composables/instanceCreation'
 
 defineProps({
   valid: required(Boolean),
 })
 const emit = defineEmits(['update:valid'])
 const { t } = useI18n()
-const content = inject(CreateOptionKey)
+const content = inject(kInstanceCreation)
 const { instances } = injection(kInstances)
 if (!content) {
   throw new Error('Cannot use without providing CreateOption!')

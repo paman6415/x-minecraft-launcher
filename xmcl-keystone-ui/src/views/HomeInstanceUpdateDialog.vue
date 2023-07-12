@@ -128,7 +128,7 @@
 <script lang="ts" setup>
 import InstanceManifestFileTree from '@/components/InstanceManifestFileTree.vue'
 import { useRefreshable, useService, useServiceBusy } from '@/composables'
-import { kInstance, kInstances } from '@/composables/instance'
+import { kInstances } from '@/composables/instances'
 import { InstanceFileNode, provideFileNodes } from '@/composables/instanceFileNodeData'
 import { InstanceInstallDialog } from '@/composables/instanceUpdate'
 import { useVuetifyColor } from '@/composables/vuetify'
@@ -137,6 +137,7 @@ import { injection } from '@/util/inject'
 import { getUpstreamFromResource } from '@/util/upstream'
 import { EditInstanceOptions, InstanceFileOperation, InstanceFileUpdate, InstanceInstallServiceKey, InstanceServiceKey, InstanceUpdateServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
+import { kInstance } from '@/composables/instance'
 
 const selected = ref([] as string[])
 

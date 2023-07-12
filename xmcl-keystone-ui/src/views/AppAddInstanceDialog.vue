@@ -107,7 +107,7 @@ import StepperModpackContent from '../components/StepperModpackContent.vue'
 import TemplateContent from '../components/StepperTemplateContent.vue'
 import { useDialog } from '../composables/dialog'
 import { AddInstanceDialogKey, Template, useAllTemplate } from '../composables/instanceAdd'
-import { CreateOptionKey, useInstanceCreation } from '../composables/instanceCreation'
+import { kInstanceCreation, useInstanceCreation } from '../composables/instanceCreation'
 import { useNotifier } from '../composables/notifier'
 import { useRefreshable, useService } from '@/composables'
 import { kJavaContext } from '@/composables/java'
@@ -115,7 +115,7 @@ import { injection } from '@/util/inject'
 import { kModpacks } from '@/composables/modpack'
 import { kUserContext } from '@/composables/user'
 import { kLocalVersions } from '@/composables/versionLocal'
-import { kInstances } from '@/composables/instance'
+import { kInstances } from '@/composables/instances'
 import { kPeerState } from '@/composables/peers'
 
 const { isShown, dialog, show: showAddInstance, hide } = useDialog(AddInstanceDialogKey)
@@ -135,7 +135,7 @@ const { resources } = injection(kModpacks)
 const { connections } = injection(kPeerState)
 const { templates, refreshing } = useAllTemplate(all, resources, connections)
 
-provide(CreateOptionKey, creationData)
+provide(kInstanceCreation, creationData)
 
 const valid = ref(false)
 const step = ref(2)

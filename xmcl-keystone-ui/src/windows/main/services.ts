@@ -6,17 +6,6 @@ import { DeepPartial } from '@xmcl/runtime-api/src/util/object'
 import { GameProfile } from '@xmcl/user'
 import { del, set } from 'vue'
 
-class ReactiveInstanceVersionState extends InstanceVersionState {
-  versionHeader = EMPTY_VERSION
-  instanceVersion(version: ResolvedVersion | undefined) {
-    set(this, 'version', version)
-  }
-
-  instanceVersionHeader(version: LocalVersionHeader | undefined) {
-    set(this, 'versionHeader', version)
-  }
-}
-
 class ReactiveUserState extends UserState {
   gameProfileUpdate({ profile, userId }: { userId: string; profile: (GameProfileAndTexture | GameProfile) }) {
     const userProfile = this.users[userId]

@@ -60,13 +60,14 @@ import { Instance, InstanceServiceKey } from '@xmcl/runtime-api'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { ContextMenuItem } from '../composables/contextMenu'
 import { useDialog } from '../composables/dialog'
-import { kInstance, useInstances } from '../composables/instance'
+import { kInstance } from '../composables/instance'
 import { vContextMenu } from '../directives/contextMenu'
 import InstancesView from './InstancesCards.vue'
 import CreateButton from './InstancesCreateButton.vue'
 import InstancesFabButton from './InstancesFabButton.vue'
 import ImportButton from './InstancesImportButton.vue'
 import { injection } from '@/util/inject'
+import { kInstances } from '@/composables/instances'
 
 const { show: showAddInstanceDialog } = useDialog('add-instance-dialog')
 const { show: showAddServerDialog } = useDialog('add-server-dialog')
@@ -90,7 +91,8 @@ const contextMenuItems = computed(() => {
 })
 
 const { select } = injection(kInstance)
-const { instances } = useInstances()
+const { instances } = injection(kInstances)
+
 const { deleteInstance } = useService(InstanceServiceKey)
 const { push } = useRouter()
 const { t } = useI18n()

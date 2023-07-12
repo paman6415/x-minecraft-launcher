@@ -136,7 +136,7 @@
 
 <script lang=ts setup>
 import { protocolToMinecraft, ServerStatus } from '@xmcl/runtime-api'
-import { CreateOptionKey } from '../composables/instanceCreation'
+import { kInstanceCreation } from '../composables/instanceCreation'
 import { useMinecraftVersionList } from '../composables/versionList'
 import { vFallbackImg } from '../directives/fallbackImage'
 import VersionMenu from './VersionMenu.vue'
@@ -156,7 +156,7 @@ const emit = defineEmits(['update:valid'])
 const { t } = useI18n()
 const { versions } = injection(kLocalVersions)
 const { items, refreshing } = useMinecraftVersionList(computed(() => content.runtime.minecraft), versions)
-const content = injection(CreateOptionKey)
+const content = injection(kInstanceCreation)
 const server = computed(() => content.server ?? { host: '', port: undefined })
 const serverField = ref('')
 const acceptingMinecrafts = computed(() => protocolToMinecraft[props.status.version.protocol])

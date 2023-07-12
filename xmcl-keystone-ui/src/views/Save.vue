@@ -54,22 +54,24 @@
 <script lang="ts" setup>
 import Hint from '@/components/Hint.vue'
 import { useDrop, useOperation, useService } from '@/composables'
+import { kInstances } from '@/composables/instances'
 import { usePresence } from '@/composables/presence'
+import { kInstanceSave } from '@/composables/save'
 import { injection } from '@/util/inject'
 import { InstanceSavesServiceKey } from '@xmcl/runtime-api'
 import DeleteDialog from '../components/DeleteDialog.vue'
 import { useDialog } from '../composables/dialog'
-import { kInstance, useInstances } from '../composables/instance'
+import { kInstance } from '../composables/instance'
 import SaveViewPagePreviewCard from './SaveCard.vue'
 import SaveViewPageCopyFromDialog from './SaveCopyFromDialog.vue'
 import SaveViewPageCopyToDialog from './SaveCopyToDialog.vue'
 import SaveViewPageFloatButton from './SaveFloatButton.vue'
-import { kInstanceSave } from '@/composables/save'
 
 const { path } = injection(kInstance)
 const { saves } = injection(kInstanceSave)
+const { instances } = injection(kInstances)
+
 const { deleteSave, importSave, exportSave, cloneSave: copySave } = useService(InstanceSavesServiceKey)
-const { instances } = useInstances()
 const { showSaveDialog, showOpenDialog } = windowController
 const { t } = useI18n()
 const { isShown: isCopyFromDialogShown } = useDialog('save-copy-from')

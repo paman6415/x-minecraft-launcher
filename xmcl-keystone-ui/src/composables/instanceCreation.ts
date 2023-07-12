@@ -5,7 +5,7 @@ import type { GameProfile } from '@xmcl/user'
 import { InjectionKey, Ref, reactive } from 'vue'
 import { useMinecraftVersions } from './version'
 
-export const CreateOptionKey: InjectionKey<InstanceData> = Symbol('CreateOption')
+export const kInstanceCreation: InjectionKey<InstanceData> = Symbol('CreateOption')
 
 /**
  * Hook to create a general instance
