@@ -161,10 +161,6 @@ export interface InstanceService {
    */
   createInstance(option: CreateInstanceOption): Promise<string>
   /**
-   * Create a managed instance in storage.
-   */
-  createAndMount(payload: CreateInstanceOption): Promise<string>
-  /**
    * Delete the managed instance from the disk
    * @param path The instance path
    */

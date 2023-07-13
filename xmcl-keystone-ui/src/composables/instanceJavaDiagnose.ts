@@ -4,10 +4,11 @@ import { useDialog } from './dialog'
 import { JavaRecommendation } from './instanceJava'
 import { JavaIssueDialogKey, kJavaContext } from './java'
 import { LaunchMenuItem } from './launchButton'
+import { JavaRecord } from '@xmcl/runtime-api'
 
 export const kInstanceJavaDiagnose: InjectionKey<ReturnType<typeof useInstanceJavaDiagnose>> = Symbol('InstanceJavaDiagnose')
 
-export function useInstanceJavaDiagnose(javaRecommendation: Ref<JavaRecommendation | undefined>) {
+export function useInstanceJavaDiagnose(all: Ref<JavaRecord[]>, javaRecommendation: Ref<JavaRecommendation | undefined>) {
   const { t } = useI18n()
   const issue: Ref<LaunchMenuItem | undefined> = computed(() => {
     if (all.value.length === 0) {
@@ -23,7 +24,6 @@ export function useInstanceJavaDiagnose(javaRecommendation: Ref<JavaRecommendati
       }
     }
   })
-  const { all } = injection(kJavaContext)
   const { show: showJavaDialog } = useDialog(JavaIssueDialogKey)
 
   function fix() {

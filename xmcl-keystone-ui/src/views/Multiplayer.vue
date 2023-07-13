@@ -445,7 +445,7 @@ import { useDialog } from '../composables/dialog'
 import MultiplayerDialogInitiate from './MultiplayerDialogInitiate.vue'
 import MultiplayerDialogReceive from './MultiplayerDialogReceive.vue'
 import { kUserContext } from '@/composables/user'
-import { kPeerState } from '@/composables/peers'
+import { kPeerState, usePeerState } from '@/composables/peers'
 import { useNatState } from '@/composables/nat'
 
 const { show } = useDialog('peer-initiate')

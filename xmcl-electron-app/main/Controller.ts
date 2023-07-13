@@ -173,7 +173,7 @@ export default class Controller implements LauncherAppController {
       } else if (level === 2) {
         logBus.emit('warn', tagName, message)
       } else if (level === 3) {
-        logBus.emit('error', tagName, message)
+        logBus.emit('failure', tagName, message)
       }
       stream.write(`[${levels[level]}] [${new Date().toUTCString()}] [${id}]: ${message}\n`)
     })

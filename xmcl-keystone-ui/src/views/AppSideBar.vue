@@ -241,17 +241,15 @@
 </template>
 
 <script lang=ts setup>
-import { useService } from '@/composables'
 import { useLocalStorageCacheBool } from '@/composables/cache'
+import { kSettingsState } from '@/composables/setting'
+import { kMarketRoute } from '@/composables/useMarketRoute'
 import { injection } from '@/util/inject'
-import { BaseServiceKey } from '@xmcl/runtime-api'
 import { useBarBlur } from '../composables/background'
 import { kColorTheme } from '../composables/colorTheme'
 import { kUILayout } from '../composables/uiLayout'
 import AppSideBarContentFocus from './AppSideBarContentFocus.vue'
 import AppSideBarContentNext from './AppSideBarContentNext.vue'
-import { kMarketRoute } from '@/composables/useMarketRoute'
-import { kSettingsState } from '@/composables/setting'
 
 const { blurSidebar } = useBarBlur()
 const layout = injection(kUILayout)

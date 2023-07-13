@@ -7,16 +7,28 @@ export const kInstanceOptions: InjectionKey<ReturnType<typeof useInstanceOptions
 
 export function useInstanceOptions(instance: Ref<Instance>) {
   const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)
-  const { state, isValidating, error } = useState(computed(() => `/instance-options/${instance.value.path}`), () => watchOptions(instance.value.path))
+  const { state, isValidating, error } = useState(computed(() => instance.value.path && `/instance-options/${instance.value.path}`), () => watchOptions(instance.value.path))
 
-  watch(state, (newOps) => {
-    if (newOps) {
-      editGameSetting({
-        instancePath: instance.value.path,
-        ...newOps,
-      })
-    }
-  }, { deep: true })
+  // watch(state, (newOps) => {
+  //   if (newOps) {
+  //     editGameSetting({
+  //       instancePath: instance.value.path,
+  //       resourcePacks: newOps.resourcePacks,
+  //       anaglyph3d: newOps.anaglyph3d,
+  //       ao: newOps.ao,
+  //       useVbo: newOps.useVbo,
+  //       enableVsync: newOps.enableVsync,
+  //       difficulty: newOps.difficulty,
+  //       entityShadows: newOps.entityShadows,
+  //       fboEnable: newOps.fboEnable,
+  //       fullscreen: newOps.fullscreen,
+  //       renderDistance: newOps.renderDistance,
+  //       fancyGraphics: newOps.fancyGraphics,
+  //       renderClouds: newOps.renderClouds,
+  //       lang: newOps.lang,
+  //     })
+  //   }
+  // }, { deep: true })
 
   return {
     gameOptions: state,

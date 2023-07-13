@@ -21,6 +21,7 @@ import MainWindow from './App.vue'
 import { createRouter } from './router'
 import { createStore, kStore } from './store'
 import vuetify from './vuetify'
+import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 
 // to prevent the universal drop activated on self element dragging
 document.addEventListener('dragstart', (e) => {
@@ -73,6 +74,7 @@ const app = new Vue(defineComponent({
     provide(kStore, store)
     provide(kServiceFactory, useServiceFactory())
     provide(kVuetify, vuetify.framework)
+    provide(kSWRVConfig, useSWRVConfig())
     provide(kSemaphores, useSemaphores())
     provide(kExceptionHandlers, useExceptionHandlers())
     provide(kDialogModel, useDialogModel())

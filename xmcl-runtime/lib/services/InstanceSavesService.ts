@@ -94,6 +94,7 @@ export class InstanceSavesService extends AbstractService implements IInstanceSa
         parking = newState
       }
 
+      await ensureDir(savesDir)
       const watcher = watch(savesDir, (event, filename) => {
         if (filename.startsWith('.')) return
         const filePath = filename

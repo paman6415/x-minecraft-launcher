@@ -27,7 +27,9 @@ export default class ServiceManager extends Manager {
     super(app)
 
     this.app.controller.handle('service-call', (e, service: string, name: string, ...payload: any[]) => this.handleServiceCall(e.sender, service, name, ...payload))
-    this.app.controller.handle('session', (_, id) => this.startServiceCall(id))
+    this.app.controller.handle('session', (_, id) => {
+      return this.startServiceCall(id)
+    })
 
     for (const type of preloadServices) {
       const key = getServiceKey(type)
@@ -77,7 +79,7 @@ export default class ServiceManager extends Manager {
     try {
       const r = await this.sessions[id].call()
       if (isStateObject(r)) {
-        r.__state__ = Object.getPrototypeOf(r).constructor.name
+        return { result: JSON.parse(JSON.stringify(r)) }
       }
       return { result: r }
     } catch (e) {

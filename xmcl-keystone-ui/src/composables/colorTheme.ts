@@ -31,6 +31,11 @@ export function useColorTheme() {
   const lightAccentColor = useLocalStorageCacheStringValue<string>('lightAccentColor', '#82B1FF')
   const lightCardColor = useLocalStorageCacheStringValue<string>('lightCardColor', '#e0e0e080')
 
+  const cssVars = computed(() => ({
+    '--primary': primaryColor.value,
+    'background-color': backgroundColor.value,
+  }))
+
   const appBarColor = computed({
     get: () => darkTheme.value ? darkAppBarColor.value : lightAppBarColor.value,
     set: (v: string) => {
@@ -181,5 +186,6 @@ export function useColorTheme() {
     successColor,
     infoColor,
     cardColor,
+    cssVars,
   }
 }

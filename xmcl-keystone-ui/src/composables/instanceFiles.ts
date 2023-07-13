@@ -11,6 +11,7 @@ export function useInstanceFiles(instancePath: Ref<string>) {
 
   let abortController = new AbortController()
   const { refresh, error, refreshing } = useRefreshable(async () => {
+    if (!instancePath.value) { return }
     abortController.abort()
     abortController = new AbortController()
     const abortSignal = abortController.signal

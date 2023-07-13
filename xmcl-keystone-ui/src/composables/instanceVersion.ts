@@ -28,7 +28,7 @@ export function useInstanceVersion(instance: Ref<Instance>, local: Ref<LocalVers
     instance.value.runtime.quiltLoader) || markRaw(EMPTY_VERSION))
   const folder = computed(() => versionHeader.value?.id || 'unknown')
 
-  const { isValidating, mutate, data: resolvedVersion, error } = useSWRV(`/instance/${instance.value.path}/version`, async () => {
+  const { isValidating, mutate, data: resolvedVersion, error } = useSWRV(() => instance.value.path && `/instance/${instance.value.path}/version`, async () => {
     if (versionHeader.value === EMPTY_VERSION || !versionHeader.value.id) {
       return undefined
     }

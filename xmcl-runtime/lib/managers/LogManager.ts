@@ -102,7 +102,7 @@ export default class LogManager extends Manager {
       },
       error(e: Error, scope?: string) {
         const message = getMessageFromError(e)
-        logBus.emit('error', scope ?? tag, message, e)
+        logBus.emit('failure', scope ?? tag, message, e)
         loggerEntries.error.write(`[${scope ?? tag}] ${message}`)
       },
     }

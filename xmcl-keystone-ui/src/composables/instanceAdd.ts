@@ -72,9 +72,9 @@ export function useAllTemplate(javas: Ref<JavaRecord[]>, modpackResources: Ref<R
     templates.value = all
   })
 
-  watch([modpackResources, peers], () => {
-    refresh()
-  })
+  // watch([modpackResources, peers], () => {
+  //   refresh()
+  // })
 
   function getPeerTemplate(id: string, name: string, man: InstanceManifest) {
     const result: Template = {
@@ -193,6 +193,7 @@ export function useAllTemplate(javas: Ref<JavaRecord[]>, modpackResources: Ref<R
 
   return {
     templates,
+    refresh,
     refreshing,
   }
 }

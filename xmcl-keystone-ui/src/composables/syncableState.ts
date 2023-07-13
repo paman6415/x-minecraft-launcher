@@ -9,6 +9,8 @@ export function useState<T extends object>(key: Ref<string>, fetcher: () => Prom
   const error = ref(undefined as any)
   let abortController = new AbortController()
   const mutate = () => {
+    const k = key.value
+    if (!k) return
     isValidating.value = true
     abortController.abort()
     abortController = new AbortController()
@@ -19,6 +21,7 @@ export function useState<T extends object>(key: Ref<string>, fetcher: () => Prom
     // Avoid calling dispose multiple times
     dispose = () => { }
     fetcher().then((source) => {
+      console.log(source)
       if (signal.aborted) { return }
       state.value = source
       source.onMutated = (mutation, defaultHandler) => {
@@ -28,6 +31,7 @@ export function useState<T extends object>(key: Ref<string>, fetcher: () => Prom
     }, (e) => {
       if (signal.aborted) { return }
       error.value = e
+      if (import.meta.env.DEV) console.error(e)
     }).finally(() => {
       if (signal.aborted) { return }
       isValidating.value = false

@@ -30,15 +30,15 @@ async function receive(sessionId: number, registerState: (id: string, source: Mu
     return Promise.reject(error)
   }
 
-  if ('__state__' in result) {
+  if (result && typeof result === 'object' && '__state__' in result) {
     // recover state object
     const id = result.id
     const prototype = idToStatePrototype[result.__state__]
-    delete result.__state__
     if (!prototype) {
       // Wrong version of runtime
-      throw new Error(`Unknown state object ${result.__state__}!`)
+      throw new TypeError(`Unknown state object ${result.__state__}!`)
     }
+    delete result.__state__
     const state = Object.assign(result, {
       dispose() {
         ipcRenderer.send('dispose', id)
@@ -113,7 +113,7 @@ function createServiceChannels(): ServiceChannels {
           return this
         },
         call(method, ...payload) {
-          const promise: Promise<any> = ipcRenderer.invoke('service-call', serviceKey, method, payload).then((sessionId: any) => {
+          const promise: Promise<any> = ipcRenderer.invoke('service-call', serviceKey, method, ...payload).then((sessionId: any) => {
             if (typeof sessionId !== 'number') {
               throw new Error(`Cannot find service call named ${method as string} in ${serviceKey}`)
             }

@@ -33,7 +33,6 @@ export class InstanceService extends StatefulService<InstanceState> implements I
     @Inject(ImageStorage) private imageStore: ImageStorage,
   ) {
     super(app, () => new InstanceState(), async () => {
-      const { state } = this
       const instanceConfig = await this.instancesFile.read()
       const managed = (await readdirEnsured(this.getPathUnder())).map(p => this.getPathUnder(p))
 
@@ -65,23 +64,23 @@ export class InstanceService extends StatefulService<InstanceState> implements I
         })
       }
 
-      if (Object.keys(state.all).length === 0) {
-        const initial = this.app.getInitialInstance()
-        if (initial) {
-          try {
-            await this.addExternalInstance(initial)
-            const instance = Object.values(state.all)[0]
-            // await this.mountInstance(instance.path)
-            await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(instance.path) })
-          } catch (e) {
-            this.error(new Error(`Fail to initialize to ${initial}`, { cause: e }))
-            await this.createAndMount({ name: 'Minecraft' })
-          }
-        } else {
-          this.log('Cannot find any instances, try to init one default modpack.')
-          await this.createAndMount({ name: 'Minecraft' })
-        }
-      }
+      // if (Object.keys(state.all).length === 0) {
+      //   const initial = this.app.getInitialInstance()
+      //   if (initial) {
+      //     try {
+      //       await this.addExternalInstance(initial)
+      //       const instance = Object.values(state.all)[0]
+      //       // await this.mountInstance(instance.path)
+      //       await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(instance.path) })
+      //     } catch (e) {
+      //       this.error(new Error(`Fail to initialize to ${initial}`, { cause: e }))
+      //       await this.createAndMount({ name: 'Minecraft' })
+      //     }
+      //   } else {
+      //     this.log('Cannot find any instances, try to init one default modpack.')
+      //     await this.createAndMount({ name: 'Minecraft' })
+      //   }
+      // }
 
       this.storeManager
         .subscribe('instanceAdd', async (payload: Instance) => {
@@ -237,34 +236,11 @@ export class InstanceService extends StatefulService<InstanceState> implements I
   }
 
   /**
-   * Create a managed instance in storage.
-   */
-  async createAndMount(payload: CreateInstanceOption): Promise<string> {
-    requireObject(payload)
-
-    const path = await this.createInstance(payload)
-    return path
-  }
-
-  /**
    * Delete the managed instance from the disk
    * @param path The instance path
    */
   async deleteInstance(path: string) {
     requireString(path)
-
-    // if the instance is selected now
-    // if (this.state.path === path) {
-    //   const restPath = Object.keys(this.state.all).filter(p => p !== path)
-    //   // if only one instance left
-    //   if (restPath.length === 0) {
-    //     // then create and select a new one
-    //     await this.createAndMount({ name: 'Minecraft' })
-    //   } else {
-    //     // else select the first instance
-    //     await this.mountInstance(restPath[0])
-    //   }
-    // }
 
     this.state.instanceRemove(path)
 

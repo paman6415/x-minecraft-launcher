@@ -28,7 +28,7 @@ export const kInstanceJava: InjectionKey<ReturnType<typeof useInstanceJava>> = S
 export function useInstanceJava(instance: Ref<Instance>, version: Ref<ResolvedVersion | undefined>, all: Ref<JavaRecord[]>) {
   const { resolveJava } = useService(JavaServiceKey)
 
-  const { data, mutate, isValidating, error } = useSWRV(`/instance/${instance.value.path}/java-version?version=${version.value?.id}`, async () => {
+  const { data, mutate, isValidating, error } = useSWRV(() => instance.value.path && `/instance/${instance.value.path}/java-version?version=${version.value?.id}`, async () => {
     return await computeJava(all.value, resolveJava, instance.value, version.value)
   })
 

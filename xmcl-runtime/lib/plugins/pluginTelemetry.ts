@@ -218,7 +218,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
       return true
     })
 
-    app.logManager.logBus.on('error', (tag, message: string, e: Error) => {
+    app.logManager.logBus.on('failure', (tag, message: string, e: Error) => {
       if (baseService.state.disableTelemetry) return
       appInsight.defaultClient.trackException({
         exception: e,

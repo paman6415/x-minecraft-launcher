@@ -7,7 +7,7 @@ export const kInstanceSave: InjectionKey<ReturnType<typeof useInstanceSaves>> = 
 
 export function useInstanceSaves(instance: Ref<Instance>) {
   const { watch } = useService(InstanceSavesServiceKey)
-  const { state, isValidating, error } = useState(computed(() => `/instance-saves/${instance.value.path}`),
+  const { state, isValidating, error } = useState(computed(() => instance.value.path && `/instance-saves/${instance.value.path}`),
     () => watch(instance.value.path))
 
   const saves = computed(() => state.value?.saves || [])

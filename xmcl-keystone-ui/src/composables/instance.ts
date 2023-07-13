@@ -4,12 +4,32 @@ import { useLocalStorageCacheStringValue } from './cache'
 
 export const kInstance: InjectionKey<ReturnType<typeof useInstance>> = Symbol('Instance')
 
+const EMPTY_INSTANCE: Instance = {
+  path: '',
+  name: '',
+  runtime: {
+    minecraft: '',
+  },
+  lastAccessDate: 0,
+  lastPlayedDate: 0,
+  playtime: 0,
+  creationDate: 0,
+  author: '',
+  description: '',
+  version: '',
+  url: '',
+  icon: '',
+  modpackVersion: '',
+  fileApi: '',
+  server: null,
+  tags: [],
+}
 /**
  * Use the general info of the instance
  */
 export function useInstance(instances: Ref<Instance[]>) {
-  const path = useLocalStorageCacheStringValue('selectedInstancePath', instances.value[0]?.path ?? '')
-  const instance = computed(() => instances.value.find(i => i.path === path.value) ?? instances.value[0])
+  const path = useLocalStorageCacheStringValue('selectedInstancePath', '' as string)
+  const instance = computed(() => instances.value.find(i => i.path === path.value) ?? EMPTY_INSTANCE)
   const runtime = computed(() => instance.value.runtime)
   const name = computed(() => instance.value.name)
   const isServer = computed(() => instance.value.server !== null)

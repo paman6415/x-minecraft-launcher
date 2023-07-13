@@ -26,12 +26,14 @@ export const kUserContext: InjectionKey<ReturnType<typeof useUserContext>> = Sym
 export function useUserContext() {
   const { getUserState } = useService(UserServiceKey)
   const { state, isValidating, error } = useState(ref('user'), getUserState)
-  const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '')
+  const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '' as string)
   const userProfile: Ref<UserProfile> = computed(() => state.value?.users[selectedUserId.value] ?? NO_USER_PROFILE)
   const gameProfile: Ref<GameProfileAndTexture> = computed(() => userProfile.value.profiles[userProfile.value.selectedProfile] ?? NO_GAME_PROFILE)
   const users = computed(() => Object.values(state.value?.users || {}))
   const yggdrasilServices = computed(() => state.value?.yggdrasilServices || [])
-  const select = (id: string) => {}
+  const select = (id: string) => {
+    selectedUserId.value = id
+  }
 
   return {
     users,

@@ -125,9 +125,9 @@ const emit = defineEmits(['drop'])
 const router = useRouter()
 const { t } = useI18n()
 
-const { select, path, instance } = injection(kInstance)
+const { select, path } = injection(kInstance)
 const { show: showDeleteDialog } = useDialog('delete-instance')
-const { status } = useInstanceServerStatus(instance)
+const { status } = useInstanceServerStatus(computed(() => props.instance))
 
 const dragging = ref(false)
 const dragover = ref(0)

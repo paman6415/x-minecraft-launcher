@@ -88,11 +88,10 @@
 </template>
 
 <script lang=ts setup>
-import { useRefreshable, useService, useServiceBusy } from '@/composables'
-import { InstanceSave, InstanceSavesServiceKey, Resource, ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
-import { useInstanceSaves } from '../composables/save'
-import { injection } from '@/util/inject'
+import { useRefreshable, useService } from '@/composables'
 import { kInstance } from '@/composables/instance'
+import { injection } from '@/util/inject'
+import { InstanceSave, InstanceSavesServiceKey, Resource, ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
 
 const props = withDefaults(defineProps<{
   value: boolean

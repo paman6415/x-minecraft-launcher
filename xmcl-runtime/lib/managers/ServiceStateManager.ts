@@ -4,10 +4,10 @@ import { Manager } from '.'
 import LauncherApp from '../app/LauncherApp'
 import { ServiceStateContainer } from '../util/ServiceStateContainer'
 
-export const kStateKey = Symbol('StateKey')
+export const kStateKey = '__state__'
 
 export function isStateObject(v: object): v is MutableState<any> {
-  return kStateKey in v
+  return v && typeof v === 'object' && kStateKey in v
 }
 
 export default class ServiceStateManager extends Manager {
@@ -68,8 +68,8 @@ export default class ServiceStateManager extends Manager {
       state,
       this.logger,
     )
-    this.containers[id] = container
-    Object.defineProperty(state, kStateKey, { value: id })
+    this.containers[id] = container;
+    (state as any)[kStateKey] = Object.getPrototypeOf(state).constructor.name
     return Object.assign(state, {
       dispose: () => {
         delete this.containers[id]

@@ -10,12 +10,6 @@ export type ServiceConstructor<T extends AbstractService = AbstractService> = {
   new(...args: any[]): T
 }
 
-const STATE_SYMBOL = Symbol('Injected')
-
-export function isState(o: any) {
-  return o[STATE_SYMBOL]
-}
-
 export type MutexSerializer<T extends AbstractService> = (this: T, ...params: any[]) => string | string[]
 
 export type ParamSerializer<T extends AbstractService> = (...params: any[]) => string | undefined
@@ -280,7 +274,6 @@ export abstract class StatefulService<M extends State<M>> extends AbstractServic
   constructor(app: LauncherApp, createState: () => M, initializer?: () => Promise<void>) {
     super(app, initializer)
     const state = createState()
-    Object.defineProperty(state, STATE_SYMBOL, { value: true })
     this.state = app.serviceStateManager.register(getServiceKey(Object.getPrototypeOf(this).constructor), state, () => { })
   }
 }
