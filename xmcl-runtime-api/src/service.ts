@@ -49,7 +49,7 @@ export interface StateMetadata {
   /**
    * The methods of the state
    */
-  methods: [string, (o: any, ...args: any[]) => any][]
+  methods: [string, (this: any, ...args: any[]) => any][]
   prototype: object
 }
 

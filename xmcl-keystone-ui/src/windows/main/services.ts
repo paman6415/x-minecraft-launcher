@@ -30,25 +30,6 @@ class ReactiveUserState extends UserState {
 }
 
 class ReactiveInstanceModState extends InstanceModsState {
-  instanceModUpdate(r: Resource[]) {
-    for (const res of r) {
-      const existed = this.mods.findIndex(m => m.hash === res.hash)
-      if (existed !== -1) {
-        set(this.mods, existed, res)
-      } else {
-        this.mods = [...this.mods, res]
-      }
-    }
-  }
-
-  instanceModUpdateExisted(r: Resource[]) {
-    for (const res of r) {
-      const existed = this.mods.findIndex(m => m.hash === res.hash)
-      if (existed !== -1) {
-        set(this.mods, existed, { ...res, path: this.mods[existed].path })
-      }
-    }
-  }
 }
 
 class ReactiveNatState extends NatState {

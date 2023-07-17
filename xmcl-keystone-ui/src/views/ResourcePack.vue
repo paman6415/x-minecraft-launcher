@@ -2,7 +2,7 @@
   <div class="resource-pack-page">
     <v-progress-linear
       class="absolute top-0 z-10 m-0 p-0 left-0"
-      :active="resourcePacks.refreshing"
+      :active="refreshing"
       height="3"
       :indeterminate="true"
     />
@@ -168,8 +168,8 @@ const leftList: Ref<any> = ref(null)
 
 const { path } = injection(kInstance)
 const { minecraft } = injection(kInstanceVersion)
-const resourcePacks = injection(kInstanceResourcePacks)
-const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, minecraft, resourcePacks.enabled, resourcePacks.disabled)
+const { refreshing, enabled: enabled_, disabled: disabled_ } = injection(kInstanceResourcePacks)
+const { enabled, disabled, insert, add, remove } = useInstanceResourcePackItem(path, minecraft, enabled_, disabled_)
 const { removeResources } = useService(ResourceServiceKey)
 const { push } = useRouter()
 const { t } = useI18n()

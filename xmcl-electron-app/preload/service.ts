@@ -11,7 +11,7 @@ function getPrototypeMetadata(T: { new(): object }, prototype: object, name: str
   return {
     name,
     constructor: () => new T(),
-    methods: methods.map(([name, f]) => [name, f.call] as [string, (o: any, ...args: any[]) => any]),
+    methods: methods.map(([name, f]) => [name, (f as Function)] as [string, (this: any, ...args: any[]) => any]),
     prototype,
   }
 }
@@ -49,9 +49,7 @@ async function receive(sessionId: number, registerState: (id: string, source: Mu
 
     for (const [method, handler] of prototype.methods) {
       // explictly bind to the state object under electron context isolation
-      state[method] = function (...args: any[]) {
-        handler(this, ...args)
-      }
+      state[method] = handler.bind(state)
     }
 
     // register state to receive event

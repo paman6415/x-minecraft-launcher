@@ -1,5 +1,5 @@
 import { EditInstanceOptions, InstanceServiceKey } from '@xmcl/runtime-api'
-import { InjectionKey } from 'vue'
+import { InjectionKey, set } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
 
@@ -10,7 +10,35 @@ export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol(
  */
 export function useInstances() {
   const { createInstance, getSharedInstancesState, editInstance } = useService(InstanceServiceKey)
-  const { state, isValidating, error } = useState(ref('instances'), getSharedInstancesState)
+  const { state, isValidating, error } = useState(ref('instances'), getSharedInstancesState, {
+    instanceEdit(instance, settings) {
+      const inst = instance.instances.find(i => i.path === (settings.path))!
+      if ('showLog' in settings) {
+        set(inst, 'showLog', settings.showLog)
+      }
+      if ('hideLauncher' in settings) {
+        set(inst, 'hideLauncher', settings.hideLauncher)
+      }
+      if ('fastLaunch' in settings) {
+        set(inst, 'fastLaunch', settings.fastLaunch)
+      }
+      if ('maxMemory' in settings) {
+        set(inst, 'maxMemory', settings.maxMemory)
+      }
+      if ('minMemory' in settings) {
+        set(inst, 'minMemory', settings.minMemory)
+      }
+      if ('assignMemory' in settings) {
+        set(inst, 'assignMemory', settings.assignMemory)
+      }
+      if ('vmOptions' in settings) {
+        set(inst, 'vmOptions', settings.vmOptions)
+      }
+      if ('mcOptions' in settings) {
+        set(inst, 'mcOptions', settings.mcOptions)
+      }
+    },
+  })
   const instances = computed(() => state.value?.instances ?? [])
   async function edit(options: EditInstanceOptions & { instancePath: string }) {
     await editInstance(options)

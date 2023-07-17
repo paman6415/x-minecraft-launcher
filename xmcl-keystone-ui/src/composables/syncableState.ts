@@ -1,7 +1,9 @@
 import { MutableState } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
 
-export function useState<T extends object>(key: Ref<string>, fetcher: () => Promise<MutableState<T>>) {
+export type Handler<T> = { [k in keyof T]?: T[k] extends (...args: infer A) => infer R ? (state: T, ...args: A) => R : never }
+
+export function useState<T extends object>(key: Ref<string>, fetcher: () => Promise<MutableState<T>>, handler?: Handler<T>) {
   const isValidating = ref(false)
 
   const state = ref<T | undefined>()
@@ -25,7 +27,8 @@ export function useState<T extends object>(key: Ref<string>, fetcher: () => Prom
       if (signal.aborted) { return }
       state.value = source
       source.onMutated = (mutation, defaultHandler) => {
-        defaultHandler.call(state.value, mutation.payload)
+        defaultHandler.call(state.value, mutation.payload);
+        ((handler as any)?.[mutation.type] as any)?.(state.value, mutation.payload)
       }
       dispose = source.dispose
     }, (e) => {

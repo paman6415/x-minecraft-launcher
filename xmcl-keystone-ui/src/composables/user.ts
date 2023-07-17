@@ -1,4 +1,4 @@
-import { computed, InjectionKey, reactive, Ref, toRefs } from 'vue'
+import { computed, del, InjectionKey, reactive, Ref, set, toRefs } from 'vue'
 import { GameProfileAndTexture, OfficialUserServiceKey, UserProfile, UserServiceKey } from '@xmcl/runtime-api'
 
 import { useService, useServiceBusy } from '@/composables'
@@ -25,7 +25,26 @@ export const kUserContext: InjectionKey<ReturnType<typeof useUserContext>> = Sym
 
 export function useUserContext() {
   const { getUserState } = useService(UserServiceKey)
-  const { state, isValidating, error } = useState(ref('user'), getUserState)
+  const { state, isValidating, error } = useState(ref('user'), getUserState, {
+    gameProfileUpdate(state, { profile, userId }) {
+      const userProfile = state.users[userId]
+      if (profile.id in userProfile.profiles) {
+        const instance = { textures: { SKIN: { url: '' } }, ...profile }
+        set(userProfile.profiles, profile.id, instance)
+      } else {
+        userProfile.profiles[profile.id] = {
+          textures: { SKIN: { url: '' } },
+          ...profile,
+        }
+      }
+    },
+    userProfileRemove(state, userId) {
+      del(state.users, userId)
+    },
+    userProfile(state, user) {
+      set(state.users, user.id, user)
+    },
+  })
   const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '' as string)
   const userProfile: Ref<UserProfile> = computed(() => state.value?.users[selectedUserId.value] ?? NO_USER_PROFILE)
   const gameProfile: Ref<GameProfileAndTexture> = computed(() => userProfile.value.profiles[userProfile.value.selectedProfile] ?? NO_GAME_PROFILE)
