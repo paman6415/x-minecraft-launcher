@@ -5,7 +5,7 @@ import { set } from 'vue'
 
 export function useNatState() {
   const { getNatState } = useService(NatServiceKey)
-  const { state, isValidating, error } = useState(ref('nat'), getNatState, {
+  const { state, isValidating, error } = useState(getNatState, {
     natAddressSet(state, address): void {
       set(state, 'natAddress', address)
     },

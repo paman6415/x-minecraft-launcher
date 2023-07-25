@@ -1,10 +1,7 @@
 
-import { Framework } from 'vuetify'
-import { injection } from '../util/inject'
-import { kSettingsState } from './setting'
-import { kVuetify } from './vuetify'
 import { SettingState } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
+import { Framework } from 'vuetify'
 
 export function useI18nSync(framework: Framework, state: Ref<SettingState | undefined>) {
   const { locale } = useI18n()

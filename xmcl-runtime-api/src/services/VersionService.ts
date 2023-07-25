@@ -1,6 +1,6 @@
 import type { ResolvedVersion } from '@xmcl/core'
 import { ServiceKey } from './Service'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 
 export interface LocalVersionHeader {
   path: string

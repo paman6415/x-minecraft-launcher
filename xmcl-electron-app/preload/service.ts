@@ -16,13 +16,45 @@ function getPrototypeMetadata(T: { new(): object }, prototype: object, name: str
   }
 }
 
-const idToStatePrototype: Record<string, StateMetadata> = AllStates.reduce((obj, cur) => {
+const typeToStatePrototype: Record<string, StateMetadata> = AllStates.reduce((obj, cur) => {
   obj[cur.name] = getPrototypeMetadata(cur, cur.prototype, cur.name)
   return obj
 }, {} as Record<string, StateMetadata>)
 
-async function receive(sessionId: number, registerState: (id: string, source: MutableState<object>) => void, disposeState: (id: string) => void) {
-  const { result, error } = await ipcRenderer.invoke('session', sessionId)
+const kEmitter = Symbol('Emitter')
+
+function createMutableState<T extends object>(val: T): MutableState<T> {
+  const emitter = new EventEmitter()
+  Object.defineProperty(val, kEmitter, { value: emitter })
+  return Object.assign(val, {
+    subscribe(key: string, listener: (payload: any) => void) {
+      emitter.addListener(key, listener)
+      return this
+    },
+    unsubscribe(key: string, listener: (payload: any) => void) {
+      emitter.removeListener(key, listener)
+      return this
+    },
+    subscribeAll(listener: (payload: any) => void) {
+      emitter.addListener('*', listener)
+      return this
+    },
+    unsubscribeAll(listener: (payload: any) => void) {
+      emitter.removeListener('*', listener)
+      return this
+    },
+  }) as any
+}
+
+if (process.env.NODE_ENV === 'development') {
+  console.log('serivce.ts preload')
+}
+
+async function receive(_result: any, states: Record<string, MutableState<any>>, pendingCommits: Record<string, { type: string; payload: any }[]>) {
+  if (typeof _result !== 'object') {
+    return
+  }
+  const { result, error } = _result
   if (error) {
     if (error.errorMessage) {
       error.toString = () => error.errorMessage
@@ -33,27 +65,36 @@ async function receive(sessionId: number, registerState: (id: string, source: Mu
   if (result && typeof result === 'object' && '__state__' in result) {
     // recover state object
     const id = result.id
-    const prototype = idToStatePrototype[result.__state__]
+
+    if (states[id]) {
+      return states[id]
+    }
+
+    const prototype = typeToStatePrototype[result.__state__]
     if (!prototype) {
       // Wrong version of runtime
       throw new TypeError(`Unknown state object ${result.__state__}!`)
     }
+
     delete result.__state__
-    const state = Object.assign(result, {
-      dispose() {
-        ipcRenderer.send('dispose', id)
-        disposeState(id)
-      },
-      onCommit: undefined,
-    })
+    const state = createMutableState(result)
 
     for (const [method, handler] of prototype.methods) {
       // explictly bind to the state object under electron context isolation
       state[method] = handler.bind(state)
     }
 
-    // register state to receive event
-    registerState(id, state)
+    states[id] = state
+
+    if (pendingCommits[id]) {
+      for (const mutation of pendingCommits[id]) {
+        state[mutation.type]?.(mutation.payload);
+        (state as any)[kEmitter].emit(mutation.type, mutation.payload);
+        (state as any)[kEmitter].emit('*', mutation.type, mutation.payload)
+      }
+      delete pendingCommits[id]
+    }
+
     return state
   }
 
@@ -63,6 +104,7 @@ async function receive(sessionId: number, registerState: (id: string, source: Mu
 function createServiceChannels(): ServiceChannels {
   const servicesEmitter = new Map<ServiceKey<any>, EventEmitter>()
   const states: Record<string, MutableState<object>> = {}
+  const pendingCommits: Record<string, { type: string; payload: any }[]> = {}
 
   ipcRenderer.on('service-event', (_, { service, event, args }) => {
     const emitter = servicesEmitter.get(service)
@@ -71,19 +113,24 @@ function createServiceChannels(): ServiceChannels {
     }
   })
 
-  ipcRenderer.on('commit', (event, id, mutation) => {
+  ipcRenderer.on('commit', (_, id, type, payload) => {
     const state = states[id]
     if (state) {
-      const onCommit = state.onMutated
-      if (onCommit) {
-        onCommit(mutation, (state as any)[mutation.key])
+      (state as any)[type]?.(payload);
+      (state as any)[kEmitter].emit(type, payload);
+      (state as any)[kEmitter].emit('*', type, payload)
+    } else {
+      // pending commit
+      if (!pendingCommits[id]) {
+        pendingCommits[id] = []
       }
+      pendingCommits[id].push({ type, payload })
     }
   })
 
   return {
     getStatesMetadata() {
-      return Object.values(idToStatePrototype)
+      return Object.values(typeToStatePrototype)
     },
     open(serviceKey) {
       if (!servicesEmitter.has(serviceKey)) {
@@ -92,12 +139,6 @@ function createServiceChannels(): ServiceChannels {
       const emitter = servicesEmitter.get(serviceKey)!
       return {
         key: serviceKey,
-        sync(id?: number) {
-          return ipcRenderer.invoke('sync', serviceKey, id)
-        },
-        commit(key: string, payload: any): void {
-          ipcRenderer.invoke('commit', serviceKey, key, payload)
-        },
         on(channel: any, listener: any) {
           emitter.on(channel, listener)
           return this
@@ -110,19 +151,9 @@ function createServiceChannels(): ServiceChannels {
           emitter.removeListener(channel, listener)
           return this
         },
-        call(method, ...payload) {
-          const promise: Promise<any> = ipcRenderer.invoke('service-call', serviceKey, method, ...payload).then((sessionId: any) => {
-            if (typeof sessionId !== 'number') {
-              throw new Error(`Cannot find service call named ${method as string} in ${serviceKey}`)
-            }
-            return receive(sessionId, (id, source) => {
-              states[id] = source
-              ipcRenderer.send('activate', id)
-            }, (id) => {
-              delete states[id]
-            })
-          })
-          return promise
+        async call(method, ...payload) {
+          const result = await ipcRenderer.invoke('service-call', serviceKey, method, ...payload)
+          return receive(result, states, pendingCommits)
         },
       }
     },

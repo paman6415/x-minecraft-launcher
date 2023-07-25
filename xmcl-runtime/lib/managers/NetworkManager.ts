@@ -51,34 +51,32 @@ export default class NetworkManager extends Manager {
 
     let maxConnection = 16
 
-    const service = serviceManager.get(BaseService)
-    service.initialize().then(() => {
-      maxConnection = service.state.maxSockets > 0 ? service.state.maxSockets : Number.POSITIVE_INFINITY
-      proxy.setProxyEnabled(service.state.httpProxyEnabled)
-      if (service.state.httpProxy) {
+    serviceManager.get(BaseService).getSettings().then((state) => {
+      maxConnection = state.maxSockets > 0 ? state.maxSockets : Number.POSITIVE_INFINITY
+      proxy.setProxyEnabled(state.httpProxyEnabled)
+      if (state.httpProxy) {
         try {
-          proxy.setProxy(new URL(service.state.httpProxy))
+          proxy.setProxy(new URL(state.httpProxy))
         } catch (e) {
-          app.warn(`Fail to set url as it's not a valid url ${service.state.httpProxy}`, e)
+          app.warn(`Fail to set url as it's not a valid url ${state.httpProxy}`, e)
         }
       }
-    })
-    stateManager.subscribe('maxSocketsSet', (val) => {
-      maxConnection = val > 0 ? val : Number.POSITIVE_INFINITY
+      state.subscribe('maxSocketsSet', (val) => {
+        maxConnection = val > 0 ? val : Number.POSITIVE_INFINITY
+      })
+      state.subscribe('httpProxySet', (p) => {
+        try {
+          proxy.setProxy(new URL(p))
+        } catch (e) {
+          app.warn(`Fail to set url as it's not a valid url ${p}`, e)
+        }
+      })
+      state.subscribe('httpProxyEnabledSet', (e) => {
+        proxy.setProxyEnabled(e)
+      })
     })
 
     const apiClientFactories = [] as Array<(origin: URL, options: Agent.Options) => Dispatcher | undefined>
-
-    this.app.serviceStateManager.subscribe('httpProxySet', (p) => {
-      try {
-        proxy.setProxy(new URL(p))
-      } catch (e) {
-        app.warn(`Fail to set url as it's not a valid url ${p}`, e)
-      }
-    })
-    this.app.serviceStateManager.subscribe('httpProxyEnabledSet', (e) => {
-      proxy.setProxyEnabled(e)
-    })
 
     const proxy = new ProxyDispatcher({
       factory(connect) {

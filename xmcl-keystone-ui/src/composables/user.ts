@@ -25,7 +25,7 @@ export const kUserContext: InjectionKey<ReturnType<typeof useUserContext>> = Sym
 
 export function useUserContext() {
   const { getUserState } = useService(UserServiceKey)
-  const { state, isValidating, error } = useState(ref('user'), getUserState, {
+  const { state, isValidating, error } = useState(getUserState, {
     gameProfileUpdate(state, { profile, userId }) {
       const userProfile = state.users[userId]
       if (profile.id in userProfile.profiles) {

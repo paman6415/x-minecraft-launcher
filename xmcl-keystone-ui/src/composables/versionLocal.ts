@@ -7,7 +7,7 @@ export const kLocalVersions: InjectionKey<ReturnType<typeof useLocalVersions>> =
 
 export function useLocalVersions() {
   const { getLocalVersions } = useService(VersionServiceKey)
-  const { state, isValidating, error } = useState(ref('localVersions'), getLocalVersions)
+  const { state, isValidating, error } = useState(getLocalVersions)
   const versions = computed(() => state.value?.local ?? [])
 
   return {

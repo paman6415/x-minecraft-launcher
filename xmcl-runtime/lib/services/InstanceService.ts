@@ -82,7 +82,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
       //   }
       // }
 
-      this.storeManager
+      this.state
         .subscribe('instanceAdd', async (payload: Instance) => {
           await this.instanceFile.write(join(payload.path, 'instance.json'), payload)
           // await this.instancesFile.write({ instances: Object.keys(this.state.all).map(normalizeInstancePath), selectedInstance: normalizeInstancePath(this.state.path) })

@@ -19,7 +19,6 @@ import '../../../locales/en.yaml'
 import '../../../locales/zh-CN.yaml'
 import MainWindow from './App.vue'
 import { createRouter } from './router'
-import { createStore, kStore } from './store'
 import vuetify from './vuetify'
 import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 
@@ -70,8 +69,6 @@ const app = new Vue(defineComponent({
       }),
     })
 
-    const store = createStore()
-    provide(kStore, store)
     provide(kServiceFactory, useServiceFactory())
     provide(kVuetify, vuetify.framework)
     provide(kSWRVConfig, useSWRVConfig())

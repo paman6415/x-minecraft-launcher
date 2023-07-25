@@ -55,9 +55,9 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
   ) {
     super(app, () => new PeerState(), async () => {
       const initCredential = async () => {
-        await userService.initialize()
         await this.fetchCredential()
-        this.storeManager.subscribe('userProfile', (profile) => {
+        const state = await userService.getUserState()
+        state.subscribe('userProfile', (profile) => {
           if (profile.authService === 'microsoft' && this.iceServers.length === 0) {
             this.fetchCredential()
           }

@@ -78,4 +78,4 @@ export { default as packFormatVersionRange } from './src/util/packFormatVersionR
 export { default as protocolToMinecraft } from './src/util/protocolToMinecraft'
 export * from './src/util/versionRange'
 export * from './src/util/mavenVersion'
-export * from './src/util/WatchSource'
+export * from './src/util/MutableState'

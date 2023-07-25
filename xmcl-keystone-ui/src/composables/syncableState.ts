@@ -1,48 +1,35 @@
 import { MutableState } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
 
 export type Handler<T> = { [k in keyof T]?: T[k] extends (...args: infer A) => infer R ? (state: T, ...args: A) => R : never }
 
-export function useState<T extends object>(key: Ref<string>, fetcher: () => Promise<MutableState<T>>, handler?: Handler<T>) {
+export function useState<T extends object>(fetcher: (abortSignal: AbortSignal) => Promise<MutableState<T>> | undefined, handler?: Handler<T>) {
   const isValidating = ref(false)
 
   const state = ref<T | undefined>()
-  let dispose = () => { }
   const error = ref(undefined as any)
-  let abortController = new AbortController()
-  const mutate = () => {
-    const k = key.value
-    if (!k) return
-    isValidating.value = true
-    abortController.abort()
-    abortController = new AbortController()
-
+  const mutate = async (onCleanup?: (abort: () => void) => void) => {
+    const abortController = new AbortController()
     const { signal } = abortController
+    onCleanup?.(() => abortController.abort())
 
-    dispose()
     // Avoid calling dispose multiple times
-    dispose = () => { }
-    fetcher().then((source) => {
-      console.log(source)
-      if (signal.aborted) { return }
-      state.value = source
-      source.onMutated = (mutation, defaultHandler) => {
-        defaultHandler.call(state.value, mutation.payload);
-        ((handler as any)?.[mutation.type] as any)?.(state.value, mutation.payload)
-      }
-      dispose = source.dispose
-    }, (e) => {
+    try {
+      isValidating.value = true
+      const data = await fetcher(signal)
+      if (!data || signal.aborted) { return }
+      data.subscribeAll((mutation, payload) => {
+        ((handler as any)?.[mutation] as any)?.(state.value, payload)
+      })
+      state.value = data
+    } catch (e) {
       if (signal.aborted) { return }
       error.value = e
       if (import.meta.env.DEV) console.error(e)
-    }).finally(() => {
-      if (signal.aborted) { return }
+    } finally {
       isValidating.value = false
-    })
+    }
   }
-  watch(key, mutate)
-  onMounted(mutate)
-  onUnmounted(dispose)
+  watchEffect(mutate)
   return {
     isValidating,
     state,

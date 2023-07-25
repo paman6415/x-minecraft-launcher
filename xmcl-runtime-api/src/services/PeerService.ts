@@ -2,7 +2,7 @@ import { GenericEventEmitter } from '../events'
 import { InstanceManifest } from '../entities/instanceManifest.schema'
 import { ServiceKey } from './Service'
 import { GameProfileAndTexture } from '../entities/user.schema'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 
 export interface RTCSessionDescription {
   sdp: string

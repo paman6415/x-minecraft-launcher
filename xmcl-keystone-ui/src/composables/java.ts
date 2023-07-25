@@ -9,7 +9,7 @@ export const kJavaContext: InjectionKey<ReturnType<typeof useJavaContext>> = Sym
 
 export function useJavaContext() {
   const { getJavaState } = useService(JavaServiceKey)
-  const { state, isValidating, error } = useState<JavaState>(ref('java'), getJavaState)
+  const { state, isValidating, error } = useState<JavaState>(getJavaState)
   const all = computed(() => state.value?.all ?? [])
   const missing = computed(() => state.value?.all.length === 0)
 

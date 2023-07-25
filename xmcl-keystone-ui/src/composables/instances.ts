@@ -10,7 +10,7 @@ export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol(
  */
 export function useInstances() {
   const { createInstance, getSharedInstancesState, editInstance } = useService(InstanceServiceKey)
-  const { state, isValidating, error } = useState(ref('instances'), getSharedInstancesState, {
+  const { state, isValidating, error } = useState(getSharedInstancesState, {
     instanceEdit(instance, settings) {
       const inst = instance.instances.find(i => i.path === (settings.path))!
       if ('showLog' in settings) {
@@ -45,7 +45,7 @@ export function useInstances() {
   }
   watch(state, (newState) => {
     console.log(newState)
-    if (!newState?.all.length) {
+    if (!newState?.instances.length) {
       const path = createInstance({
         name: 'Minecraft',
       })

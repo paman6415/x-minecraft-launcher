@@ -40,13 +40,11 @@ const app = new Vue(defineComponent({
     baseService.call('getSettings').then(state => state).then(state => {
       i18n.locale = state.locale
       updateTheme(state.theme)
-    })
-    baseService.on('commit', ({ mutation }) => {
-      if (mutation.type === 'localeSet') {
-        i18n.locale = mutation.payload
-      } else if (mutation.type === 'themeSet') {
-        updateTheme(mutation.payload)
-      }
+      state.subscribe('localeSet', (locale) => {
+        i18n.locale = locale
+      }).subscribe('themeSet', (theme) => {
+        updateTheme(state.theme)
+      })
     })
 
     const preferDark = usePreferDark()

@@ -20,8 +20,9 @@ import { createI18n } from './utils/i18n'
 import { darkIcon } from './utils/icons'
 import { trackWindowSize } from './utils/windowSizeTracker'
 import { PromiseSignal, createPromiseSignal } from '@xmcl/runtime/lib/util/promiseSignal'
+import { Client } from '@xmcl/runtime/lib/engineBridge'
 
-export default class Controller implements LauncherAppController {
+export class ElectronController implements LauncherAppController {
   protected windowsVersion?: { major: number; minor: number; build: number }
 
   protected mainWin: BrowserWindow | undefined = undefined
@@ -145,8 +146,8 @@ export default class Controller implements LauncherAppController {
     }])
   }
 
-  handle(...payload: any[]) {
-    return ipcMain.handle(payload[0], payload[1])
+  handle(channel: string, handler: (event: { sender: Client }, ...args: any[]) => any) {
+    return ipcMain.handle(channel, handler)
   }
 
   broadcast(channel: string, ...payload: any[]): void {

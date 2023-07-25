@@ -7,7 +7,7 @@ export const kInstanceOptions: InjectionKey<ReturnType<typeof useInstanceOptions
 
 export function useInstanceOptions(instance: Ref<Instance>) {
   const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)
-  const { state, isValidating, error } = useState(computed(() => instance.value.path && `/instance-options/${instance.value.path}`), () => watchOptions(instance.value.path))
+  const { state, isValidating, error } = useState(() => instance.value.path ? watchOptions(instance.value.path) : undefined)
 
   // watch(state, (newOps) => {
   //   if (newOps) {

@@ -21,12 +21,6 @@ export interface SyncableStateChannel<T> extends GenericEventEmitter<SyncableEve
 export type ServiceChannel<T> = {
   readonly key: ServiceKey<T>
   /**
-   * Commit a mutation to service state.
-   * @param key The mutation name
-   * @param payload The mutation payload
-   */
-  commit(key: string, payload: any): void
-  /**
    * Call a method of the service.
    * @param method The method name
    * @param payload The method payload

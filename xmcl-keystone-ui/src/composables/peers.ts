@@ -8,7 +8,7 @@ export const kPeerState: InjectionKey<ReturnType<typeof usePeerState>> = Symbol(
 
 export function usePeerState() {
   const { getPeerState } = useService(PeerServiceKey)
-  const { state } = useState(ref('peer'), getPeerState)
+  const { state } = useState(getPeerState)
   const connections = computed(() => state.value?.connections || [])
   const group = computed(() => state.value?.group ?? '')
   const groupState = computed(() => state.value?.groupState ?? 'closed')

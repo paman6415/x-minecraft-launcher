@@ -1,11 +1,11 @@
-import Controller from '@/Controller'
+import { ElectronController } from '@/ElectronController'
 import { LaunchService } from '@xmcl/runtime'
 import { ControllerPlugin } from './plugin'
 
 /**
  * Control the behavior of window during game launch/exit, and also redirect the minecraft stdout/stderr during game
  */
-export const gameLaunch: ControllerPlugin = function (this: Controller) {
+export const gameLaunch: ControllerPlugin = function (this: ElectronController) {
   this.app.once('engine-ready', () => {
     this.app.serviceManager.get(LaunchService).on('minecraft-window-ready', ({ hideLauncher }) => {
       if (this.mainWin && this.mainWin.isVisible()) {

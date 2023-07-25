@@ -1,13 +1,13 @@
 import { AZURE_CDN, AZURE_MS_CDN, IS_DEV } from '@/constant'
-import { DownloadTask } from '@xmcl/installer'
 import { ChecksumNotMatchError, download } from '@xmcl/file-transfer'
-import { BaseService, ServiceStateManager } from '@xmcl/runtime'
+import { DownloadTask } from '@xmcl/installer'
+import { BaseService } from '@xmcl/runtime'
 import { ReleaseInfo } from '@xmcl/runtime-api'
 import { LauncherAppUpdater } from '@xmcl/runtime/lib/app/LauncherAppUpdater'
 import { Logger } from '@xmcl/runtime/lib/util/log'
-import { BaseTask, task, Task } from '@xmcl/task'
+import { BaseTask, Task, task } from '@xmcl/task'
 import { spawn } from 'child_process'
-import { autoUpdater, CancellationToken, Provider, UpdateInfo, UpdaterSignal } from 'electron-updater'
+import { CancellationToken, Provider, UpdateInfo, UpdaterSignal, autoUpdater } from 'electron-updater'
 import { stat, writeFile } from 'fs/promises'
 import { closeSync, existsSync, open, rename, unlink } from 'original-fs'
 import { platform } from 'os'
@@ -302,17 +302,3 @@ async function ensureElevateExe(appDataPath: string) {
 }
 
 let injectedUpdate = false
-
-export function setup(storeManager: ServiceStateManager) {
-  storeManager.subscribe('autoInstallOnAppQuitSet', (value) => {
-    autoUpdater.autoInstallOnAppQuit = value
-  }).subscribe('allowPrereleaseSet', (value) => {
-    autoUpdater.allowPrerelease = value
-  }).subscribe('autoDownloadSet', (value) => {
-    autoUpdater.autoDownload = value
-  }).subscribe('config', (config) => {
-    autoUpdater.autoInstallOnAppQuit = config.autoInstallOnAppQuit
-    autoUpdater.allowPrerelease = config.allowPrerelease
-    autoUpdater.autoDownload = config.autoDownload
-  })
-}

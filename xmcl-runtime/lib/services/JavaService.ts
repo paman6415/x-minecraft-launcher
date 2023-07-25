@@ -38,7 +38,7 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
       }
       this.refreshLocalJava()
 
-      this.storeManager.subscribeAll(['javaUpdate', 'javaRemove'], () => {
+      this.state.subscribeAll(() => {
         this.config.write(this.state)
       })
     })

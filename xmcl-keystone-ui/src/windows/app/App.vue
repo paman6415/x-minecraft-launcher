@@ -73,8 +73,6 @@ import { injection } from '@/util/inject'
 import AppContextMenu from '@/views/AppContextMenu.vue'
 import AppNotifier from '@/views/AppNotifier.vue'
 import AppSystemBar from '@/views/AppSystemBar.vue'
-import AppTaskDialog from '@/views/AppTaskDialog.vue'
-import { useAllServices } from './services'
 import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 
 const colorTheme = useColorTheme()
@@ -89,7 +87,6 @@ const cssVars = computed(() => ({
 
 const vuetify = injection(kVuetify)
 
-useAllServices()
 useDefaultErrorHandler()
 useI18nSync()
 useThemeSync()

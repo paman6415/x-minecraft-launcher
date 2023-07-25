@@ -29,7 +29,7 @@ export const kSettingsState: InjectionKey<ReturnType<typeof useSettingsState>> =
 
 export function useSettingsState() {
   const { getSettings } = useService(BaseServiceKey)
-  return useState(ref('settings'), getSettings)
+  return useState(getSettings)
 }
 
 export function useGlobalSettings() {

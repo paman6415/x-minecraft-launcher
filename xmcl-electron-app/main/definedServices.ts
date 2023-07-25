@@ -1,6 +1,6 @@
 import { BaseService, CurseForgeService, AuthlibInjectorService, ImportService, InstallService, InstanceIOService, InstanceInstallService, InstanceLogService, InstanceManifestService, InstanceModsService, InstanceOptionsService, InstanceResourcePackService, InstanceSavesService, InstanceScreenshotService, InstanceService, InstanceShaderPacksService, InstanceUpdateService, InstanceVersionService, JavaService, LaunchService, LittleSkinUserService, ModpackService, ModrinthService, NatService, OfficialUserService, OfflineUserService, PeerService, PresenceService, ResourcePackPreviewService, ResourceService, ServerStatusService, UserService, VersionService } from '@xmcl/runtime'
 
-export const preloadServices = [
+export const definedServices = [
   LittleSkinUserService,
   BaseService,
   CurseForgeService,

@@ -1,4 +1,4 @@
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export interface ImportHMCLModpackOptions {

@@ -1,4 +1,4 @@
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { Exception } from '../entities/exception'
 import { Instance } from '../entities/instance'
 import { InstanceSchema } from '../entities/instance.schema'

@@ -275,5 +275,10 @@ export abstract class StatefulService<M extends State<M>> extends AbstractServic
     super(app, initializer)
     const state = createState()
     this.state = app.serviceStateManager.register(getServiceKey(Object.getPrototypeOf(this).constructor), state, () => { })
+    app.serviceStateManager.ref(this.state)
+  }
+
+  async dispose(): Promise<void> {
+    this.app.serviceStateManager.deref(this.state)
   }
 }

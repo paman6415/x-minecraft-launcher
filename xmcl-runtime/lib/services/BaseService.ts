@@ -58,28 +58,13 @@ export class BaseService extends StatefulService<SettingState> implements IBaseS
     app.gamePathReadySignal.promise.then(() => {
       this.state.root = app.gameDataPath
     })
-    this.storeManager.subscribeAll([
-      'localeSet',
-      'allowPrereleaseSet',
-      'autoInstallOnAppQuitSet',
-      'autoDownloadSet',
-      'apiSetsPreferenceSet',
-      'apiSetsSet',
-      'httpProxySet',
-      'httpProxyEnabledSet',
-      'themeSet',
-      'maxSocketsSet',
-      'discordPresenceSet',
-      'globalInstanceSetting',
-      'developerModeSet',
-      'disableTelemetrySet',
-      'linuxTitlebarSet',
-    ], () => {
+    this.state.subscribeAll(() => {
       this.saver.push()
     })
   }
 
   async getSettings(): Promise<MutableState<SettingState>> {
+    await this.initialize()
     return this.state
   }
 

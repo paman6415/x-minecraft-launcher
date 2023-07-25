@@ -133,7 +133,8 @@ export class LauncherApp extends EventEmitter {
     getController: (app: LauncherApp) => LauncherAppController,
     getUpdater: (app: LauncherApp) => LauncherAppUpdater,
     readonly builtinAppManifest: InstalledAppManifest,
-    readonly preloads: ServiceConstructor[],
+    services: ServiceConstructor[],
+    _plugins: LauncherAppPlugin[],
   ) {
     super()
     this.gameDataPath = ''
@@ -152,14 +153,14 @@ export class LauncherApp extends EventEmitter {
     this.logManager = new LogManager(this)
     this.registry.register(LauncherAppKey, this)
 
-    for (const plugin of plugins) {
+    for (const plugin of plugins.concat(_plugins)) {
       plugin(this)
     }
 
     this.controller = getController(this)
     this.updater = getUpdater(this)
 
-    this.serviceManager = new ServiceManager(this, preloads)
+    this.serviceManager = new ServiceManager(this, services)
     this.serviceStateManager = new ServiceStateManager(this)
     this.networkManager = new NetworkManager(this, this.serviceManager, this.serviceStateManager)
 

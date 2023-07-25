@@ -14,12 +14,10 @@ import { castToVueI18n, createI18n } from 'vue-i18n-bridge'
 import VueObserveVisibility from 'vue-observe-visibility'
 import Router from 'vue-router'
 import Vuetify from 'vuetify'
-import Vuex from 'vuex'
 import '../../../locales/en.yaml'
 import '../../../locales/zh-CN.yaml'
 import App from './App.vue'
 import { createRouter } from './router'
-import { createStore, kStore } from './store'
 import vuetify from './vuetify'
 
 // to prevent the universal drop activated on self element dragging
@@ -31,7 +29,6 @@ document.addEventListener('dragstart', (e) => {
 
 Vue.use(VueI18n, { bridge: true })
 Vue.use(Router)
-Vue.use(Vuex)
 Vue.use(Vuetify)
 Vue.use(VueObserveVisibility)
 
@@ -69,8 +66,6 @@ const app = new Vue(defineComponent({
       }),
     })
 
-    const store = createStore()
-    provide(kStore, store)
     provide(kServiceFactory, useServiceFactory())
     provide(kVuetify, vuetify.framework)
     provide(kSemaphores, useSemaphores())

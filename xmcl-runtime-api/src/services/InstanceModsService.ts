@@ -1,4 +1,4 @@
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { Resource } from '../entities/resource'
 import { ServiceKey } from './Service'
 

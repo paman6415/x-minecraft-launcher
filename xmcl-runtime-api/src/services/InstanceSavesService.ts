@@ -1,6 +1,6 @@
 import { Exception, InstanceNotFoundException } from '../entities/exception'
 import { InstanceSave, InstanceSaveMetadata } from '../entities/save'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export interface ExportSaveOptions {

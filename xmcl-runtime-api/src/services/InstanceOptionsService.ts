@@ -1,7 +1,7 @@
 import type { Frame as GameSetting } from '@xmcl/gamesetting'
 import { Exception, InstanceNotFoundException } from '../entities/exception'
 import { ShaderOptions } from '../entities/shaderpack'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 export interface EditGameSettingOptions extends GameSetting {
   /**

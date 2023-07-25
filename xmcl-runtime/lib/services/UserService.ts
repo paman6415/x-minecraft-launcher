@@ -96,13 +96,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       tokenStorage,
     )
 
-    this.storeManager.subscribeAll([
-      'userProfile',
-      'userProfileRemove',
-      'userGameProfileSelect',
-      'userYggdrasilServices',
-      'userYggdrasilServicePut',
-    ], async () => {
+    this.state.subscribeAll(() => {
       this.saveUserFile()
     })
 
@@ -112,6 +106,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
   }
 
   async getUserState(): Promise<MutableState<UserState>> {
+    await this.initialize()
     return this.state
   }
 

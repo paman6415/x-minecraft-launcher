@@ -3,7 +3,7 @@ import { LauncherProfile } from '../entities/launcherProfile'
 import { Platform } from '../entities/platform'
 import { SettingSchema } from '../entities/setting.schema'
 import { ReleaseInfo } from '../entities/update'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export interface MigrateOptions {

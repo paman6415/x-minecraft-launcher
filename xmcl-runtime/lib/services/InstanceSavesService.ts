@@ -27,6 +27,7 @@ import { ZipTask } from '../util/zip'
 import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { LaunchService } from './LaunchService'
 
 /**
  * Provide the ability to preview saves data of an instance
@@ -36,6 +37,7 @@ export class InstanceSavesService extends AbstractService implements IInstanceSa
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(InstanceService) private instanceService: InstanceService,
+    @Inject(LaunchService) private launchService: LaunchService,
   ) {
     super(app)
     this.resourceService.registerInstaller(ResourceDomain.Saves, async (resource, instancePath) => {
@@ -115,7 +117,9 @@ export class InstanceSavesService extends AbstractService implements IInstanceSa
 
       await ensureDir(savesDir)
 
-      this.storeManager.subscribe('launchCount', onLaunch)
+      // TOOD: handle this
+      // this.launchService.on('launch', () => onLaunch)
+      // this.storeManager.subscribe('launchCount', onLaunch)
       const savePaths = await readdir(savesDir)
       const saves = await Promise.all(savePaths
         .filter((d) => !d.startsWith('.'))
@@ -131,7 +135,7 @@ export class InstanceSavesService extends AbstractService implements IInstanceSa
 
       return [state, () => {
         watcher.close()
-        this.storeManager.unsubscribe('launchCount', onLaunch)
+        // this.storeManager.unsubscribe('launchCount', onLaunch)
       }]
     })
   }

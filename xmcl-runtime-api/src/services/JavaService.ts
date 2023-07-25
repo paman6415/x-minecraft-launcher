@@ -1,7 +1,7 @@
 import { JavaVersion } from '@xmcl/core'
 import { JavaRecord } from '../entities/java'
 import { Java } from '../entities/java.schema'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export class JavaState {

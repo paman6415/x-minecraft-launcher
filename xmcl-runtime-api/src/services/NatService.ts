@@ -1,4 +1,4 @@
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export type NatType = 'Blocked'| 'Open Internet'| 'Full Cone'| 'Symmetric UDP Firewall'| 'Restrict NAT'| 'Restrict Port NAT'| 'Symmetric NAT' | 'Unknown'

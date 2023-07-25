@@ -2,7 +2,7 @@ import { GameProfile } from '@xmcl/user'
 import { Exception } from '../entities/exception'
 import { GameProfileAndTexture, UserProfile, UserSchema, YggdrasilApi } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
-import { MutableState } from '../util/WatchSource'
+import { MutableState } from '../util/MutableState'
 import { ServiceKey } from './Service'
 
 export interface RefreshSkinOptions {
