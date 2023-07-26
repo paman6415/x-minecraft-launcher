@@ -939,6 +939,8 @@ peerIceGatheringState:
 peerSignalingState:
   have-local-offer: 等待对方的信息中
 popular: 热度
+presence:
+  instance: 浏览实例 {instance}
 previous: 上一步
 proxy:
   host: 服务器地址

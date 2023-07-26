@@ -5,7 +5,7 @@ import {
   ImportSaveOptions,
   InstanceSaveException,
   InstanceSavesServiceKey,
-  ResourceDomain, SaveState,
+  ResourceDomain, Saves,
   getInstanceSaveKey,
   isSaveResource,
 } from '@xmcl/runtime-api'
@@ -73,7 +73,7 @@ export class InstanceSavesService extends AbstractService implements IInstanceSa
       const baseName = basename(path)
       const savesDir = join(path, 'saves')
       let parking = false
-      const state = new SaveState()
+      const state = new Saves()
 
       const updateSave = throttle((filePath: string) => {
         readInstanceSaveMetadata(filePath, baseName).then((save) => {

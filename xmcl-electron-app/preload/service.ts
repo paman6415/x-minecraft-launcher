@@ -129,8 +129,16 @@ function createServiceChannels(): ServiceChannels {
   })
 
   return {
-    getStatesMetadata() {
-      return Object.values(typeToStatePrototype)
+    deref(state) {
+      if (typeof state !== 'object' || !state) {
+        return
+      }
+      const emitter = (states[state.id] as any)[kEmitter] as EventEmitter
+      if (emitter) {
+        emitter.removeAllListeners()
+      }
+      delete states[state.id]
+      ipcRenderer.invoke('deref', state.id)
     },
     open(serviceKey) {
       if (!servicesEmitter.has(serviceKey)) {

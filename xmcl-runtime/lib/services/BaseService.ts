@@ -1,4 +1,4 @@
-import { BaseService as IBaseService, BaseServiceException, BaseServiceKey, SettingState, MigrateOptions, SettingSchema, Environment, MutableState } from '@xmcl/runtime-api'
+import { BaseService as IBaseService, BaseServiceException, BaseServiceKey, Settings, MigrateOptions, SettingSchema, Environment, MutableState } from '@xmcl/runtime-api'
 import { readdir, rename, rm, stat } from 'fs/promises'
 import os, { freemem, totalmem } from 'os'
 import { join } from 'path'
@@ -15,7 +15,7 @@ import { ExposeServiceKey, Singleton, StatefulService } from './Service'
 import { AggregateExecutor } from '../util/aggregator'
 
 @ExposeServiceKey(BaseServiceKey)
-export class BaseService extends StatefulService<SettingState> implements IBaseService {
+export class BaseService extends StatefulService<Settings> implements IBaseService {
   private settingFile = createSafeFile(this.getAppDataPath('setting.json'), SettingSchema, this, [this.getPath('setting.json')])
   private saver = new AggregateExecutor<void, void>(() => { }, () => this.settingFile.write({
     locale: this.state.locale,
@@ -46,7 +46,7 @@ export class BaseService extends StatefulService<SettingState> implements IBaseS
     @Inject(LauncherAppKey) app: LauncherApp,
   ) {
     super(app, () => {
-      const state = new SettingState()
+      const state = new Settings()
       state.root = app.gameDataPath
       return state
     }, async () => {
@@ -63,7 +63,7 @@ export class BaseService extends StatefulService<SettingState> implements IBaseS
     })
   }
 
-  async getSettings(): Promise<MutableState<SettingState>> {
+  async getSettings(): Promise<MutableState<Settings>> {
     await this.initialize()
     return this.state
   }

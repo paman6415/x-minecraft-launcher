@@ -14,9 +14,6 @@ export function getInstanceModStateKey(path: string) {
   return `instance-mods://${path}`
 }
 
-/**
- * The service manage all enable mods in mounted instance
- */
 export class InstanceModsState {
   /**
    * The mods under instance folder

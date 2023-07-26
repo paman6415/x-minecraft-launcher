@@ -1,6 +1,6 @@
 import { useService, useServiceBusy } from '@/composables'
 import { injection } from '@/util/inject'
-import { BaseServiceKey, Environment } from '@xmcl/runtime-api'
+import { BaseServiceKey, Environment, Settings } from '@xmcl/runtime-api'
 import { InjectionKey, Ref } from 'vue'
 import { useLocalStorageCacheBool } from './cache'
 import { useState } from './syncableState'
@@ -25,11 +25,11 @@ export function useUpdateSettings() {
     updateInfo,
   }
 }
-export const kSettingsState: InjectionKey<ReturnType<typeof useSettingsState>> = Symbol('SettingState')
+export const kSettingsState: InjectionKey<ReturnType<typeof useSettingsState>> = Symbol('Settings')
 
 export function useSettingsState() {
   const { getSettings } = useService(BaseServiceKey)
-  return useState(getSettings)
+  return useState(getSettings, Settings)
 }
 
 export function useGlobalSettings() {

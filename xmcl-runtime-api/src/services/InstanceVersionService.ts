@@ -2,8 +2,8 @@
 import { AssetIndexIssue, AssetIssue, LibraryIssue, MinecraftJarIssue, ResolvedVersion } from '@xmcl/core'
 import { InstallProfileIssueReport } from '@xmcl/installer'
 import { Exception } from '../entities/exception'
+import { LocalVersionHeader } from '../entities/version'
 import { ServiceKey } from './Service'
-import { LocalVersionHeader } from './VersionService'
 
 export class InstanceVersionState {
   version: ResolvedVersion | undefined

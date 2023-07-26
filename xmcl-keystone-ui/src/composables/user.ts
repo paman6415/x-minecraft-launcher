@@ -1,9 +1,10 @@
 import { computed, del, InjectionKey, reactive, Ref, set, toRefs } from 'vue'
-import { GameProfileAndTexture, OfficialUserServiceKey, UserProfile, UserServiceKey } from '@xmcl/runtime-api'
+import { GameProfileAndTexture, OfficialUserServiceKey, UserProfile, UserServiceKey, UserState } from '@xmcl/runtime-api'
 
 import { useService, useServiceBusy } from '@/composables'
 import { useLocalStorageCacheStringValue } from './cache'
 import { useState } from './syncableState'
+import { GameProfile } from '@xmcl/user'
 
 const NO_USER_PROFILE: UserProfile = Object.freeze({
   selectedProfile: '',
@@ -25,9 +26,9 @@ export const kUserContext: InjectionKey<ReturnType<typeof useUserContext>> = Sym
 
 export function useUserContext() {
   const { getUserState } = useService(UserServiceKey)
-  const { state, isValidating, error } = useState(getUserState, {
-    gameProfileUpdate(state, { profile, userId }) {
-      const userProfile = state.users[userId]
+  const { state, isValidating, error } = useState(getUserState, class extends UserState {
+    override gameProfileUpdate({ profile, userId }: { userId: string; profile: (GameProfileAndTexture | GameProfile) }) {
+      const userProfile = this.users[userId]
       if (profile.id in userProfile.profiles) {
         const instance = { textures: { SKIN: { url: '' } }, ...profile }
         set(userProfile.profiles, profile.id, instance)
@@ -37,13 +38,15 @@ export function useUserContext() {
           ...profile,
         }
       }
-    },
-    userProfileRemove(state, userId) {
-      del(state.users, userId)
-    },
-    userProfile(state, user) {
-      set(state.users, user.id, user)
-    },
+    }
+
+    override userProfileRemove(userId: string) {
+      del(this.users, userId)
+    }
+
+    override userProfile(user: UserProfile) {
+      set(this.users, user.id, user)
+    }
   })
   const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '' as string)
   const userProfile: Ref<UserProfile> = computed(() => state.value?.users[selectedUserId.value] ?? NO_USER_PROFILE)

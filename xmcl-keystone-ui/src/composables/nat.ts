@@ -1,17 +1,18 @@
-import { NatServiceKey } from '@xmcl/runtime-api'
+import { NatDeviceInfo, NatServiceKey, NatState } from '@xmcl/runtime-api'
 import { useService } from './service'
 import { useState } from './syncableState'
 import { set } from 'vue'
 
 export function useNatState() {
   const { getNatState } = useService(NatServiceKey)
-  const { state, isValidating, error } = useState(getNatState, {
-    natAddressSet(state, address): void {
-      set(state, 'natAddress', address)
-    },
-    natDeviceSet(state, device): void {
-      set(state, 'natDevice', device)
-    },
+  const { state, isValidating, error } = useState(getNatState, class extends NatState {
+    override natAddressSet(address: string): void {
+      set(this, 'natAddress', address)
+    }
+
+    override natDeviceSet(device: NatDeviceInfo): void {
+      set(this, 'natDevice', device)
+    }
   })
   const natType = computed(() => state.value?.natType ?? 'Unknown')
   const externalIp = computed(() => state.value?.externalIp ?? '')

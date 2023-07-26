@@ -1,7 +1,8 @@
-import { EditInstanceOptions, InstanceServiceKey } from '@xmcl/runtime-api'
+import { EditInstanceOptions, InstanceSchema, InstanceServiceKey, InstanceState } from '@xmcl/runtime-api'
 import { InjectionKey, set } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
+import { DeepPartial } from '@xmcl/runtime-api/src/util/object'
 
 export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol('Instances')
 
@@ -10,9 +11,9 @@ export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol(
  */
 export function useInstances() {
   const { createInstance, getSharedInstancesState, editInstance } = useService(InstanceServiceKey)
-  const { state, isValidating, error } = useState(getSharedInstancesState, {
-    instanceEdit(instance, settings) {
-      const inst = instance.instances.find(i => i.path === (settings.path))!
+  const { state, isValidating, error } = useState(getSharedInstancesState, class extends InstanceState {
+    override instanceEdit(settings: DeepPartial<InstanceSchema> & { path: string }) {
+      const inst = this.instances.find(i => i.path === (settings.path))!
       if ('showLog' in settings) {
         set(inst, 'showLog', settings.showLog)
       }
@@ -37,7 +38,7 @@ export function useInstances() {
       if ('mcOptions' in settings) {
         set(inst, 'mcOptions', settings.mcOptions)
       }
-    },
+    }
   })
   const instances = computed(() => state.value?.instances ?? [])
   async function edit(options: EditInstanceOptions & { instancePath: string }) {

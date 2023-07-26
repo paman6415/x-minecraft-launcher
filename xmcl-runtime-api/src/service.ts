@@ -1,6 +1,7 @@
 /* eslint-disable no-dupe-class-members */
 import { GenericEventEmitter } from './events'
 import { ServiceKey } from './services/Service'
+import { MutableState } from './util/MutableState';
 
 interface SyncableEventMap {
   commit: {
@@ -57,8 +58,6 @@ export interface ServiceChannels {
    * @param serviceKey The service key
    */
   open<T>(serviceKey: ServiceKey<T>): ServiceChannel<T>
-  /**
-   * Return all the possible mutatble states used in this service channel
-   */
-  getStatesMetadata(): StateMetadata[]
+
+  deref(state: MutableState<any>): void
 }

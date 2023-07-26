@@ -7,7 +7,7 @@
     >
       <AppSideBarInstanceItem
         v-for="(i, index) of instances"
-        :key="i.path+'-'+index"
+        :key="i.path"
         :instance="i"
         @drop="setToPrevious($event, i.path)"
       />

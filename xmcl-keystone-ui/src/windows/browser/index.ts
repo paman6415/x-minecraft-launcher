@@ -28,19 +28,12 @@ const app = new Vue({
   vuetify,
   i18n,
   setup() {
-    baseServiceChannel.call('getSettings').then(state => state)
-      .then(state => {
-        i18n.locale = state.locale
-        state.onMutated = (m) => {
-          if (m.type === 'localeSet') i18n.locale = m.payload
-        }
+    baseServiceChannel.call('getSettings').then(state => state).then(state => {
+      i18n.locale = state.locale
+      state.subscribe('localeSet', (locale) => {
+        i18n.locale = locale
       })
-    // baseServiceChannel.on('commit', ({ mutation }) => {
-    //   if (mutation.type === 'localeSet') {
-    //     i18n.locale = mutation.payload
-    //   }
-    // })
-
+    })
     return () => h(BrowseVue)
   },
 })

@@ -63,7 +63,7 @@
 import '@/assets/common.css'
 import ImageDialog from '@/components/ImageDialog.vue'
 import SharedTooltip from '@/components/SharedTooltip.vue'
-import { useExternalRoute, useI18nSync, useThemeSync } from '@/composables'
+import { useExternalRoute, useI18nSync, useService, useThemeSync } from '@/composables'
 import { useBackground } from '@/composables/background'
 import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
 import { useDefaultErrorHandler } from '@/composables/errorHandler'
@@ -74,6 +74,9 @@ import AppContextMenu from '@/views/AppContextMenu.vue'
 import AppNotifier from '@/views/AppNotifier.vue'
 import AppSystemBar from '@/views/AppSystemBar.vue'
 import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
+import { useNotifier } from '@/composables/notifier'
+import { useState } from '@/composables/syncableState'
+import { BaseServiceKey, Settings } from '@xmcl/runtime-api'
 
 const colorTheme = useColorTheme()
 const { primaryColor, accentColor, infoColor, errorColor, successColor, warningColor, backgroundColor } = colorTheme
@@ -87,12 +90,17 @@ const cssVars = computed(() => ({
 
 const vuetify = injection(kVuetify)
 
-useDefaultErrorHandler()
-useI18nSync()
-useThemeSync()
-useExternalRoute()
+const { notify } = useNotifier()
+useDefaultErrorHandler(notify)
+
+const { getSettings } = useService(BaseServiceKey)
+const { state } = useState(getSettings, Settings)
+useI18nSync(vuetify, state)
+useThemeSync(vuetify, state)
+
 provide(kImageDialog, useImageDialog())
 const router = useRouter()
+useExternalRoute(router)
 provide(kSWRVConfig, useSWRVConfig())
 
 </script>

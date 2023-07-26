@@ -2,7 +2,7 @@ import { injection } from '@/util/inject'
 import { Ref, computed } from 'vue'
 import { kSettingsState } from './setting'
 import { kVuetify } from './vuetify'
-import { SettingState } from '@xmcl/runtime-api'
+import { Settings } from '@xmcl/runtime-api'
 import { Framework } from 'vuetify'
 
 export function useTheme() {
@@ -30,7 +30,7 @@ export function usePreferDark() {
   return preferDark
 }
 
-export function useThemeSync(framework: Framework, state: Ref<SettingState | undefined>) {
+export function useThemeSync(framework: Framework, state: Ref<Settings | undefined>) {
   const preferDark = usePreferDark()
 
   const updateTheme = (theme: 'dark' | 'system' | 'light') => {

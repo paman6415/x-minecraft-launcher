@@ -52,6 +52,13 @@ export default class ServiceStateManager extends Manager {
         this.logger.error(e as any)
       }
     })
+    app.controller.handle('deref', (_, id) => {
+      const stateProxy = this.containers[id]
+      if (!stateProxy) return 'NOT_STATE_SERVICE'
+      if (stateProxy.deref()) {
+        delete this.containers[id]
+      }
+    })
   }
 
   /**

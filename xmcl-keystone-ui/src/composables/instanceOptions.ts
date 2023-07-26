@@ -1,4 +1,4 @@
-import { Instance, InstanceOptionsServiceKey } from '@xmcl/runtime-api'
+import { GameOptionsState, Instance, InstanceOptionsServiceKey } from '@xmcl/runtime-api'
 import { Ref, InjectionKey } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
@@ -7,7 +7,7 @@ export const kInstanceOptions: InjectionKey<ReturnType<typeof useInstanceOptions
 
 export function useInstanceOptions(instance: Ref<Instance>) {
   const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)
-  const { state, isValidating, error } = useState(() => instance.value.path ? watchOptions(instance.value.path) : undefined)
+  const { state, isValidating, error } = useState(() => instance.value.path ? watchOptions(instance.value.path) : undefined, GameOptionsState)
 
   // watch(state, (newOps) => {
   //   if (newOps) {

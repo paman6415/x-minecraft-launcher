@@ -1,5 +1,5 @@
 import { ResolvedVersion, Version } from '@xmcl/core'
-import { filterForgeVersion, filterOptifineVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary, isQuiltLibrary, LocalVersionHeader, VersionService as IVersionService, VersionServiceKey, VersionState, MutableState } from '@xmcl/runtime-api'
+import { filterForgeVersion, filterOptifineVersion, isFabricLoaderLibrary, isForgeLibrary, isOptifineLibrary, isQuiltLibrary, LocalVersionHeader, VersionService as IVersionService, VersionServiceKey, LocalVersions, MutableState } from '@xmcl/runtime-api'
 import { task } from '@xmcl/task'
 import { FSWatcher } from 'fs'
 import { ensureDir } from 'fs-extra/esm'
@@ -18,13 +18,13 @@ import { ExposeServiceKey, Singleton, StatefulService } from './Service'
  * The local version service maintains the installed versions on disk
  */
 @ExposeServiceKey(VersionServiceKey)
-export class VersionService extends StatefulService<VersionState> implements IVersionService {
+export class VersionService extends StatefulService<LocalVersions> implements IVersionService {
   private watcher: FSWatcher | undefined
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(kResourceWorker) private worker: ResourceWorker,
   ) {
-    super(app, () => new VersionState(), async () => {
+    super(app, () => new LocalVersions(), async () => {
       await this.refreshVersions()
       const versions = this.getPath('versions')
       await ensureDir(versions)
@@ -60,7 +60,7 @@ export class VersionService extends StatefulService<VersionState> implements IVe
     })
   }
 
-  async getLocalVersions(): Promise<MutableState<VersionState>> {
+  async getLocalVersions(): Promise<MutableState<LocalVersions>> {
     return this.state
   }
 

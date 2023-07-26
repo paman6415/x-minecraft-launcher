@@ -8,7 +8,7 @@ export const kInstanceModsContext: InjectionKey<ReturnType<typeof useInstanceMod
 
 export function useInstanceMods(instance: Ref<Instance>, java: Ref<JavaRecord | undefined>) {
   const { watch: watchMods } = useService(InstanceModsServiceKey)
-  const { isValidating, error, state } = useState<InstanceModsState>(() => instance.value.path ? watchMods(instance.value.path) : undefined)
+  const { isValidating, error, state } = useState(() => instance.value.path ? watchMods(instance.value.path) : undefined, InstanceModsState)
 
   const mods: Ref<Mod[]> = shallowRef([])
   const modsIconsMap: Ref<Record<string, string>> = shallowRef({})
