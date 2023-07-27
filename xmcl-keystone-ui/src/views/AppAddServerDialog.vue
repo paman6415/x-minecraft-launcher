@@ -76,12 +76,14 @@ import { injection } from '@/util/inject'
 import { kUserContext } from '@/composables/user'
 import { kLocalVersions } from '@/composables/versionLocal'
 import { kInstances } from '@/composables/instances'
+import { kInstance } from '@/composables/instance'
 
 const { t } = useI18n()
 const { gameProfile } = injection(kUserContext)
 const { versions } = injection(kLocalVersions)
 const { instances } = injection(kInstances)
-const { create, reset: _reset, data: creationData } = useInstanceCreation(gameProfile, versions, instances)
+const { path } = injection(kInstance)
+const { create, reset: _reset, data: creationData } = useInstanceCreation(gameProfile, versions, instances, path)
 const { isShown } = useDialog('add-server-dialog', () => {
   reset()
 })

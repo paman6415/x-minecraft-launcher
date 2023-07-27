@@ -8,7 +8,7 @@ export function useVuetifyColorTheme(vuetify: Framework, {
   errorColor,
   successColor,
   warningColor,
-}: ReturnType<typeof useColorTheme>) {
+}: Omit<ReturnType<typeof useColorTheme>, 'cssVars'>) {
   if (primaryColor.value) { vuetify.theme.currentTheme.primary = primaryColor.value }
   if (accentColor.value) { vuetify.theme.currentTheme.accent = accentColor.value }
   if (infoColor.value) { vuetify.theme.currentTheme.info = infoColor.value }

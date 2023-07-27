@@ -1,11 +1,9 @@
+/* eslint-disable vue/one-component-per-file */
 import TextComponent from '@/components/TextComponent'
-import { kSemaphores, kServiceFactory, useSemaphores, useServiceFactory } from '@/composables'
+import { kServiceFactory, useServiceFactory } from '@/composables'
 import { kDialogModel, useDialogModel } from '@/composables/dialog'
-import { kExceptionHandlers, useExceptionHandlers } from '@/composables/exception'
-import { kNotificationQueue, useNotificationQueue } from '@/composables/notifier'
-import { kServerStatusCache, useServerStatusCache } from '@/composables/serverStatus'
+import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 import { kTaskManager, useTaskManager } from '@/composables/taskManager'
-import { kVuetify } from '@/composables/vuetify'
 import messages from '@intlify/unplugin-vue-i18n/messages'
 import 'virtual:windi.css'
 import Vue, { defineComponent, getCurrentInstance, h, provide } from 'vue'
@@ -17,10 +15,10 @@ import Vuetify from 'vuetify'
 import Vuex from 'vuex'
 import '../../../locales/en.yaml'
 import '../../../locales/zh-CN.yaml'
-import MainWindow from './App.vue'
+import App from './App.vue'
+import Context from './Context.vue'
 import { createRouter } from './router'
 import vuetify from './vuetify'
-import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 
 // to prevent the universal drop activated on self element dragging
 document.addEventListener('dragstart', (e) => {
@@ -69,17 +67,12 @@ const app = new Vue(defineComponent({
       }),
     })
 
-    provide(kServiceFactory, useServiceFactory())
-    provide(kVuetify, vuetify.framework)
-    provide(kSWRVConfig, useSWRVConfig())
-    provide(kSemaphores, useSemaphores())
-    provide(kExceptionHandlers, useExceptionHandlers())
-    provide(kDialogModel, useDialogModel())
     provide(kTaskManager, useTaskManager())
-    provide(kServerStatusCache, useServerStatusCache())
-    provide(kNotificationQueue, useNotificationQueue())
+    provide(kServiceFactory, useServiceFactory())
+    provide(kDialogModel, useDialogModel())
+    provide(kSWRVConfig, useSWRVConfig())
 
-    return () => h(MainWindow)
+    return () => h(Context, [h(App)])
   },
 }))
 

@@ -3,7 +3,7 @@
     lazy-validation
     style="height: 100%;"
     :value="valid"
-    @input="emit('update:valid', $event)"
+    @input="onUpdate"
   >
     <v-list
       three-line
@@ -74,4 +74,8 @@ const nameRules = computed(() => [
   (v: any) => !!v || t('instance.requireName'),
   (v: any) => !instances.value.some(i => i.name === v) || t('instance.duplicatedName'),
 ])
+
+const onUpdate = ($event: any) => {
+  emit('update:valid', $event)
+}
 </script>

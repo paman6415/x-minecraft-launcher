@@ -10,8 +10,8 @@ export const kInstanceCreation: InjectionKey<InstanceData> = Symbol('CreateOptio
 /**
  * Hook to create a general instance
  */
-export function useInstanceCreation(gameProfile: Ref<GameProfile>, versions: Ref<LocalVersionHeader[]>, instances: Ref<Instance[]>) {
-  const { createAndMount: createAndSelect } = useService(InstanceServiceKey)
+export function useInstanceCreation(gameProfile: Ref<GameProfile>, versions: Ref<LocalVersionHeader[]>, instances: Ref<Instance[]>, path: Ref<string>) {
+  const { createInstance: create } = useService(InstanceServiceKey)
   const { release } = useMinecraftVersions(versions)
   const data = reactive<InstanceData>({
     name: '',
@@ -41,11 +41,13 @@ export function useInstanceCreation(gameProfile: Ref<GameProfile>, versions: Ref
     /**
      * Commit this creation. It will create and select the instance.
      */
-    create() {
+    async create() {
       if (!data.name) {
         data.name = generateDistinctName(instances.value.map(i => i.name), data.runtime)
       }
-      return createAndSelect(data)
+      const newPath = await create(data)
+      path.value = newPath
+      return newPath
     },
     /**
      * Reset the change

@@ -14,9 +14,9 @@ export function useState<T extends object>(fetcher: (abortSignal: AbortSignal) =
     let data: MutableState<T> | undefined
     onCleanup?.(() => {
       abortController.abort()
-      if (data) {
-        serviceChannels.deref(data)
-      }
+      // if (data) {
+      //   serviceChannels.deref(data)
+      // }
     })
 
     // Avoid calling dispose multiple times

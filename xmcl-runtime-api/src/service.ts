@@ -59,5 +59,5 @@ export interface ServiceChannels {
    */
   open<T>(serviceKey: ServiceKey<T>): ServiceChannel<T>
 
-  deref(state: MutableState<any>): void
+  // deref(state: MutableState<any>): void
 }

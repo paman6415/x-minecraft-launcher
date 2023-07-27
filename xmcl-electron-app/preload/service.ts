@@ -50,7 +50,7 @@ if (process.env.NODE_ENV === 'development') {
   console.log('serivce.ts preload')
 }
 
-async function receive(_result: any, states: Record<string, MutableState<any>>, pendingCommits: Record<string, { type: string; payload: any }[]>) {
+async function receive(_result: any, states: Record<string, WeakRef<MutableState<any>>>, pendingCommits: Record<string, { type: string; payload: any }[]>, gc: FinalizationRegistry<string>) {
   if (typeof _result !== 'object') {
     return
   }
@@ -66,8 +66,8 @@ async function receive(_result: any, states: Record<string, MutableState<any>>, 
     // recover state object
     const id = result.id
 
-    if (states[id]) {
-      return states[id]
+    if (states[id] && states[id].deref()) {
+      return states[id].deref()
     }
 
     const prototype = typeToStatePrototype[result.__state__]
@@ -84,7 +84,9 @@ async function receive(_result: any, states: Record<string, MutableState<any>>, 
       state[method] = handler.bind(state)
     }
 
-    states[id] = state
+    gc.register(state, state.id)
+
+    states[id] = new WeakRef(state)
 
     if (pendingCommits[id]) {
       for (const mutation of pendingCommits[id]) {
@@ -102,8 +104,13 @@ async function receive(_result: any, states: Record<string, MutableState<any>>, 
 }
 
 function createServiceChannels(): ServiceChannels {
+  const gc = new FinalizationRegistry<string>((id) => {
+    delete states[id]
+    ipcRenderer.invoke('deref', id)
+    console.log(`deref ${id}`)
+  })
   const servicesEmitter = new Map<ServiceKey<any>, EventEmitter>()
-  const states: Record<string, MutableState<object>> = {}
+  const states: Record<string, WeakRef<MutableState<object>>> = {}
   const pendingCommits: Record<string, { type: string; payload: any }[]> = {}
 
   ipcRenderer.on('service-event', (_, { service, event, args }) => {
@@ -114,7 +121,7 @@ function createServiceChannels(): ServiceChannels {
   })
 
   ipcRenderer.on('commit', (_, id, type, payload) => {
-    const state = states[id]
+    const state = states[id]?.deref()
     if (state) {
       (state as any)[type]?.(payload);
       (state as any)[kEmitter].emit(type, payload);
@@ -129,17 +136,17 @@ function createServiceChannels(): ServiceChannels {
   })
 
   return {
-    deref(state) {
-      if (typeof state !== 'object' || !state) {
-        return
-      }
-      const emitter = (states[state.id] as any)[kEmitter] as EventEmitter
-      if (emitter) {
-        emitter.removeAllListeners()
-      }
-      delete states[state.id]
-      ipcRenderer.invoke('deref', state.id)
-    },
+    // deref(state) {
+    //   if (typeof state !== 'object' || !state) {
+    //     return
+    //   }
+    //   const emitter = (states[state.id] as any)[kEmitter] as EventEmitter
+    //   if (emitter) {
+    //     emitter.removeAllListeners()
+    //   }
+    //   delete states[state.id]
+    //   ipcRenderer.invoke('deref', state.id)
+    // },
     open(serviceKey) {
       if (!servicesEmitter.has(serviceKey)) {
         servicesEmitter.set(serviceKey, new EventEmitter())
@@ -161,7 +168,7 @@ function createServiceChannels(): ServiceChannels {
         },
         async call(method, ...payload) {
           const result = await ipcRenderer.invoke('service-call', serviceKey, method, ...payload)
-          return receive(result, states, pendingCommits)
+          return receive(result, states, pendingCommits, gc)
         },
       }
     },

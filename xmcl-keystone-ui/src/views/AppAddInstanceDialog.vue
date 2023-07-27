@@ -69,14 +69,14 @@
             style="overflow: auto; max-height: 70vh; padding: 24px 24px 16px"
           >
             <BaseContent
-              :valid.sync="valid"
+              :valid="valid"
               @update:valid="valid = $event"
             />
             <AdvanceContent :valid.sync="valid" />
           </div>
           <StepperFooter
             style="padding: 16px 24px"
-            :disabled="!valid || creationData.name === '' || creationData.runtime.minecraft === ''"
+            :disabled="!valid || isInvalid"
             :creating="creating"
             create
             @create="onCreate"
@@ -99,7 +99,6 @@
 
 <script lang=ts setup>
 import { InstanceInstallServiceKey, PeerServiceKey, ResourceDomain, ResourceServiceKey } from '@xmcl/runtime-api'
-import { Ref } from 'vue'
 import AdvanceContent from '../components/StepperAdvanceContent.vue'
 import BaseContent from '../components/StepperBaseContent.vue'
 import StepperFooter from '../components/StepperFooter.vue'
@@ -117,13 +116,15 @@ import { kUserContext } from '@/composables/user'
 import { kLocalVersions } from '@/composables/versionLocal'
 import { kInstances } from '@/composables/instances'
 import { kPeerState } from '@/composables/peers'
+import { kInstance } from '@/composables/instance'
 
 const { isShown, dialog, show: showAddInstance, hide } = useDialog(AddInstanceDialogKey)
 const { show } = useDialog('task')
 const { gameProfile } = injection(kUserContext)
 const { versions } = injection(kLocalVersions)
 const { instances } = injection(kInstances)
-const { create, reset, data: creationData } = useInstanceCreation(gameProfile, versions, instances)
+const { path } = injection(kInstance)
+const { create, reset, data: creationData } = useInstanceCreation(gameProfile, versions, instances, path)
 const router = useRouter()
 
 const { on, removeListener } = useService(ResourceServiceKey)
@@ -174,6 +175,10 @@ watch(selectedTemplate, (t) => {
   creationData.server = instData.server ? { ...instData.server } : null
   creationData.upstream = instData.upstream
   step.value = 2
+})
+
+const isInvalid = computed(() => {
+  return creationData.name === '' || creationData.runtime.minecraft === '' || instances.value.some(i => i.name === creationData.name)
 })
 
 const { refreshing: creating, refresh: onCreate } = useRefreshable(async () => {
