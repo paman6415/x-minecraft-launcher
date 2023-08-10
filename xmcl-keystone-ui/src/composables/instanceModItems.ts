@@ -68,9 +68,17 @@ export function useInstanceModItems(instance: Ref<Instance>, mods: Ref<Mod[]>) {
   const updating = ref(false)
   const executor = new AggregateExecutor<[ModItem, 'enable' | 'disable' | 'update'], [ModItem, 'enable' | 'disable' | 'update'][]>(
     (v) => v, (cmd) => {
-      const toEnable = cmd.filter(c => c[1] === 'enable')
-      const toDisable = cmd.filter(c => c[1] === 'disable')
       const toUpdate = cmd.filter(c => c[1] === 'update')
+
+      const enableDisableOptions: Record<string, [ModItem, 'enable' | 'disable']> = {}
+      for (const [item, op] of cmd) {
+        if (op === 'enable' || op === 'disable') {
+          enableDisableOptions[item.mod.hash] = [item, op]
+        }
+      }
+      const toEnable = Object.values(enableDisableOptions).filter(c => c[1] === 'enable')
+      const toDisable = Object.values(enableDisableOptions).filter(c => c[1] === 'disable')
+
       Promise.all([
         enable({ mods: toEnable.map(e => e[0].mod.resource), path: instance.value.path }),
         disable({ mods: toDisable.map(e => e[0].mod.resource), path: instance.value.path }),

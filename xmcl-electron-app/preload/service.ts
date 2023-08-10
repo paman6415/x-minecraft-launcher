@@ -88,14 +88,16 @@ async function receive(_result: any, states: Record<string, WeakRef<MutableState
 
     states[id] = new WeakRef(state)
 
+    queueMicrotask(() => {
     if (pendingCommits[id]) {
       for (const mutation of pendingCommits[id]) {
-        state[mutation.type]?.(mutation.payload);
+        // state[mutation.type]?.(mutation.payload);
         (state as any)[kEmitter].emit(mutation.type, mutation.payload);
         (state as any)[kEmitter].emit('*', mutation.type, mutation.payload)
       }
       delete pendingCommits[id]
     }
+  })
 
     return state
   }
@@ -123,7 +125,7 @@ function createServiceChannels(): ServiceChannels {
   ipcRenderer.on('commit', (_, id, type, payload) => {
     const state = states[id]?.deref()
     if (state) {
-      (state as any)[type]?.(payload);
+      // (state as any)[type]?.(payload);
       (state as any)[kEmitter].emit(type, payload);
       (state as any)[kEmitter].emit('*', type, payload)
     } else {

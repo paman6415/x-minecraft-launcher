@@ -1,7 +1,7 @@
 import { useService } from '@/composables'
 import { injection } from '@/util/inject'
-import { AuthlibInjectorServiceKey, BaseServiceKey, LaunchOptions, LaunchServiceKey, UserServiceKey } from '@xmcl/runtime-api'
-import { computed } from 'vue'
+import { AUTHORITY_DEV, AuthlibInjectorServiceKey, BaseServiceKey, LaunchOptions, LaunchServiceKey, UserServiceKey } from '@xmcl/runtime-api'
+import { InjectionKey } from 'vue'
 import { DialogKey } from './dialog'
 import { kInstance } from './instance'
 import { kInstanceJava } from './instanceJava'
@@ -11,6 +11,11 @@ import { kUserContext } from './user'
 
 export const LaunchStatusDialogKey: DialogKey<void> = 'launch-status'
 
+export enum LaunchErrorCode {
+  NO_VERSION = 'NO_VERSION',
+  NO_JAVA = 'NO_JAVA',
+}
+
 export function useLaunchOption() {
   const { globalAssignMemory, globalMaxMemory, globalMinMemory, globalMcOptions, globalVmOptions, globalFastLaunch, globalHideLauncher, globalShowLog } = useGlobalSettings()
   const { path, instance } = injection(kInstance)
@@ -18,25 +23,33 @@ export function useLaunchOption() {
   const { java } = injection(kInstanceJava)
   const { userProfile } = injection(kUserContext)
   const { getMemoryStatus } = useService(BaseServiceKey)
-  const { getOrInstallAuthlibInjector, getYggdrasilAuthHost } = useService(AuthlibInjectorServiceKey)
+  const { getOrInstallAuthlibInjector } = useService(AuthlibInjectorServiceKey)
+
+  function tryParseUrl(url: string) {
+    try {
+      return new URL(url)
+    } catch {
+      return undefined
+    }
+  }
 
   async function generateLaunchOptions() {
     const ver = resolvedVersion.value
     if (!ver) {
-      throw new Error()
+      throw LaunchErrorCode.NO_JAVA
     }
     const javaRec = java.value
     if (!javaRec) {
-      throw new Error()
+      throw LaunchErrorCode.NO_VERSION
     }
 
-    const yggdrasilHost = await getYggdrasilAuthHost(userProfile.value)
     let yggdrasilAgent: LaunchOptions['yggdrasilAgent']
 
-    if (yggdrasilHost) {
+    const authority = tryParseUrl(userProfile.value.authority)
+    if (authority && (authority.protocol === 'http:' || authority?.protocol === 'https:' || authority.toString() === AUTHORITY_DEV)) {
       yggdrasilAgent = {
         jar: await getOrInstallAuthlibInjector(),
-        server: yggdrasilHost,
+        server: authority.toString(),
       }
     }
 
@@ -76,29 +89,55 @@ export function useLaunchOption() {
   return { generateLaunchOptions }
 }
 
+export function useLaunchStatus() {
+  const launching = ref(false)
+  const launchCount = ref(0)
+  const launchError = ref<LaunchErrorCode | undefined>(undefined)
+
+  const { on } = useService(LaunchServiceKey)
+
+  on('minecraft-start', () => {
+    launchCount.value++
+  })
+  on('minecraft-exit', () => {
+    launchCount.value--
+  })
+
+  return {
+    launching,
+    launchCount,
+    launchError,
+  }
+}
+
+export const kLaunchStatus: InjectionKey<ReturnType<typeof useLaunchStatus>> = Symbol('LaunchStatus')
+
 export function useLaunch() {
   const { refreshUser } = useService(UserServiceKey)
   const { launch } = useService(LaunchServiceKey)
   const { userProfile } = injection(kUserContext)
   const { generateLaunchOptions } = useLaunchOption()
-
-  const status = computed(() => '')
-  const launchCount = computed(() => 0)
+  const { launching, launchError } = injection(kLaunchStatus)
 
   async function launchGame() {
-    const options = await generateLaunchOptions()
+    try {
+      launching.value = true
+      const options = await generateLaunchOptions()
 
-    if (!options.skipAssetsCheck) {
-      try {
-        await refreshUser(userProfile.value.id)
-      } catch (e) {
+      if (!options.skipAssetsCheck) {
+        try {
+          await refreshUser(userProfile.value.id)
+        } catch (e) {
+        }
       }
+      await launch(options)
+    } catch (e) {
+      if (e instanceof Error) {
+
+      }
+    } finally {
+      launching.value = false
     }
-    await launch(options)
   }
-  return {
-    launchCount,
-    status,
-    launch: launchGame,
-  }
+  return launchGame
 }

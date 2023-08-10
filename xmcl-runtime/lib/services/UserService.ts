@@ -73,7 +73,8 @@ export class UserService extends StatefulService<UserState> implements IUserServ
           }),
           loadYggdrasilApiProfile('https://authserver.ely.by/api/authlib-injector').then(api => {
             this.state.userYggdrasilServicePut(api)
-          })])
+          }),
+        ])
       }
     })
 
@@ -169,7 +170,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     const user = this.state.users[userId]
     const gameProfile = user.profiles[gameProfileId || user.selectedProfile]
 
-    const sys = this.accountSystems[user.authService] || this.yggdrasilAccountSystem
+    const sys = this.accountSystems[user.authority] || this.yggdrasilAccountSystem
 
     if (skin) {
       if (typeof skin.slim !== 'boolean') skin.slim = false
@@ -207,7 +208,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       return
     }
 
-    const system = this.accountSystems[user.authService] || this.yggdrasilAccountSystem
+    const system = this.accountSystems[user.authority] || this.yggdrasilAccountSystem
     this.refreshController = new AbortController()
 
     const newUser = await system.refresh(user, this.refreshController.signal).finally(() => {
@@ -233,7 +234,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
   }
 
   async getOfficialUserProfile(): Promise<(UserProfile & { accessToken: string | undefined }) | undefined> {
-    const official = Object.values(this.state.users).find(u => u.authService === 'microsoft')
+    const official = Object.values(this.state.users).find(u => u.authority === 'microsoft')
     if (official) {
       const controller = new AbortController()
       await this.accountSystems.microsoft?.refresh(official, controller.signal)

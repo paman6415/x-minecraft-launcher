@@ -1,6 +1,6 @@
 import { LibraryInfo, MinecraftFolder } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { AuthlibInjectorServiceKey, AuthlibInjectorService as IAuthlibInjectorService, UserProfile } from '@xmcl/runtime-api'
+import { AuthlibInjectorServiceKey, AuthlibInjectorService as IAuthlibInjectorService } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
@@ -94,13 +94,5 @@ export class AuthlibInjectorService extends AbstractService implements IAuthlibI
     const mc = new MinecraftFolder(this.getPath())
     const libPath = mc.getLibraryByPath(info.path)
     return validateSha256(libPath, content.checksums.sha256)
-  }
-
-  async getYggdrasilAuthHost(user: UserProfile) {
-    const yggdrasilHost = user
-      ? this.userService.getAccountSystem(user?.authService)?.getYggdrasilAuthHost?.(user?.authService) ??
-      this.userService.yggdrasilAccountSystem.getYggdrasilAuthHost(user?.authService)
-      : undefined
-    return yggdrasilHost
   }
 }

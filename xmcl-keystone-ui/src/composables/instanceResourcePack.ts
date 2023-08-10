@@ -59,7 +59,7 @@ export function useInstanceResourcePacks(gameOptions: Ref<GameOptions | undefine
   /**
    * Disabled pack item
    */
-  const disabled = computed(() => allResourcePacks.value.filter((item) => enabledSet.value.has(item.id)))
+  const disabled = computed(() => allResourcePacks.value.filter((item) => !enabledSet.value.has(item.id)))
 
   function getResourcepackFormat(meta: any) {
     return meta ? meta.format ?? meta.pack_format : 3

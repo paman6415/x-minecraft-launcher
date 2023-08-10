@@ -1,6 +1,6 @@
 import { MinecraftLanDiscover } from '@xmcl/client'
 import { ChecksumNotMatchError } from '@xmcl/file-transfer'
-import { InstanceManifest, PeerService as IPeerService, MutableState, PeerServiceKey, PeerState, ShareInstanceOptions, UpnpMapOptions, UserState } from '@xmcl/runtime-api'
+import { AUTHORITY_MICROSOFT, InstanceManifest, PeerService as IPeerService, MutableState, PeerServiceKey, PeerState, ShareInstanceOptions, UpnpMapOptions, UserState } from '@xmcl/runtime-api'
 import { AbortableTask, BaseTask } from '@xmcl/task'
 import { randomFill, randomUUID } from 'crypto'
 import { createWriteStream } from 'fs'
@@ -58,7 +58,7 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
         await this.fetchCredential()
         const state = await userService.getUserState()
         state.subscribe('userProfile', (profile) => {
-          if (profile.authService === 'microsoft' && this.iceServers.length === 0) {
+          if (profile.authority === AUTHORITY_MICROSOFT && this.iceServers.length === 0) {
             this.fetchCredential()
           }
         })

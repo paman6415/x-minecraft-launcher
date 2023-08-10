@@ -1,68 +1,83 @@
 <template>
-  <v-card
-    ref="card"
-    v-draggable-card
-    v-context-menu="contextMenuItems"
-    draggable
-    :class="{ incompatible: !pack.compatible }"
-    class="draggable-card cursor-pointer transition-all duration-150 invisible-scroll"
-    @dragstart="onDragStart"
-    @dragend.prevent="onDragEnd"
-    @mouseenter="hovered = true"
-    @mouseleave="hovered = false"
-  >
+  <div class="relative">
     <div
-      v-shared-tooltip="tooltip"
-      class="flex max-h-[125px] overflow-x-auto max-w-full"
+      class="min-h-1 absolute -top-1 left-0 z-10 max-h-1 min-w-full px-2"
     >
-      <img
-        ref="iconImage"
-        v-fallback-img="unknownPack"
-        style="image-rendering: pixelated"
-        class="select-none h-[125px]"
-        :src="pack.resourcePack.icon"
-        contain
+      <div
+        class="transition-300 min-h-1 max-h-1 min-w-full rounded transition-colors"
+        :class="{ 'bg-yellow-400': dragover > 0 }"
       >
-      <div class="flex flex-col overflow-x-auto gap-1 px-3">
-        <text-component
-          v-once
-          v-shared-tooltip="name"
-          class="whitespace-nowrap w-full text-lg mt-2 font-semibold overflow-x-auto"
-          :source="name"
-          editable
-          @edit="onEditPackName(pack, $event)"
-        />
-        <text-component
-          class="whitespace-normal break-words text-sm"
-          :source="description"
-        />
+        {{ ' ' }}
       </div>
     </div>
-    <v-divider
-      v-show="pack.tags.length > 0"
-    />
-    <v-card-actions v-show="pack.tags.length > 0">
-      <div class="flex gap-2 flex-wrap">
-        <v-chip
-          v-for="(tag, index) in pack.tags"
-          :key="`${tag}-${index}`"
-          :outlined="darkTheme"
-          :color="getColor(tag)"
-          label
-          close
-          @click:close="onDeleteTag(tag)"
+    <v-card
+      ref="card"
+      v-draggable-card
+      v-context-menu="contextMenuItems"
+      draggable
+      :class="{ incompatible: !pack.compatible, 'border-yellow-300': pack.enabled }"
+      class="draggable-card invisible-scroll cursor-pointer border border-dashed border-transparent transition-all duration-150"
+      @dragstart="onDragStart"
+      @dragenter="onDragEnter"
+      @dragleave="onDragLeave"
+      @dragend.prevent="onDragEnd"
+      @mouseenter="hovered = true"
+      @mouseleave="hovered = false"
+      @drop="emit('drop', $event); onDragLeave()"
+    >
+      <div
+        v-shared-tooltip="tooltip"
+        class="flex max-h-[80px] max-w-full overflow-x-auto"
+      >
+        <img
+          ref="iconImage"
+          v-fallback-img="unknownPack"
+          style="image-rendering: pixelated"
+          class="h-[80px] select-none"
+          :src="pack.resourcePack.icon"
+          contain
         >
-          <span
-            contenteditable
-            class="max-w-90 sm:max-w-40 overflow-scroll"
-            :class="{ 'text-white': hovered }"
-            @input.stop="onEditTag($event, index)"
-            @blur="notifyTagChange(pack)"
-          >{{ tag }}</span>
-        </v-chip>
+        <div class="flex flex-col gap-1 overflow-x-auto px-3">
+          <text-component
+            v-once
+            v-shared-tooltip="name"
+            class="mt-2 w-full overflow-x-auto whitespace-nowrap text-lg font-semibold"
+            :source="name"
+            editable
+            @edit="onEditPackName(pack, $event)"
+          />
+          <text-component
+            class="whitespace-normal break-words text-sm"
+            :source="description"
+          />
+        </div>
       </div>
-    </v-card-actions>
-  </v-card>
+      <v-divider
+        v-show="pack.tags.length > 0"
+      />
+      <v-card-actions v-show="pack.tags.length > 0">
+        <div class="flex flex-wrap gap-2">
+          <v-chip
+            v-for="(tag, index) in pack.tags"
+            :key="`${tag}-${index}`"
+            :outlined="darkTheme"
+            :color="getColor(tag)"
+            label
+            close
+            @click:close="onDeleteTag(tag)"
+          >
+            <span
+              contenteditable
+              class="max-w-90 sm:max-w-40 overflow-scroll"
+              :class="{ 'text-white': hovered }"
+              @input.stop="onEditTag($event, index)"
+              @blur="notifyTagChange(pack)"
+            >{{ tag }}</span>
+          </v-chip>
+        </div>
+      </v-card-actions>
+    </v-card>
+  </div>
 </template>
 
 <script lang=ts setup>
@@ -86,7 +101,7 @@ const props = defineProps<{
   minecraft: string
 }>()
 
-const emit = defineEmits(['tags', 'dragstart', 'dragend', 'delete'])
+const emit = defineEmits(['tags', 'dragstart', 'dragend', 'delete', 'drop'])
 const { darkTheme } = useTheme()
 
 const { t } = useI18n()
@@ -107,6 +122,14 @@ const { editTag, createTag, removeTag } = useTags(computed({
 const onDeleteTag = removeTag
 
 useDragTransferItem(computed(() => card.value?.$el as HTMLElement), props.pack.resourcePack.id, props.isSelected ? 'right' : 'left')
+
+const dragover = ref(0)
+const onDragEnter = (e: DragEvent) => {
+  dragover.value += 1
+}
+const onDragLeave = () => {
+  dragover.value += -1
+}
 
 const tooltip = computed(() => props.pack.compatible
   ? t('resourcepack.compatible', {

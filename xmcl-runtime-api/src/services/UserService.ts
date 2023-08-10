@@ -15,9 +15,9 @@ export interface LoginOptions {
   username: string
   password?: string
   /**
-   * The account service name.
+   * The authority url.
    */
-  service: string
+  authority: string
   /**
    * Custom property for special login service
    */
@@ -80,7 +80,7 @@ interface UserServiceEventMap {
   'auth-profile-added': string
 }
 
-export class UserState implements UserSchema {
+export class UserState {
   /**
    * The user id to user profile mapping
    */
@@ -235,7 +235,7 @@ export type UserExceptions = {
   type: 'userAccessTokenExpired'
 } | {
   type: 'loginServiceNotSupported'
-  service: string
+  authority: string
 }
 
 export class UserException extends Exception<UserExceptions> { }

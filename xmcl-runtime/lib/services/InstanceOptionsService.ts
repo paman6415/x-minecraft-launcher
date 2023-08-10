@@ -124,18 +124,24 @@ export class InstanceOptionsService extends AbstractService implements IInstance
 
   async editGameSetting(options: EditGameSettingOptions) {
     const instancePath = options.instancePath
-    // const instance = this.instanceService.state.all[instancePath]
-    // if (!instance) {
-    //   throw new InstanceOptionException({ type: 'instanceNotFound', instancePath: options.instancePath! })
-    // }
     const current = await this.getGameOptions(instancePath)
 
     const diff: Frame = {}
-    for (const key of Object.keys(options)) {
-      if (key === 'instancePath') continue
-      if (key in current && (current as any)[key] !== (options as any)[key]) {
+    if (Object.keys(current).length !== 0) {
+      for (const key of Object.keys(options)) {
+        if (key === 'instancePath') continue
+        if (key in current && (current as any)[key] !== (options as any)[key]) {
+          (diff as any)[key] = (options as any)[key]
+        }
+      }
+    } else {
+      for (const key of Object.keys(options)) {
+        if (key === 'instancePath') continue
         (diff as any)[key] = (options as any)[key]
       }
+    }
+    if (diff.lang) {
+      diff.lang = diff.lang.toLowerCase().replace('-', '_')
     }
     if (Object.keys(diff).length > 0) {
       this.log(`Edit gamesetting: ${JSON.stringify(diff, null, 4)} to ${instancePath}`)

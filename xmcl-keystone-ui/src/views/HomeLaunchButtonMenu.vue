@@ -8,7 +8,6 @@
       <template v-for="(item, index) in items">
         <v-list-item
           :key="index"
-          ripple
         >
           <v-list-item-avatar>
             <v-icon :color="item.color ?? 'warning darken-1'">

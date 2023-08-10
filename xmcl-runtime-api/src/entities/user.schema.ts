@@ -32,6 +32,45 @@ export interface GameProfileAndTexture extends GameProfile {
   }>
 }
 
+export interface UserProfileCompatible {
+  /**
+   * User id. Also means the localId in new account_json
+   */
+  id: string
+  /**
+   * The username usually email
+   */
+  username: string
+  /**
+   * The used auth service url
+   */
+  authService?: string
+  /**
+   * If the user profile is invalidated and should be re-login
+   */
+  invalidated: boolean
+  /**
+   * The authority url
+   */
+  authority?: string
+  /**
+   * The expire time
+   */
+  expiredAt: number
+  /**
+   * All available game profiles
+   */
+  profiles: { [uuid: string]: GameProfileAndTexture }
+  /**
+   * Selected profile uuid
+   */
+  selectedProfile: string
+  /**
+   * The avatar uri. This can be base64 data uri.
+   */
+  avatar?: string
+}
+
 export interface UserProfile {
   /**
    * User id. Also means the localId in new account_json
@@ -42,13 +81,13 @@ export interface UserProfile {
    */
   username: string
   /**
-   * The used auth service name
-   */
-  authService: string
-  /**
    * If the user profile is invalidated and should be re-login
    */
   invalidated: boolean
+  /**
+   * The authority service uri.
+   */
+  authority: string
   /**
    * The expire time
    */
@@ -144,7 +183,7 @@ export interface UserSchema {
    * All saved user account through multiple services
    * @default {}
    */
-  users: { [account: string]: UserProfile }
+  users: { [account: string]: UserProfileCompatible }
   /**
    * The client token of current client. The launcher will generate one at first launch.
    * @default ""

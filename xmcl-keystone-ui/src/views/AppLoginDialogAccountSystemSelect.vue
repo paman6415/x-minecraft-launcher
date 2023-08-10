@@ -26,11 +26,10 @@
   </v-select>
 </template>
 <script setup lang="ts">
-import { useService } from '@/composables'
 import { kSettingsState } from '@/composables/setting'
 import { kUserContext } from '@/composables/user'
 import { injection } from '@/util/inject'
-import { BaseServiceKey, UserServiceKey } from '@xmcl/runtime-api'
+import { AUTHORITY_MICROSOFT } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
 
 const props = defineProps<{
@@ -47,7 +46,7 @@ interface ServiceItem {
 const { users, yggdrasilServices } = injection(kUserContext)
 const { state: setting } = injection(kSettingsState)
 const { t } = useI18n()
-const hasMicrosoft = computed(() => Object.values(users.value)?.some(u => u.authService === 'microsoft'))
+const hasMicrosoft = computed(() => Object.values(users.value)?.some(u => u.authority === AUTHORITY_MICROSOFT))
 
 const items: Ref<ServiceItem[]> = computed(() => {
   const items = [

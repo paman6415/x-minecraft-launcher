@@ -3,7 +3,7 @@ import { MutableState } from '@xmcl/runtime-api'
 export type Handler<T> = { [k in keyof T]?: T[k] /* extends (...args: infer A) => infer R ? (state: T, ...args: A) => R : never */ }
 
 export function useState<T extends object>(fetcher: (abortSignal: AbortSignal) => Promise<MutableState<T>> | undefined,
-  handler: { prototype: Handler<T> }) {
+  Type: { prototype: Handler<T>; new(): T }) {
   const isValidating = ref(false)
 
   const state = ref<T | undefined>()
@@ -14,9 +14,6 @@ export function useState<T extends object>(fetcher: (abortSignal: AbortSignal) =
     let data: MutableState<T> | undefined
     onCleanup?.(() => {
       abortController.abort()
-      // if (data) {
-      //   serviceChannels.deref(data)
-      // }
     })
 
     // Avoid calling dispose multiple times
@@ -25,7 +22,7 @@ export function useState<T extends object>(fetcher: (abortSignal: AbortSignal) =
       data = await fetcher(signal)
       if (!data || signal.aborted) { return }
       data.subscribeAll((mutation, payload) => {
-        ((handler.prototype as any)?.[mutation] as Function)?.call(state.value, payload)
+        ((Type.prototype as any)?.[mutation] as Function)?.call(state.value, payload)
       })
       state.value = data
     } catch (e) {

@@ -1,17 +1,9 @@
+import { AUTHORITY_DEV } from '../util/authority'
 import { Exception } from '../entities/exception'
 import { UserProfile } from '../entities/user.schema'
 import { GenericEventEmitter } from '../events'
 import { ServiceKey } from './Service'
 import { UserExceptions } from './UserService'
-
-export class LaunchState {
-  activeCount = 0
-
-  launchCount(count: number) {
-    if (count < 0) count = 0
-    this.activeCount = count
-  }
-}
 
 interface LaunchServiceEventMap {
   'minecraft-window-ready': { pid?: number }
@@ -61,7 +53,9 @@ export interface LaunchOptions {
      */
     jar: string
     /**
-     * The auth server host
+     * The auth server url.
+     *
+     * If this input is {@link AUTHORITY_DEV}. This will be resolved to the localhost yggrasil server
      */
     server: string
     /**

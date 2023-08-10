@@ -27,8 +27,7 @@ const EMPTY_INSTANCE: Instance = {
 /**
  * Use the general info of the instance
  */
-export function useInstance(instances: Ref<Instance[]>) {
-  const path = useLocalStorageCacheStringValue('selectedInstancePath', '' as string)
+export function useInstance(path: Ref<string>, instances: Ref<Instance[]>) {
   const instance = computed(() => instances.value.find(i => i.path === path.value) ?? EMPTY_INSTANCE)
   const runtime = computed(() => instance.value.runtime)
   const name = computed(() => instance.value.name)

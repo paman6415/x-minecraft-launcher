@@ -37,10 +37,12 @@ export const pluginWorker: LauncherAppPlugin = async (app) => {
       worker.on('message', (message: 'idle' | object) => {
         if (message === 'idle') {
           destroyTimer = setTimeout(() => {
-            logger.log(`Dispose the worker ${factory}`)
-            threadWorker?.terminate()
-            threadWorker = undefined
-            destroyTimer = undefined
+            if (threadWorker) {
+              logger.log(`Dispose the worker ${factory}`)
+              threadWorker?.terminate()
+              threadWorker = undefined
+              destroyTimer = undefined
+            }
           }, 1000 * 60)
         }
       })

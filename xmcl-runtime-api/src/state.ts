@@ -6,7 +6,6 @@ import { GameOptionsState } from './services/InstanceOptionsService'
 import { InstanceState } from './services/InstanceService'
 import { InstanceVersionState } from './services/InstanceVersionService'
 import { JavaState } from './services/JavaService'
-import { LaunchState } from './services/LaunchService'
 import { PeerState } from './services/PeerService'
 import { UserState } from './services/UserService'
 
@@ -21,7 +20,6 @@ export const AllStates = [
   GameOptionsState,
   Saves,
   JavaState,
-  LaunchState,
   UserState,
   LocalVersions,
   PeerState,

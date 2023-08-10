@@ -1,14 +1,14 @@
 <template>
   <v-card
     outlined
-    class="overflow-y-auto max-h-90vh invisible-scroll"
+    class="max-h-90vh invisible-scroll overflow-y-auto"
   >
     <v-list>
       <UserMenuUserItem
         v-if="selected"
         :user="selected"
         controls
-        :refreshing="refreshingUser"
+        :refreshing="refreshing"
         @remove="emit('remove')"
         @abort-refresh="emit('abort-refresh')"
         @refresh="emit('refresh')"
@@ -16,11 +16,11 @@
     </v-list>
 
     <UserMenuMicrosoft
-      v-if="selected && selected.authService === 'microsoft'"
+      v-if="selected && selected.authority === AUTHORITY_MICROSOFT"
       :user="selected"
     />
     <UserMenuMojang
-      v-else-if="selected && selected.authService === 'mojang'"
+      v-else-if="selected && selected.authority === AUTHORITY_MOJANG"
       :user="selected"
     />
     <UserMenuYggdrasil
@@ -66,21 +66,20 @@
 <script lang="ts" setup>
 import { useDialog } from '@/composables/dialog'
 import { LoginDialog } from '@/composables/login'
-import { UserProfile, UserServiceKey } from '@xmcl/runtime-api'
-import UserMenuUserItem from './UserMenuUserItem.vue'
+import { AUTHORITY_MICROSOFT, AUTHORITY_MOJANG, UserProfile } from '@xmcl/runtime-api'
 import UserMenuMicrosoft from './UserMenuMicrosoft.vue'
 import UserMenuMojang from './UserMenuMojang.vue'
+import UserMenuUserItem from './UserMenuUserItem.vue'
 import UserMenuYggdrasil from './UserMenuYggdrasil.vue'
-import { useServiceBusy } from '@/composables'
 
 const emit = defineEmits(['refresh', 'abort-refresh', 'select', 'remove'])
 const { t } = useI18n()
 const props = defineProps<{
   selected: UserProfile | undefined
   users: UserProfile[]
+  refreshing: boolean
 }>()
 const { show: showLoginDialog } = useDialog(LoginDialog)
 
 const usersToSwitch = computed(() => props.users.filter(v => props.selected ? (v.id !== props.selected.id) : true))
-const refreshingUser = useServiceBusy(UserServiceKey, 'refreshUser')
 </script>

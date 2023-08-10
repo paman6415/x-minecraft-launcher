@@ -27,7 +27,7 @@ export class MicrosoftAccountSystem implements UserAccountSystem {
       id: authentication.userId,
       username: options.username,
       invalidated: false,
-      authService: options.service,
+      authority: options.authority,
       expiredAt: authentication.expiredAt,
       profiles: toRecord(authentication.gameProfiles, p => p.id),
       selectedProfile: authentication.selectedProfile?.id ?? '',

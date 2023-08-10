@@ -1,12 +1,9 @@
-import { useTheme } from '@/composables'
 import { useLocalStorageCacheStringValue } from '@/composables/cache'
-import { InjectionKey } from 'vue'
+import { InjectionKey, Ref } from 'vue'
 
 export const kColorTheme: InjectionKey<ReturnType<typeof useColorTheme>> = Symbol('ColorTheme')
 
-export function useColorTheme() {
-  const { darkTheme } = useTheme()
-
+export function useColorTheme(darkTheme: Ref<boolean>) {
   const lightAppBarColor = useLocalStorageCacheStringValue<string>('lightAppBarColor', '#e0e0e0FF')
   const lightSideBarColor = useLocalStorageCacheStringValue<string>('lightSideBarColor', '#FFFFFFFF')
 

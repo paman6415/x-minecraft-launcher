@@ -9,7 +9,7 @@ import { GameProfile } from '@xmcl/user'
 const NO_USER_PROFILE: UserProfile = Object.freeze({
   selectedProfile: '',
   invalidated: true,
-  authService: '',
+  authority: '',
   profileService: '',
   profiles: {},
   id: '',
@@ -45,6 +45,7 @@ export function useUserContext() {
     }
 
     override userProfile(user: UserProfile) {
+      super.userProfile(user)
       set(this.users, user.id, user)
     }
   })

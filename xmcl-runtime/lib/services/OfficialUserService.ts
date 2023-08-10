@@ -22,7 +22,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(kUserTokenStorage) private userTokenStorage: UserTokenStorage,
-    @Inject(UserService) private userService: UserService) {
+    @Inject(UserService) userService: UserService) {
     super(app)
 
     const dispatcher = this.networkManager.registerAPIFactoryInterceptor((origin, opts) => {
@@ -115,7 +115,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
           profiles: toRecord(result.availableProfiles.map(normalizeGameProfile), (v) => v.id),
           selectedProfile: result.selectedProfile?.id ?? '',
           expiredAt: Date.now() + 86400_000,
-          authService: options.service,
+          authority: options.authority,
         }
 
         await this.userTokenStorage.put(userProfile, result.accessToken)
@@ -130,7 +130,7 @@ export class OfficialUserService extends AbstractService implements IOfficialUse
         }
         const valid = await legacyClient.validate(token, userService.getClientToken())
 
-        this.log(`Validate ${user.authService} user access token: ${valid ? 'valid' : 'invalid'}`)
+        this.log(`Validate ${user.authority} user access token: ${valid ? 'valid' : 'invalid'}`)
 
         if (valid) {
           return user

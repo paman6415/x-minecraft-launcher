@@ -1,6 +1,6 @@
 import { Mod, getModItemFromResource } from '@/util/mod'
 import { Instance, InstanceModsServiceKey, InstanceModsState, JavaRecord, Resource } from '@xmcl/runtime-api'
-import { InjectionKey, Ref } from 'vue'
+import { InjectionKey, Ref, set } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
 
@@ -16,10 +16,9 @@ export function useInstanceMods(instance: Ref<Instance>, java: Ref<JavaRecord | 
 
   const enabledModCounts = computed(() => mods.value.filter(v => v.enabled).length)
 
-  watch(state, (s) => {
-    if (s?.mods) {
-      updateItems(s.mods)
-    }
+  watch(computed(() => state.value?.mods), (mods) => {
+    if (!mods) { return }
+    updateItems(mods)
   })
 
   function updateItems(resources: Resource[]) {

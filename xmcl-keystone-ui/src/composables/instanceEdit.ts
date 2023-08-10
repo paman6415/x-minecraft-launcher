@@ -33,7 +33,7 @@ export function useInstanceEdit(instance: Ref<Instance>, edit: (instance: EditIn
     minMemory: instance.value?.minMemory,
 
     runtime: {
-      minecraft: '',
+      minecraft: instance.value?.runtime.minecraft,
       forge: instance.value?.runtime.forge,
       fabricLoader: instance.value?.runtime.fabricLoader,
       quiltLoader: instance.value?.runtime.quiltLoader,

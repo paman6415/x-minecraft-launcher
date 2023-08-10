@@ -1,24 +1,16 @@
 import TextComponent from '@/components/TextComponent'
-import { kSemaphores, kServiceFactory, useSemaphores, useServiceFactory } from '@/composables'
+import { kServiceFactory, useServiceFactory } from '@/composables'
 import { kDialogModel, useDialogModel } from '@/composables/dialog'
-import { kExceptionHandlers, useExceptionHandlers } from '@/composables/exception'
-import { kNotificationQueue, useNotificationQueue } from '@/composables/notifier'
-import { kServerStatusCache, useServerStatusCache } from '@/composables/serverStatus'
+import { kSWRVConfig, useSWRVConfig } from '@/composables/swrvConfig'
 import { kTaskManager, useTaskManager } from '@/composables/taskManager'
 import { kVuetify } from '@/composables/vuetify'
-import messages from '@intlify/unplugin-vue-i18n/messages'
+import { i18n } from '@/i18n'
+import { vuetify } from '@/vuetify'
 import 'virtual:windi.css'
 import Vue, { defineComponent, getCurrentInstance, h, provide } from 'vue'
-import VueI18n from 'vue-i18n'
-import { castToVueI18n, createI18n } from 'vue-i18n-bridge'
-import VueObserveVisibility from 'vue-observe-visibility'
-import Router from 'vue-router'
-import Vuetify from 'vuetify'
-import '../../../locales/en.yaml'
-import '../../../locales/zh-CN.yaml'
 import App from './App.vue'
-import { createRouter } from './router'
-import vuetify from './vuetify'
+import Context from './Context'
+import { router } from './router'
 
 // to prevent the universal drop activated on self element dragging
 document.addEventListener('dragstart', (e) => {
@@ -26,27 +18,6 @@ document.addEventListener('dragstart', (e) => {
     e.dataTransfer!.effectAllowed = 'none'
   }
 })
-
-Vue.use(VueI18n, { bridge: true })
-Vue.use(Router)
-Vue.use(Vuetify)
-Vue.use(VueObserveVisibility)
-
-const i18n = castToVueI18n(
-  createI18n(
-    {
-      legacy: false,
-      locale: 'en',
-      silentTranslationWarn: true,
-      missingWarn: false,
-      messages,
-    },
-    VueI18n,
-  ),
-) // `createI18n` which is provide `vue-i18n-bridge` has second argument, you **must** pass `VueI18n` constructor which is provide `vue-i18n`
-
-const router = createRouter()
-Vue.use(i18n)
 
 const app = new Vue(defineComponent({
   i18n,
@@ -66,16 +37,13 @@ const app = new Vue(defineComponent({
       }),
     })
 
-    provide(kServiceFactory, useServiceFactory())
     provide(kVuetify, vuetify.framework)
-    provide(kSemaphores, useSemaphores())
-    provide(kExceptionHandlers, useExceptionHandlers())
-    provide(kDialogModel, useDialogModel())
     provide(kTaskManager, useTaskManager())
-    provide(kServerStatusCache, useServerStatusCache())
-    provide(kNotificationQueue, useNotificationQueue())
+    provide(kServiceFactory, useServiceFactory())
+    provide(kDialogModel, useDialogModel())
+    provide(kSWRVConfig, useSWRVConfig())
 
-    return () => h(App)
+    return () => h(Context, [h(App)])
   },
 }))
 

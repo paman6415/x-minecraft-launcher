@@ -1,5 +1,5 @@
 import { createMinecraftProcessWatcher, diagnoseJar, diagnoseLibraries, launch, LaunchOption, LaunchPrecheck, MinecraftFolder, ResolvedVersion, Version } from '@xmcl/core'
-import { LaunchService as ILaunchService, LaunchException, LaunchOptions, LaunchServiceKey, LaunchState } from '@xmcl/runtime-api'
+import { LaunchService as ILaunchService, LaunchException, LaunchOptions, LaunchServiceKey } from '@xmcl/runtime-api'
 import { ChildProcess } from 'child_process'
 import { EOL } from 'os'
 import LauncherApp from '../app/LauncherApp'
@@ -10,31 +10,25 @@ import { kUserTokenStorage, UserTokenStorage } from '../entities/userTokenStore'
 import { UTF8 } from '../util/encoding'
 import { Inject } from '../util/objectRegistry'
 import { InstallService } from './InstallService'
-import { InstanceService } from './InstanceService'
 import { JavaService } from './JavaService'
-import { ExposeServiceKey, StatefulService } from './Service'
-import { UserService } from './UserService'
+import { AbstractService, ExposeServiceKey } from './Service'
 
 export interface LaunchPlugin {
 
 }
 
 @ExposeServiceKey(LaunchServiceKey)
-export class LaunchService extends StatefulService<LaunchState> implements ILaunchService {
+export class LaunchService extends AbstractService implements ILaunchService {
   private launchedProcesses: ChildProcess[] = []
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstallService) private installService: InstallService,
     @Inject(JavaService) private javaService: JavaService,
     @Inject(kUserTokenStorage) private userTokenStorage: UserTokenStorage,
     @Inject(kEncodingWorker) private encoder: EncodingWorker,
-    @Inject(UserService) private userService: UserService,
   ) {
-    super(app, () => new LaunchState())
+    super(app)
   }
-
-  register() {}
 
   async generateArguments() {
     return []
@@ -161,11 +155,6 @@ export class LaunchService extends StatefulService<LaunchState> implements ILaun
       // Launch
       const process = await launch(launchOptions)
       this.launchedProcesses.push(process)
-      process.on('spawn', () => {
-        this.state.launchCount(this.state.activeCount + 1)
-      }).on('close', () => {
-        this.state.launchCount(this.state.activeCount - 1)
-      })
 
       this.emit('minecraft-start', {
         pid: process.pid,

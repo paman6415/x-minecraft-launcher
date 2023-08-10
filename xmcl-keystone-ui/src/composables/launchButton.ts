@@ -1,7 +1,7 @@
 import { injection } from '@/util/inject'
 import { TaskState } from '@xmcl/runtime-api'
 import { useDialog } from './dialog'
-import { LaunchStatusDialogKey, useLaunch } from './launch'
+import { LaunchStatusDialogKey, kLaunchStatus, useLaunch } from './launch'
 import { kInstanceVersionDiagnose } from './instanceVersionDiagnose'
 import { kInstanceJavaDiagnose } from './instanceJavaDiagnose'
 import { kInstanceFilesDiagnose } from './instanceFilesDiagnose'
@@ -19,7 +19,8 @@ export interface LaunchMenuItem {
 }
 
 export function useLaunchButton() {
-  const { launch, status: launchStatus, launchCount } = useLaunch()
+  const launch = useLaunch()
+  const { launchCount, launching } = injection(kLaunchStatus)
   const { show: showLaunchStatusDialog } = useDialog(LaunchStatusDialogKey)
   const { show: showMultiInstanceDialog } = useDialog('multi-instance-launch')
 
@@ -41,7 +42,6 @@ export function useLaunchButton() {
         onClick: () => pause(),
       }
     } else if (status.value === TaskState.Paused) {
-      resume()
       return {
         icon: 'get_app',
         text: t('install'),
@@ -87,7 +87,7 @@ export function useLaunchButton() {
         color: 'primary',
         right: true,
         onClick: () => {
-          if (launchStatus.value === 'launching') {
+          if (launching.value) {
             showLaunchStatusDialog()
           } else if (launchCount.value >= 1) {
             showMultiInstanceDialog()
@@ -105,7 +105,7 @@ export function useLaunchButton() {
   const color = computed(() => launchButtonFacade.value.color)
   const icon = computed(() => launchButtonFacade.value.icon)
   const text = computed(() => launchButtonFacade.value.text)
-  const loading = computed(() => launchStatus.value === 'launching' ||
+  const loading = computed(() => launching.value ||
     loadingVersionIssues.value ||
     refreshingFiles.value ||
     isRefreshingVersion.value)

@@ -38,7 +38,7 @@
           <template v-else>
             {{ text }}
             <v-icon
-              v-if="loading"
+              v-if="!loading"
               right
               class="text-2xl pl-3"
             >

@@ -9,11 +9,11 @@
     <template #activator="{ on, attrs }">
       <div
         v-bind="attrs"
-        class="non-moveable hover:bg-[rgba(255,255,255,0.2)] cursor-pointer px-2 rounded transition-all flex flex-grow-0 items-center gap-2"
+        class="non-moveable flex flex-grow-0 cursor-pointer items-center gap-2 rounded px-2 transition-all hover:bg-[rgba(255,255,255,0.2)]"
         v-on="on"
       >
         <PlayerAvatar
-          class="rounded-full overflow-hidden transition-all duration-300"
+          class="overflow-hidden rounded-full transition-all duration-300"
           :src="selectedUserGameProfile?.textures.SKIN.url"
           :dimension="28"
         />
@@ -24,6 +24,7 @@
     <UserMenu
       :users="users"
       :selected="selectedUser"
+      :refreshing="refreshing"
       @select="onSelectUser"
       @refresh="onRefresh"
       @remove="onRemoveUser"
@@ -36,16 +37,17 @@ import PlayerAvatar from '@/components/PlayerAvatar.vue'
 import { useService } from '@/composables'
 import { useDialog } from '@/composables/dialog'
 import { LoginDialog } from '@/composables/login'
-import { kUserContext } from '@/composables/user'
+import { kUserContext, useUserExpired } from '@/composables/user'
 import { UserSkinRenderPaused } from '@/composables/userSkin'
 import { injection } from '@/util/inject'
 import { UserServiceKey } from '@xmcl/runtime-api'
 import UserMenu from './UserMenu.vue'
 
-const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile } = injection(kUserContext)
+const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile, yggdrasilServices } = injection(kUserContext)
 const { abortRefresh, refreshUser, removeUser } = useService(UserServiceKey)
 const { show: showLoginDialog } = useDialog(LoginDialog)
 const isShown = ref(false)
+const expired = useUserExpired(computed(() => selectedUser.value))
 
 const { t } = useI18n()
 const onSelectUser = (user: string) => {
@@ -53,20 +55,35 @@ const onSelectUser = (user: string) => {
   select(user)
 }
 watch(isShown, (show) => {
-  if (show && users.value.length === 0) {
+  if (show) {
+    onRefresh()
+  }
+})
+
+const refreshing = ref(false)
+
+function onRefresh() {
+  if (users.value.length === 0) {
     showLoginDialog()
     nextTick().then(() => {
       isShown.value = false
     })
-  }
-})
-function onRefresh() {
-  if (users.value.length === 0) {
-    showLoginDialog()
-  } else if (selectedUser.value?.id) {
-    refreshUser(selectedUser.value.id).catch(() => {
-      showLoginDialog({ username: selectedUser.value?.username, service: selectedUser.value?.authService, error: t('login.userRelogin') })
-    })
+  } else if (selectedUser.value?.id || selectedUser.value.invalidated || expired.value) {
+    const authService = selectedUser.value?.authService
+    if (yggdrasilServices.value.every((e) => new URL(e.url).host !== authService) && authService !== 'microsoft' && authService !== 'offline') {
+      
+    } else {
+      refreshing.value = true
+      refreshUser(selectedUser.value.id).catch((e) => {
+        console.error(e)
+        showLoginDialog({ username: selectedUser.value?.username, service: authService, error: t('login.userRelogin') })
+        nextTick().then(() => {
+          isShown.value = false
+        })
+      }).finally(() => {
+        refreshing.value = false
+      })
+    }
   }
 }
 async function onRemoveUser() {

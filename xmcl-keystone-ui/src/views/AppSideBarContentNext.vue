@@ -7,7 +7,7 @@
     >
       <AppSideBarInstanceItem
         v-for="(i, index) of instances"
-        :key="i.path"
+        :key="i.path + ' ' + index"
         :instance="i"
         @drop="setToPrevious($event, i.path)"
       />
@@ -145,9 +145,8 @@ import { useService } from '@/composables'
 import { useLocalStorageCacheBool } from '@/composables/cache'
 import { ContextMenuItem } from '@/composables/contextMenu'
 import { useDialog } from '@/composables/dialog'
-import { kInstances } from '@/composables/instances'
 import { AddInstanceDialogKey } from '@/composables/instanceAdd'
-import { useSortedInstance } from '@/composables/instanceSort'
+import { kInstances } from '@/composables/instances'
 import { injection } from '@/util/inject'
 import { InstanceServiceKey } from '@xmcl/runtime-api'
 import AppSideBarInstanceItem from './AppSideBarInstanceItem.vue'
@@ -157,8 +156,7 @@ const { t } = useI18n()
 const sideBarShowCurseforge = useLocalStorageCacheBool('sideBarShowCurseforge', true)
 const sideBarShowModrinth = useLocalStorageCacheBool('sideBarShowModrinth', true)
 const sideBarShowFtb = useLocalStorageCacheBool('sideBarShowFtb', true)
-const { instances: unordered } = injection(kInstances)
-const { instances, setToPrevious } = useSortedInstance(unordered)
+const { instances, setToPrevious } = injection(kInstances)
 const { showOpenDialog } = windowController
 const { addExternalInstance } = useService(InstanceServiceKey)
 

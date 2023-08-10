@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="!isFocus"
-    class="select-none mx-4 relative"
+    class="relative mx-3 select-none"
   >
     <GridLayout
       :layout.sync="layout"

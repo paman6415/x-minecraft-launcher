@@ -1,33 +1,61 @@
 <template>
   <v-app class="h-full overflow-auto relative max-h-[100vh]">
     <v-card class="h-full flex flex-col overflow-auto">
-      <v-toolbar class="moveable w-full" flat>
+      <v-toolbar
+        class="moveable w-full"
+        flat
+      >
         <v-app-bar-nav-icon />
         <v-toolbar-title>{{ t('title') }}</v-toolbar-title>
         <v-spacer />
-        <v-btn icon class="non-moveable" @click="changeTheme">
+        <v-btn
+          icon
+          class="non-moveable"
+          @click="changeTheme"
+        >
           <v-icon>
             {{ themeIcon }}
           </v-icon>
         </v-btn>
-        <v-btn icon class="non-moveable" @click="close">
+        <v-btn
+          icon
+          class="non-moveable"
+          @click="close"
+        >
           <v-icon>
             close
           </v-icon>
         </v-btn>
         <template #extension>
-          <v-tabs v-model="tab" align-with-title class="non-moveable">
+          <v-tabs
+            v-model="tab"
+            align-with-title
+            class="non-moveable"
+          >
             <v-tabs-slider color="yellow" />
 
-            <v-tab v-for="item in Object.keys(logsRecord)" :key="item">
+            <v-tab
+              v-for="item in Object.keys(logsRecord)"
+              :key="item"
+            >
               Minecraft {{ item }}
             </v-tab>
           </v-tabs>
         </template>
       </v-toolbar>
-      <v-tabs-items v-model="tab" class="flex-grow h-full overflow-auto">
-        <v-tab-item v-for="item in Object.entries(logsRecord)" :key="item[0]" class="flex-grow h-full overflow-auto">
-          <log-view class="flex-grow h-full overflow-auto" :logs="item[1]" />
+      <v-tabs-items
+        v-model="tab"
+        class="flex-grow h-full overflow-auto"
+      >
+        <v-tab-item
+          v-for="item in Object.entries(logsRecord)"
+          :key="item[0]"
+          class="flex-grow h-full overflow-auto"
+        >
+          <log-view
+            class="flex-grow h-full overflow-auto"
+            :logs="item[1]"
+          />
         </v-tab-item>
       </v-tabs-items>
     </v-card>

@@ -1,18 +1,18 @@
 <template>
   <v-app
     v-if="!shouldSetup"
-    class="overflow-auto h-full overflow-x-hidden max-h-[100vh]"
+    class="h-full max-h-[100vh] overflow-auto overflow-x-hidden"
     :class="{ 'dark': vuetify.theme.dark }"
     :style="cssVars"
   >
     <AppBackground />
     <AppSystemBar />
     <div
-      class="flex h-full overflow-auto relative"
+      class="relative flex h-full overflow-auto"
     >
       <AppSideBar />
       <main
-        class="flex flex-col top-0 bottom-0 right-0 overflow-auto max-h-full relative"
+        class="relative inset-y-0 right-0 flex max-h-full flex-col overflow-auto"
         :class="{ solid: !blurMainBody }"
       >
         <transition
@@ -36,12 +36,12 @@
     <AppInstanceDeleteDialog />
     <AppGameExitDialog />
     <AppLaunchBlockedDialog />
-    <ImageDialog />
-    <SharedTooltip />
+    <AppImageDialog />
+    <AppSharedTooltip />
   </v-app>
   <v-app
     v-else
-    class="overflow-auto h-full overflow-x-hidden max-h-[100vh]"
+    class="h-full max-h-[100vh] overflow-auto overflow-x-hidden"
     :class="{ 'dark': vuetify.theme.dark }"
     :style="cssVars"
   >
@@ -50,7 +50,7 @@
       no-task
     />
     <div
-      class="flex h-full overflow-auto relative"
+      class="relative flex h-full overflow-auto"
     >
       <Setup @ready="shouldSetup = false" />
     </div>
@@ -60,12 +60,11 @@
 
 <script lang=ts setup>
 import '@/assets/common.css'
-import ImageDialog from '@/components/ImageDialog.vue'
-import SharedTooltip from '@/components/SharedTooltip.vue'
+import AppImageDialog from '@/components/AppImageDialog.vue'
+import AppSharedTooltip from '@/components/AppSharedTooltip.vue'
 import { useAuthProfileImportNotification } from '@/composables/authProfileImport'
-import { kBackground, useBackground } from '@/composables/background'
-import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
-import { kDropHandler, useDropHandler } from '@/composables/dropHandler'
+import { kBackground } from '@/composables/background'
+import { kColorTheme } from '@/composables/colorTheme'
 import { useDefaultErrorHandler } from '@/composables/errorHandler'
 import { useNotifier } from '@/composables/notifier'
 import { kVuetify } from '@/composables/vuetify'

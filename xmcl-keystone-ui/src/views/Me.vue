@@ -76,10 +76,10 @@
 </template>
 
 <script lang=ts setup>
-import { kInstances, useInstances } from '@/composables/instances'
+import { kInstances } from '@/composables/instances'
 import { useMojangNews } from '@/composables/mojangNews'
 import { useScrollRight } from '@/composables/scroll'
-import { getAgoOrDate, getLocalDateString } from '@/util/date'
+import { getAgoOrDate } from '@/util/date'
 import { getInstanceIcon } from '@/util/favicon'
 import { injection } from '@/util/inject'
 

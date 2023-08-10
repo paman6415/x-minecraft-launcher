@@ -1,10 +1,10 @@
 <template>
   <div
-    class="flex items-center justify-center flex-col flex-grow h-100vh moveable"
+    class="h-100vh moveable flex flex-grow flex-col items-center justify-center"
   >
     <AppLoginDialogBackground
       :value="isShown"
-      :auth-service="authService"
+      :authority="authority"
     />
     <hint
       v-if="showDropHint"
@@ -13,9 +13,9 @@
     />
     <div
       v-else
-      class="min-w-100 text-center z-10 m-20 non-moveable"
+      class="min-w-100 non-moveable z-10 m-20 text-center"
     >
-      <AppLoginDialogAccountSystemSelect v-model="authService" />
+      <AppLoginDialogAccountSystemSelect v-model="authority" />
 
       <v-combobox
         ref="accountInput"
@@ -24,7 +24,7 @@
         prepend-inner-icon="person"
         outlined
         required
-        :label="getUserServiceAccount(authService)"
+        :label="getUserServiceAccount(authority)"
         :rules="usernameRules"
         :error="!!usernameErrors.length"
         :error-messages="usernameErrors"
@@ -89,7 +89,7 @@
           color="primary"
           rounded
           large
-          class="text-white z-10"
+          class="z-10 text-white"
 
           @click="onLogin"
         >
@@ -108,7 +108,7 @@
       >
         <a
           :href="data.microsoftUrl"
-          class="border-b border-b-current border-dashed"
+          class="border-b border-dashed border-b-current"
         >
           {{ t('login.manualLoginUrl') }}
         </a>
@@ -137,16 +137,16 @@
 </template>
 
 <script lang=ts setup>
+import Hint from '@/components/Hint.vue'
+import { useBusy, useService } from '@/composables'
+import { injection } from '@/util/inject'
+import { AUTHORITY_DEV, AUTHORITY_MICROSOFT, AUTHORITY_MOJANG, isException, OfficialUserServiceKey, UserException, UserServiceKey } from '@xmcl/runtime-api'
 import { Ref } from 'vue'
-import { isException, OfficialUserServiceKey, UserException, UserServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
 import { LoginDialog, useAccountSystemHistory } from '../composables/login'
 import { kUserContext, useLoginValidation } from '../composables/user'
-import Hint from '@/components/Hint.vue'
-import { useBusy, useRefreshable, useService } from '@/composables'
 import AppLoginDialogAccountSystemSelect from './AppLoginDialogAccountSystemSelect.vue'
 import AppLoginDialogBackground from './AppLoginDialogBackground.vue'
-import { injection } from '@/util/inject'
 
 const props = defineProps<{
   inside: boolean
@@ -167,24 +167,24 @@ const data = reactive({
   microsoftUrl: '',
 })
 const getUserServicePassword = (serv: string) => {
-  if (serv === 'microsoft') return data.useDeviceCode ? t('userServices.microsoft.deviceCode') : t('userServices.microsoft.password')
-  if (serv === 'mojang') return t('userServices.mojang.password')
-  if (serv === 'offline') return t('userServices.offline.password')
+  if (serv === AUTHORITY_MICROSOFT) return data.useDeviceCode ? t('userServices.microsoft.deviceCode') : t('userServices.microsoft.password')
+  if (serv === AUTHORITY_MOJANG) return t('userServices.mojang.password')
+  if (serv === AUTHORITY_DEV) return t('userServices.offline.password')
   return t('userServices.mojang.password')
 }
 const getUserServiceAccount = (serv: string) => {
-  if (serv === 'microsoft') return t('userServices.microsoft.account')
-  if (serv === 'mojang') return t('userServices.mojang.account')
-  if (serv === 'offline') return t('userServices.offline.account')
+  if (serv === AUTHORITY_MICROSOFT) return t('userServices.microsoft.account')
+  if (serv === AUTHORITY_MOJANG) return t('userServices.mojang.account')
+  if (serv === AUTHORITY_DEV) return t('userServices.offline.account')
   return t('userServices.mojang.account')
 }
 
-const { authService, history } = useAccountSystemHistory()
+const { authority, history } = useAccountSystemHistory()
 
 const signUpLink = computed(() => {
-  if (authService.value === 'microsoft') return 'https://account.live.com/registration'
-  if (authService.value === 'mojang') return 'https://my.minecraft.net/en-us/store/minecraft/#register'
-  const api = yggdrasilServices.value.find(a => new URL(a.url).host === authService.value)
+  if (authority.value === AUTHORITY_MICROSOFT) return 'https://account.live.com/registration'
+  if (authority.value === AUTHORITY_MOJANG) return 'https://my.minecraft.net/en-us/store/minecraft/#register'
+  const api = yggdrasilServices.value.find(a => new URL(a.url).host === authority.value)
   const url = api?.authlibInjector?.meta.links.register
   return url || ''
 })
@@ -197,10 +197,10 @@ const accountInput: Ref<any> = ref(null)
 const hovered = ref(false)
 
 const isLogining = useBusy('login')
-const isMicrosoft = computed(() => authService.value === 'microsoft')
-const isOffline = computed(() => authService.value === 'offline')
+const isMicrosoft = computed(() => authority.value === AUTHORITY_MICROSOFT)
+const isOffline = computed(() => authority.value === AUTHORITY_DEV)
 
-const passwordLabel = computed(() => getUserServicePassword(authService.value))
+const passwordLabel = computed(() => getUserServicePassword(authority.value))
 const passwordPlaceholder = computed(() => data.useDeviceCode ? t('userServices.microsoft.deviceCodeHint') : passwordLabel.value)
 const showDropHint = computed(() => isMicrosoft.value && props.inside && isLogining.value)
 const uuidLabel = computed(() => t('userServices.offline.uuid'))
@@ -282,7 +282,7 @@ function reset() {
   } else {
     data.username = dialog.value.parameter?.username ?? data.username
     data.microsoftUrl = ''
-    authService.value = dialog.value.parameter?.service ?? authService.value
+    authority.value = dialog.value.parameter?.service ?? authority.value
     usernameErrors.value = dialog.value.parameter.error ? [dialog.value.parameter.error] : []
     passwordErrors.value = dialog.value.parameter.error ? [dialog.value.parameter.error] : []
   }
@@ -304,7 +304,7 @@ async function onLogin() {
     await login({
       username: data.username,
       password: data.password,
-      service: authService.value,
+      authority: authority.value,
       properties: {
         mode: data.useDeviceCode ? 'device' : data.useFast ? 'fast' : '',
       },
@@ -321,7 +321,7 @@ function nextDirection() {
   const i = Math.round(Math.random() * dirs.length)
   direction.value = dirs[i]
 }
-watch(authService, () => { nextDirection() })
+watch(authority, () => { nextDirection() })
 
 onMounted(() => {
   reset()

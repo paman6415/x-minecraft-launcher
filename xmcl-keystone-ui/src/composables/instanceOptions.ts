@@ -8,7 +8,19 @@ export const kInstanceOptions: InjectionKey<ReturnType<typeof useInstanceOptions
 export function useInstanceOptions(instance: Ref<Instance>) {
   const { editGameSetting, watch: watchOptions } = useService(InstanceOptionsServiceKey)
   const { state, isValidating, error } = useState(() => instance.value.path ? watchOptions(instance.value.path) : undefined, GameOptionsState)
+  const { locale } = useI18n()
 
+  watch(state, (newOps) => {
+    if (newOps) {
+      if (newOps.lang === '') {
+        editGameSetting({
+          instancePath: instance.value.path,
+          lang: locale.value.toLowerCase().replace('-', '_'),
+          resourcePacks: newOps.resourcePacks,
+        })
+      }
+    }
+  })
   // watch(state, (newOps) => {
   //   if (newOps) {
   //     editGameSetting({

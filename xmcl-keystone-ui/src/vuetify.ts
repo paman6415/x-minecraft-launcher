@@ -11,8 +11,11 @@ import Vuetify from 'vuetify'
 import colors from 'vuetify/es5/util/colors'
 import ru from 'vuetify/src/locale/ru'
 import zhHans from 'vuetify/src/locale/zh-Hans'
+import Vue from 'vue'
 
-const vuetify = new Vuetify({
+Vue.use(Vuetify)
+
+export const vuetify = new Vuetify({
   lang: {
     locales: {
       zhHans,
@@ -58,5 +61,3 @@ const vuetify = new Vuetify({
     },
   },
 })
-
-export default vuetify

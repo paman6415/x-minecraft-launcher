@@ -1,4 +1,4 @@
-import { UserProfile, UserSchema } from '@xmcl/runtime-api'
+import { AUTHORITY_MICROSOFT, UserProfile, UserSchema } from '@xmcl/runtime-api'
 import { randomUUID } from 'crypto'
 import { existsSync } from 'fs'
 import { readFile, writeFile } from 'fs/promises'
@@ -70,7 +70,7 @@ function fillData(output: UserSchema, input: UserSchema, launchProfile: Launcher
           id: userId,
           invalidated: false,
           username: user.username,
-          authService: 'mojang',
+          authority: AUTHORITY_MICROSOFT,
           selectedProfile: profiles[launchProfile.selectedUser.profile] ? launchProfile.selectedUser.profile : Object.values(profiles)[0].id,
           expiredAt: 0,
           profiles,

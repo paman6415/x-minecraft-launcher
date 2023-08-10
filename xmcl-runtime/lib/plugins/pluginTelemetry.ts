@@ -256,12 +256,12 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
       })
     })
 
-    app.serviceManager.get(UserService).on('user-login', (authService) => {
+    app.serviceManager.get(UserService).on('user-login', (authority) => {
       if (baseService.state.disableTelemetry) return
       appInsight.defaultClient.trackEvent({
         name: 'user-login',
         properties: {
-          authService,
+          authService: authority,
         },
       })
     })

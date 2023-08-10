@@ -1,16 +1,17 @@
 import { EditInstanceOptions, InstanceSchema, InstanceServiceKey, InstanceState } from '@xmcl/runtime-api'
-import { InjectionKey, set } from 'vue'
+import { InjectionKey, Ref, set } from 'vue'
 import { useService } from './service'
 import { useState } from './syncableState'
 import { DeepPartial } from '@xmcl/runtime-api/src/util/object'
+import { useSortedInstance } from './instanceSort'
 
 export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol('Instances')
 
 /**
  * Hook of a view of all instances & some deletion/selection functions
  */
-export function useInstances() {
-  const { createInstance, getSharedInstancesState, editInstance } = useService(InstanceServiceKey)
+export function useInstances(path: Ref<string>) {
+  const { createInstance, getSharedInstancesState, editInstance, deleteInstance } = useService(InstanceServiceKey)
   const { state, isValidating, error } = useState(getSharedInstancesState, class extends InstanceState {
     override instanceEdit(settings: DeepPartial<InstanceSchema> & { path: string }) {
       const inst = this.instances.find(i => i.path === (settings.path))!
@@ -38,14 +39,24 @@ export function useInstances() {
       if ('mcOptions' in settings) {
         set(inst, 'mcOptions', settings.mcOptions)
       }
+      super.instanceEdit(settings)
     }
   })
-  const instances = computed(() => state.value?.instances ?? [])
+  const _instances = computed(() => state.value?.instances ?? [])
+  const { instances, setToPrevious } = useSortedInstance(_instances)
+
   async function edit(options: EditInstanceOptions & { instancePath: string }) {
     await editInstance(options)
   }
+  async function remove(instancePath: string) {
+    const index = instances.value.findIndex(i => i.path === instancePath)
+    const lastSelected = path.value
+    await deleteInstance(instancePath)
+    if (instancePath === lastSelected) {
+      path.value = instances.value[Math.max(index - 1, 0)]?.path ?? ''
+    }
+  }
   watch(state, (newState) => {
-    console.log(newState)
     if (!newState?.instances.length) {
       const path = createInstance({
         name: 'Minecraft',
@@ -54,8 +65,10 @@ export function useInstances() {
   })
   return {
     instances,
+    setToPrevious,
     isValidating,
     error,
     edit,
+    remove,
   }
 }

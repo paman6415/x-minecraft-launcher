@@ -9,7 +9,7 @@ import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { missing } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
-import { isValidateUrl, joinUrl } from '../util/url'
+import { isValidUrl, joinUrl } from '../util/url'
 import { ZipTask } from '../util/zip'
 import { InstanceService } from './InstanceService'
 import { AbstractService, Singleton } from './Service'
@@ -41,7 +41,7 @@ export class XUpdateService extends AbstractService implements IXUpdateService {
       throw new InstanceIOException({ instancePath, type: 'instanceHasNoFileApi' })
     }
 
-    const url = isValidateUrl(instance.fileApi)
+    const url = isValidUrl(instance.fileApi)
     if (!url || (url.protocol !== 'http:' && url.protocol !== 'https')) {
       throw new InstanceIOException({ instancePath, type: 'instanceInvalidFileApi', url: instance.fileApi })
     }

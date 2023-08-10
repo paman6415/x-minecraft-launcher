@@ -19,7 +19,7 @@ export function useInstanceVersionInstall(versions: Ref<LocalVersionHeader[]>) {
   const getCacheOrFetch = async <T>(key: string, fetcher: () => Promise<T>) => {
     const cached = cache.get(key)
     if (cached) {
-      return cached.data as T
+      return cached.data.data as T
     }
     const data = await fetcher()
     cache.set(key, data, 1000 * 60 * 60 * 24)

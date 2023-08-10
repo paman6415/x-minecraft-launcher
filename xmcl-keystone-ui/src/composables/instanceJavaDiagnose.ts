@@ -7,7 +7,7 @@ import { LaunchMenuItem } from './launchButton'
 
 export const kInstanceJavaDiagnose: InjectionKey<ReturnType<typeof useInstanceJavaDiagnose>> = Symbol('InstanceJavaDiagnose')
 
-export function useInstanceJavaDiagnose(all: Ref<JavaRecord[]>, javaRecommendation: Ref<JavaRecommendation | undefined>) {
+export function useInstanceJavaDiagnose(all: Ref<JavaRecord[]>, java: Ref<JavaRecord | undefined>, javaRecommendation: Ref<JavaRecommendation | undefined>) {
   const { t } = useI18n()
   const issue: Ref<LaunchMenuItem | undefined> = computed(() => {
     if (all.value.length === 0) {
@@ -22,11 +22,17 @@ export function useInstanceJavaDiagnose(all: Ref<JavaRecord[]>, javaRecommendati
         description: t('diagnosis.incompatibleJava.message'),
       }
     }
+    if (!java.value) {
+      return {
+        title: t('diagnosis.missingJava.name'),
+        description: t('diagnosis.missingJava.message'),
+      }
+    }
   })
   const { show: showJavaDialog } = useDialog(JavaIssueDialogKey)
 
   function fix() {
-    if (javaRecommendation.value || all.value.length === 0) {
+    if (issue.value) {
       showJavaDialog()
     }
   }
