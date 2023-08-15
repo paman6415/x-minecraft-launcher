@@ -35,7 +35,6 @@ import { kDropHandler, useDropHandler } from '@/composables/dropHandler'
 import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
 import { kBackground, useBackground } from '@/composables/background'
 import { kLaunchStatus, useLaunchStatus } from '@/composables/launch'
-import { useLocalStorageCacheStringValue } from '@/composables/cache'
 import { vuetify } from '@/vuetify'
 
 export default defineComponent({
@@ -53,11 +52,10 @@ export default defineComponent({
     const user = useUserContext()
     const java = useJavaContext()
     const localVersions = useLocalVersions()
-    const path = useLocalStorageCacheStringValue('selectedInstancePath', '' as string)
-    const instances = useInstances(path)
+    const instances = useInstances()
     const peerState = usePeerState()
     provide(kPeerState, peerState)
-    const instance = useInstance(path, instances.instances)
+    const instance = useInstance(instances.selectedInstance, instances.instances)
 
     const settings = useSettingsState()
     const instanceVersion = useInstanceVersion(instance.instance, localVersions.versions)

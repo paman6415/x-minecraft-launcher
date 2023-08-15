@@ -1,7 +1,7 @@
 <template>
   <div
     ref="containerRef"
-    class="flex flex-col home-page flex-1 max-h-full relative visible-scroll"
+    class="home-page visible-scroll relative flex max-h-full flex-1 flex-col"
     :style="{ overflow: 'overlay' }"
     @wheel="onScroll"
   >
@@ -49,6 +49,7 @@ import HomeJavaIssueDialog from './HomeJavaIssueDialog.vue'
 import HomeLaunchMultiInstanceDialog from './HomeLaunchMultiInstanceDialog.vue'
 import HomeLaunchStatusDialog from './HomeLaunchStatusDialog.vue'
 import HomeLogDialog from './HomeLogDialog.vue'
+import { kInstanceVersion } from '@/composables/instanceVersion'
 
 const router = useRouter()
 
@@ -63,6 +64,7 @@ const mods = useMods()
 provide(kMods, mods)
 
 const { path, isServer, instance } = injection(kInstance)
+const { resolvedVersion, versionHeader } = injection(kInstanceVersion)
 provide(kInstallList, useInstallList(path, mods.resources))
 
 const { refresh } = useInstanceServerStatus(instance)

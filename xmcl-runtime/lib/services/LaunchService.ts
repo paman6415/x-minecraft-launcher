@@ -1,5 +1,5 @@
-import { createMinecraftProcessWatcher, diagnoseJar, diagnoseLibraries, launch, LaunchOption, LaunchPrecheck, MinecraftFolder, ResolvedVersion, Version } from '@xmcl/core'
-import { LaunchService as ILaunchService, LaunchException, LaunchOptions, LaunchServiceKey } from '@xmcl/runtime-api'
+import { createMinecraftProcessWatcher, diagnoseJar, diagnoseLibraries, launch, LaunchOption, LaunchPrecheck, MinecraftFolder, ResolvedVersion, Version, generateArguments } from '@xmcl/core'
+import { AUTHORITY_DEV, LaunchService as ILaunchService, LaunchException, LaunchOptions, LaunchServiceKey } from '@xmcl/runtime-api'
 import { ChildProcess } from 'child_process'
 import { EOL } from 'os'
 import LauncherApp from '../app/LauncherApp'
@@ -13,13 +13,9 @@ import { InstallService } from './InstallService'
 import { JavaService } from './JavaService'
 import { AbstractService, ExposeServiceKey } from './Service'
 
-export interface LaunchPlugin {
-
-}
-
 @ExposeServiceKey(LaunchServiceKey)
 export class LaunchService extends AbstractService implements ILaunchService {
-  private launchedProcesses: ChildProcess[] = []
+  private processes: Record<number, ChildProcess> = {}
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstallService) private installService: InstallService,
@@ -30,29 +26,70 @@ export class LaunchService extends AbstractService implements ILaunchService {
     super(app)
   }
 
-  async generateArguments() {
-    return []
-  }
+  #generateOptions(options: LaunchOptions, version: ResolvedVersion, accessToken?: string) {
+    const user = options.user
+    const gameProfile = user.profiles[user.selectedProfile]
+    const javaPath = options.java
+    const yggdrasilAgent = options.yggdrasilAgent
 
-  async kill() {
-    if (this.launchedProcesses.length > 0) {
-      const last = this.launchedProcesses.pop()
-      last!.kill()
+    const minecraftFolder = new MinecraftFolder(options.gameDirectory)
+
+    const minMemory: number | undefined = options.maxMemory
+    const maxMemory: number | undefined = options.minMemory
+    const prechecks = [LaunchPrecheck.checkNatives, LaunchPrecheck.linkAssets]
+
+    /**
+     * Build launch condition
+     */
+    const launchOptions: LaunchOption = {
+      gameProfile,
+      accessToken,
+      properties: {},
+      gamePath: minecraftFolder.root,
+      resourcePath: this.getPath(),
+      javaPath,
+      minMemory,
+      maxMemory,
+      version,
+      extraExecOption: {
+        detached: true,
+        cwd: minecraftFolder.root,
+      },
+      extraJVMArgs: options.vmOptions?.filter(v => !!v),
+      extraMCArgs: options.mcOptions?.filter(v => !!v),
+      launcherBrand: options?.launcherBrand ?? '',
+      launcherName: options?.launcherName ?? 'XMCL',
+      yggdrasilAgent,
+      prechecks,
     }
+
+    const getAddress = () => {
+      const address = this.app.server.address()
+      if (address) {
+        if (typeof address === 'string') {
+          return `http://localhost${address.substring(address.indexOf(':'))}/yggdrasil`
+        }
+        return `http://localhost:${address.port}/yggdrasil`
+      }
+      throw (new Error(`Unexpected state. The OfflineYggdrasilServer does not initialized? Listening: ${this.app.server.listening}`))
+    }
+
+    if (options.server) {
+      const ip = options.server.host === AUTHORITY_DEV
+        ? getAddress()
+        : options.server.host
+      launchOptions.server = {
+        ip,
+        port: options.server?.port,
+      }
+    }
+    return launchOptions
   }
 
-  /**
-   * Launch the current selected instance. This will return a boolean promise indeicate whether launch is success.
-   * @returns Does this launch request success?
-   */
-  async launch(options: LaunchOptions) {
+  async generateArguments(options: LaunchOptions) {
     try {
       const user = options.user
-      const gameProfile = user.profiles[user.selectedProfile]
       const javaPath = options.java
-      const yggdrasilAgent = options.yggdrasilAgent
-
-      const minecraftFolder = new MinecraftFolder(options.gameDirectory)
 
       let version: ResolvedVersion | undefined
 
@@ -69,11 +106,52 @@ export class LaunchService extends AbstractService implements ILaunchService {
       if (!version) {
         throw new LaunchException({
           type: 'launchNoVersionInstalled',
-          override: options?.version,
-          minecraft: '',
-          // minecraft: instance.runtime.minecraft,
-          // forge: instance.runtime.forge,
-          // fabric: instance.runtime.fabricLoader,
+          options,
+        })
+      }
+
+      if (!javaPath) {
+        throw new LaunchException({ type: 'launchNoProperJava', javaPath: javaPath || '' }, 'Cannot launch without a valid java')
+      }
+
+      const accessToken = user ? await this.userTokenStorage.get(user).catch(() => undefined) : undefined
+      const _options = this.#generateOptions(options, version, accessToken)
+      const args = await generateArguments(_options)
+
+      return args
+    } catch (e) {
+      if (e instanceof LaunchException) {
+        throw e
+      }
+      throw new LaunchException({ type: 'launchGeneralException', error: { ...(e as any), message: (e as any).message, stack: (e as any).stack } })
+    }
+  }
+
+  /**
+   * Launch the current selected instance. This will return a boolean promise indeicate whether launch is success.
+   * @returns Does this launch request success?
+   */
+  async launch(options: LaunchOptions) {
+    try {
+      const user = options.user
+      const javaPath = options.java
+
+      let version: ResolvedVersion | undefined
+
+      if (options.version) {
+        this.log(`Override the version: ${options.version}`)
+        try {
+          version = await Version.parse(this.getPath(), options.version)
+        } catch (e) {
+          this.warn(`Cannot use override version: ${options.version}`)
+          this.warn(e)
+        }
+      }
+
+      if (!version) {
+        throw new LaunchException({
+          type: 'launchNoVersionInstalled',
+          options,
         })
       }
 
@@ -99,46 +177,9 @@ export class LaunchService extends AbstractService implements ILaunchService {
       if (!javaPath) {
         throw new LaunchException({ type: 'launchNoProperJava', javaPath: javaPath || '' }, 'Cannot launch without a valid java')
       }
-      const minMemory: number | undefined = options.maxMemory
-      const maxMemory: number | undefined = options.minMemory
-      const prechecks = [LaunchPrecheck.checkNatives, LaunchPrecheck.linkAssets]
+
       const accessToken = user ? await this.userTokenStorage.get(user).catch(() => undefined) : undefined
-
-      /**
-       * Build launch condition
-       */
-      const launchOptions: LaunchOption = {
-        gameProfile,
-        accessToken,
-        properties: {},
-        gamePath: minecraftFolder.root,
-        resourcePath: this.getPath(),
-        javaPath,
-        minMemory,
-        maxMemory,
-        version,
-        extraExecOption: {
-          detached: true,
-          cwd: minecraftFolder.root,
-        },
-        extraJVMArgs: options.vmOptions?.filter(v => !!v),
-        extraMCArgs: options.mcOptions?.filter(v => !!v),
-        launcherBrand: options?.launcherBrand ?? '',
-        launcherName: options?.launcherName ?? 'XMCL',
-        yggdrasilAgent,
-        prechecks,
-      }
-
-      if (options.server) {
-        this.log('Launching a server')
-        launchOptions.server = {
-          ip: options.server.host,
-          port: options.server?.port,
-        }
-      }
-
-      this.log('Launching with these option...')
-      this.log(JSON.stringify(launchOptions, (k, v) => (k === 'accessToken' ? '***' : v), 2))
+      const launchOptions = this.#generateOptions(options, version, accessToken)
 
       try {
         const result = await this.javaService.validateJavaPath(javaPath)
@@ -152,9 +193,16 @@ export class LaunchService extends AbstractService implements ILaunchService {
         throw new LaunchException({ type: 'launchNoProperJava', javaPath }, 'Cannot launch without a valid java')
       }
 
+      if (launchOptions.server) {
+        this.log('Launching a server')
+      }
+
+      this.log('Launching with these option...')
+      this.log(JSON.stringify(launchOptions, (k, v) => (k === 'accessToken' ? '***' : v), 2))
+
       // Launch
       const process = await launch(launchOptions)
-      this.launchedProcesses.push(process)
+      this.processes[process.pid!] = (process)
 
       this.emit('minecraft-start', {
         pid: process.pid,
@@ -221,18 +269,26 @@ export class LaunchService extends AbstractService implements ILaunchService {
             errorLog: errorLogs.join('\n'),
           })
         })
-        this.launchedProcesses = this.launchedProcesses.filter(p => p !== process)
+        delete this.processes[process.pid!]
       }).on('minecraft-window-ready', () => {
         this.emit('minecraft-window-ready', { pid: process.pid, ...options })
       })
       process.unref()
 
-      return true
+      return process.pid
     } catch (e) {
       if (e instanceof LaunchException) {
         throw e
       }
       throw new LaunchException({ type: 'launchGeneralException', error: { ...(e as any), message: (e as any).message, stack: (e as any).stack } })
+    }
+  }
+
+  async kill(pid: number) {
+    const process = this.processes[pid]
+    delete this.processes[pid]
+    if (process) {
+      process.kill()
     }
   }
 }

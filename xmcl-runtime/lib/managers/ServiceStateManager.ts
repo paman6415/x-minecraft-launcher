@@ -62,13 +62,6 @@ export default class ServiceStateManager extends Manager {
   }
 
   /**
-   * Get the state object by id
-   */
-  get(id: string): MutableState<any> | undefined {
-    return this.containers[id]?.state
-  }
-
-  /**
    * Serialize the state object to the client. The client will receive the state object and its mutations.
    *
    * This will add the client to state tracking list. When there is no client connected, the state tracking code will be disposed.

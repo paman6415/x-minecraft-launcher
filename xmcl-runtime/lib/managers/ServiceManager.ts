@@ -9,10 +9,10 @@ import { isStateObject } from './ServiceStateManager'
 export default class ServiceManager extends Manager {
   private logger = this.app.logManager.getLogger('ServiceManager')
 
-  private serviceConstructorMap: Record<string, ServiceConstructor> = {}
-  private servicesMap: Record<string, AbstractService> = {}
+  private registered: Record<string, ServiceConstructor> = {}
+  private instances: Record<string, AbstractService> = {}
 
-  constructor(app: LauncherApp, private services: ServiceConstructor[]) {
+  constructor(app: LauncherApp, services: ServiceConstructor[]) {
     super(app)
 
     this.app.controller.handle('service-call', (e, service: string, name: string, ...payload: any[]) => this.handleServiceCall(e.sender, service, name, ...payload))
@@ -20,36 +20,26 @@ export default class ServiceManager extends Manager {
     for (const type of services) {
       const key = getServiceKey(type)
       if (key) {
-        this.serviceConstructorMap[key] = type
+        this.registered[key] = type
       }
     }
   }
 
-  getServiceByKey<T>(type: ServiceKey<T>): T | undefined {
-    const service = this.servicesMap[type as string] as any
-    if (!service) {
-      const con = this.serviceConstructorMap[type as string]
-      if (con) {
-        return this.get(con) as any
+  private async get<T extends AbstractService>(skey: ServiceKey<T>, serviceMethod: string): Promise<T> {
+    if (!this.instances[skey as string]) {
+      const ServiceConstructor = this.registered[skey as string]
+      if (!ServiceConstructor) {
+        throw new AnyError('ServiceNotFoundError', `Cannot execute service call ${serviceMethod} from service ${skey}.`)
       }
-    }
-    return service
-  }
+      const service = await this.app.registry.getOrCreate(ServiceConstructor)
 
-  get<T extends AbstractService>(ServiceConstructor: ServiceConstructor<T>): T {
-    const service = this.app.registry.get(ServiceConstructor)
-    if (!service) {
-      throw new Error(`Fail construct service ${ServiceConstructor.name}!`)
-    }
-
-    const key = getServiceKey(ServiceConstructor)
-    if (!this.servicesMap[key]) {
-      this.servicesMap[key] = service
-      this.logger.log(`Expose service ${key} to remote`)
+      this.instances[skey as string] = service
+      this.logger.log(`Create service ${skey as string}`)
       service.initialize()
-    }
 
-    return service
+      return service as T
+    }
+    return this.instances[skey as string] as T
   }
 
   /**
@@ -64,11 +54,11 @@ export default class ServiceManager extends Manager {
    * @returns The service call result
    */
   private async handleServiceCall(client: Client, serviceName: string, serviceMethod: string, ...payload: any[]) {
-    const serv = this.servicesMap[serviceName]
-
-    if (!serv) {
-      const error = new AnyError('ServiceNotFoundError', `Cannot execute service call ${serviceMethod} from service ${serviceName}. No service exposed as ${serviceName}.`)
-      this.logger.error(error)
+    let serv: AbstractService | undefined
+    try {
+      serv = await this.get(serviceName, serviceMethod)
+    } catch (error) {
+      if (error instanceof Error) this.logger.error(error)
       return { error }
     }
 
@@ -98,20 +88,12 @@ export default class ServiceManager extends Manager {
     }
   }
 
-  async setup() {
-    this.logger.log(`Setup service ${this.app.gameDataPath}`)
-
-    for (const ServiceConstructor of [...Object.values(this.services)]) {
-      this.get(ServiceConstructor)
-    }
-  }
-
   /**
    * Dispose all services
    */
   async dispose() {
     this.logger.log('Dispose all services')
-    await Promise.all(Object.values(this.servicesMap).map((s) => s.dispose().catch((e) => {
+    await Promise.all(Object.values(this.instances).map((s) => s.dispose().catch((e) => {
       this.logger.error(new Error(`Error during dispose ${Object.getPrototypeOf(s).constructor.name}:`, { cause: e }))
     })))
     this.logger.log('All services are disposed')

@@ -3,7 +3,7 @@ import { autoUpdater } from 'electron-updater'
 
 export const pluginAutoUpdate: LauncherAppPlugin = (app) => {
   app.once('engine-ready', async () => {
-    const baseService = app.serviceManager.get(BaseService)
+    const baseService = await app.registry.get(BaseService)
     const state = await baseService.getSettings()
 
     state.subscribe('autoInstallOnAppQuitSet', (value) => {

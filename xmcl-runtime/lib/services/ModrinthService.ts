@@ -6,7 +6,6 @@ import { basename, join } from 'path'
 import { LauncherApp } from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { Inject } from '../util/objectRegistry'
-import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 
@@ -15,11 +14,9 @@ export class ModrinthService extends AbstractService implements IModrinthService
   readonly client = new ModrinthV2Client()
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(ResourceService) private resourceService: ResourceService,
   ) {
-    super(app, async () => {
-    })
+    super(app, async () => { })
   }
 
   @Singleton((o) => `${o.version.id}`)

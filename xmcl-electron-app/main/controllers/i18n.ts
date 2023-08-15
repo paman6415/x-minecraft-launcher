@@ -5,7 +5,7 @@ import { ControllerPlugin } from './plugin'
 
 export const i18n: ControllerPlugin = function (this: ElectronController) {
   this.app.once('engine-ready', async () => {
-    const baseService = this.app.serviceManager.get(BaseService)
+    const baseService = await this.app.registry.get(BaseService)
     const state = await baseService.getSettings()
     state.localesSet(Object.entries(localeMappings).map(([locale, name]) => ({ locale, name })))
     this.app.log(`Set locale for the app ${baseService.state.locales.map(l => l.name)}`)

@@ -40,10 +40,6 @@ export class Settings implements SettingSchema {
   apiSetsPreference: 'mojang' | 'mcbbs' | 'bmcl' | '' = ''
   apiSets = [{ name: 'mcbbs', url: 'https://download.mcbbs.net' }, { name: 'bmcl', url: 'https://bmclapi2.bangbang93.com' }]
   /**
-    * launcher root data folder path
-    */
-  root = ''
-  /**
    * Is current environment connecting to internet?
    */
   online = false
@@ -144,10 +140,6 @@ export class Settings implements SettingSchema {
 
   apiSetsSet(sets: { name: string; url: string }[]) {
     this.apiSets = sets
-  }
-
-  rootSet(root: string) {
-    this.root = root
   }
 
   onlineSet(online: boolean) {

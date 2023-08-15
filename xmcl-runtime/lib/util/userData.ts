@@ -1,4 +1,5 @@
-import { AUTHORITY_MICROSOFT, UserProfile, UserSchema } from '@xmcl/runtime-api'
+import { isNotNull } from '@xmcl/core/utils'
+import { AUTHORITY_DEV, AUTHORITY_MICROSOFT, AUTHORITY_MOJANG, UserProfile, UserProfileCompatible, UserSchema, normalizeUserId } from '@xmcl/runtime-api'
 import { randomUUID } from 'crypto'
 import { existsSync } from 'fs'
 import { readFile, writeFile } from 'fs/promises'
@@ -11,7 +12,7 @@ import { UserTokenStorage } from '../entities/userTokenStore'
  * @param output The output user data
  * @param input The loaded user data
  */
-export async function preprocessUserData(output: UserSchema, input: UserSchema, minecraftJsonPath: string, tokenStorage: UserTokenStorage) {
+export async function preprocessUserData(output: Omit<UserSchema, 'users'> & { users: Record<string, UserProfile> }, input: UserSchema, minecraftJsonPath: string, tokenStorage: UserTokenStorage) {
   let mojangSelectedUserId = ''
   try {
     const minecraftProfile = await readFile(minecraftJsonPath, 'utf-8').then(JSON.parse).catch(() => undefined)
@@ -34,16 +35,53 @@ export async function preprocessUserData(output: UserSchema, input: UserSchema, 
     }
   }
 
-  await Promise.all(Object.values(input.users).map(checkToken))
+  const users = Object.values(input.users).map(migrateUserProfile)
+    .filter(isNotNull)
+    .map(userProfile => {
+      userProfile.id = normalizeUserId(userProfile.id, userProfile.authority)
+      return userProfile
+    })
+
+  await Promise.all(users.map(checkToken))
+
+  output.users = users.reduce((acc, u) => {
+    acc[u.id] = u
+    return acc
+  }, {} as Record<string, UserProfile>)
 
   return { mojangSelectedUserId }
 }
+
+function migrateUserProfile(userProfile: UserProfileCompatible): UserProfile | undefined {
+  if (userProfile.authority) return userProfile as any
+  if (userProfile.authService) {
+    const output = {
+      ...userProfile,
+    }
+    delete output.authService
+    if (userProfile.authService === 'microsoft') {
+      output.authority = AUTHORITY_MICROSOFT
+    } else if (userProfile.authService === 'mojang') {
+      output.authority = AUTHORITY_MOJANG
+    } else if (userProfile.authService === 'offline') {
+      output.authority = AUTHORITY_DEV
+    } else if (userProfile.authService === 'littleskin.cn') {
+      output.authority = 'https://littleskin.cn/api/yggdrasil'
+    } else if (userProfile.authService === 'authserver.ely.by') {
+      output.authority = 'https://authserver.ely.by/api/authlib-injector'
+    } else {
+      return undefined
+    }
+    return output as any
+  }
+  return undefined
+}
+
 /**
  * Fit the user data from loaded user data and loaded launcher profile json
  */
-function fillData(output: UserSchema, input: UserSchema, launchProfile: LauncherProfile | undefined, tokenStorage: UserTokenStorage) {
-  output.clientToken = input.clientToken || launchProfile?.clientToken || randomUUID().replace(/-/g, '')
-  output.users = input.users
+function fillData(output: Omit<UserSchema, 'users'> & { users: Record<string, UserProfile> }, input: UserSchema, launchProfile: LauncherProfile | undefined, tokenStorage: UserTokenStorage) {
+  output.users = input.users as any
 
   for (const user of Object.values(output.users)) {
     if (typeof user.expiredAt === 'undefined') {
@@ -52,7 +90,7 @@ function fillData(output: UserSchema, input: UserSchema, launchProfile: Launcher
   }
 
   // Fill the user data from minecraft launcher profile
-  if (launchProfile?.clientToken === output.clientToken && launchProfile?.authenticationDatabase) {
+  if (launchProfile?.authenticationDatabase) {
     const adb = launchProfile.authenticationDatabase
     for (const userId of Object.keys(adb)) {
       const user = adb[userId]

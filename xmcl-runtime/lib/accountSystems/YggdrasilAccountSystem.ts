@@ -12,7 +12,7 @@ import { isValidUrl } from '../util/url'
 export class YggdrasilAccountSystem implements UserAccountSystem {
   constructor(private logger: Logger,
     private dispatcher: Dispatcher,
-    private userState: UserState,
+    private clientToken: string,
     private storage: UserTokenStorage,
   ) {
   }
@@ -47,7 +47,7 @@ export class YggdrasilAccountSystem implements UserAccountSystem {
         username,
         password: password ?? '',
         requestUser: true,
-        clientToken: this.userState.clientToken,
+        clientToken: this.clientToken,
       }, signal)
 
       const userProfile: UserProfile = {
@@ -94,7 +94,7 @@ export class YggdrasilAccountSystem implements UserAccountSystem {
       return userProfile
     }
 
-    const valid = await client.validate(token, this.userState.clientToken, signal)
+    const valid = await client.validate(token, this.clientToken, signal)
 
     this.logger.log(`Validate ${userProfile.authority} user access token: ${valid ? 'valid' : 'invalid'}`)
 
@@ -103,7 +103,7 @@ export class YggdrasilAccountSystem implements UserAccountSystem {
         const result = await client.refresh({
           accessToken: token,
           requestUser: true,
-          clientToken: this.userState.clientToken,
+          clientToken: this.clientToken,
         }, signal)
         this.logger.log(`Refreshed user access token for user: ${userProfile.id}`)
 

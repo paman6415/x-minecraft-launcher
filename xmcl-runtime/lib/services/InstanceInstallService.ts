@@ -175,12 +175,6 @@ export class InstanceInstallService extends AbstractService implements IInstance
       files,
     } = options
 
-    // const instance = this.instanceService.state.all[instancePath]
-
-    // if (!instance) {
-    //   throw new InstanceIOException({ instancePath, type: 'instanceNotFound' })
-    // }
-
     await this.writeInstallProfile(instancePath, files)
 
     const { writeInstallProfile } = this

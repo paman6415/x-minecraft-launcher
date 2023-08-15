@@ -69,14 +69,14 @@ function onRefresh() {
       isShown.value = false
     })
   } else if (selectedUser.value?.id || selectedUser.value.invalidated || expired.value) {
-    const authService = selectedUser.value?.authService
-    if (yggdrasilServices.value.every((e) => new URL(e.url).host !== authService) && authService !== 'microsoft' && authService !== 'offline') {
+    const authority = selectedUser.value?.authority
+    if (yggdrasilServices.value.every((e) => new URL(e.url).host !== authority) && authority !== 'microsoft' && authority !== 'offline') {
       
     } else {
       refreshing.value = true
       refreshUser(selectedUser.value.id).catch((e) => {
         console.error(e)
-        showLoginDialog({ username: selectedUser.value?.username, service: authService, error: t('login.userRelogin') })
+        showLoginDialog({ username: selectedUser.value?.username, service: authority, error: t('login.userRelogin') })
         nextTick().then(() => {
           isShown.value = false
         })
@@ -88,7 +88,7 @@ function onRefresh() {
 }
 async function onRemoveUser() {
   const isLastOne = users.value.length <= 0
-  await removeUser(selectedUser.value.id)
+  await removeUser(selectedUser.value)
   if (isLastOne) {
     showLoginDialog()
   }

@@ -2,6 +2,8 @@ import { kSemaphores, useExternalRoute, useI18nSync, useSemaphores, useThemeSync
 import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
 import { kExceptionHandlers, useExceptionHandlers } from '@/composables/exception'
 import { kImageDialog, useImageDialog } from '@/composables/imageDialog'
+import { kInstance, useInstance } from '@/composables/instance'
+import { kInstances, useInstances } from '@/composables/instances'
 import { kNotificationQueue, useNotificationQueue } from '@/composables/notifier'
 import { kServerStatusCache, useServerStatusCache } from '@/composables/serverStatus'
 import { kSettingsState, useSettingsState } from '@/composables/setting'
@@ -33,6 +35,9 @@ export default defineComponent({
     useExternalRoute(router)
 
     provide(kLocalVersions, useLocalVersions())
+    const instances = useInstances()
+    provide(kInstances, instances)
+    provide(kInstance, useInstance(instances.selectedInstance, instances.instances))
 
     provide(kUILayout, useUILayout())
     provide(kImageDialog, useImageDialog())

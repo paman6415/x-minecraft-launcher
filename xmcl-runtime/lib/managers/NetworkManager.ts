@@ -18,11 +18,7 @@ import ServiceStateManager from './ServiceStateManager'
 type DispatchOptions = Dispatcher.DispatchOptions
 
 export default class NetworkManager extends Manager {
-  private inGFW = false
-
   private headers: Record<string, string> = {}
-
-  private logger = this.app.logManager.getLogger('NetworkManager')
 
   private apiDispatcher: Dispatcher
   private downloadAgent: DownloadAgent
@@ -35,7 +31,7 @@ export default class NetworkManager extends Manager {
 
   private cache: ClassicLevel
 
-  constructor(app: LauncherApp, serviceManager: ServiceManager, stateManager: ServiceStateManager) {
+  constructor(app: LauncherApp) {
     super(app)
     const cachePath = join(app.appDataPath, 'undici-cache')
     const cache = new ClassicLevel(cachePath, {
@@ -51,7 +47,7 @@ export default class NetworkManager extends Manager {
 
     let maxConnection = 16
 
-    serviceManager.get(BaseService).getSettings().then((state) => {
+    app.registry.get(BaseService).then((service) => service.getSettings()).then((state) => {
       maxConnection = state.maxSockets > 0 ? state.maxSockets : Number.POSITIVE_INFINITY
       proxy.setProxyEnabled(state.httpProxyEnabled)
       if (state.httpProxy) {
@@ -199,43 +195,7 @@ export default class NetworkManager extends Manager {
     return this.cache.close()
   }
 
-  /**
-   * Update the status of GFW
-   */
-  async updateGFW() {
-    const taobao = new Client('https://npm.taobao.org')
-    const google = new Client('https://www.google.com')
-    this.inGFW = await Promise.race([
-      taobao.request({
-        method: 'HEAD',
-        path: '/',
-        connectTimeout: 5000,
-        headersTimeout: 5000,
-      }).then(() => true, () => false),
-      google.request({
-        method: 'HEAD',
-        path: '/',
-        connectTimeout: 5000,
-        headersTimeout: 5000,
-      }).then(() => false, () => true),
-    ])
-    this.gfwReady.resolve()
-    this.logger.log(this.inGFW ? 'Detected current in China mainland.' : 'Detected current NOT in China mainland.')
-    taobao.close()
-    google.close()
-  }
-
-  readonly gfwReady = createPromiseSignal()
-
-  /**
-   * Return if current environment is in GFW.
-   */
-  get isInGFW() {
-    return this.inGFW
-  }
-
   // setup code
   setup() {
-    this.updateGFW()
   }
 }

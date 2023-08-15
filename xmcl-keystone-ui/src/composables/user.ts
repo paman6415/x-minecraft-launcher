@@ -45,8 +45,16 @@ export function useUserContext() {
     }
 
     override userProfile(user: UserProfile) {
-      super.userProfile(user)
-      set(this.users, user.id, user)
+      if (this.users[user.id]) {
+        const current = this.users[user.id]
+        current.avatar = user.avatar
+        current.expiredAt = user.expiredAt
+        current.profiles = user.profiles
+        current.username = user.username
+        current.selectedProfile = user.selectedProfile
+      } else {
+        set(this.users, user.id, user)
+      }
     }
   })
   const selectedUserId = useLocalStorageCacheStringValue('selectedUserId', '' as string)
@@ -85,19 +93,9 @@ export function useLoginValidation(isOffline: Ref<boolean>) {
   const usernameRules = computed(() => (isOffline.value
     ? nameRules
     : emailRules))
-  const data = reactive({
-    usernameErrors: [] as string[],
-    passwordErrors: [] as string[],
-  })
-  function reset() {
-    data.usernameErrors = []
-    data.passwordErrors = []
-  }
   return {
-    ...toRefs(data),
     usernameRules,
     passwordRules,
-    reset,
   }
 }
 

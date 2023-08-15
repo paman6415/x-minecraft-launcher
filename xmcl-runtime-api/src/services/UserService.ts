@@ -85,17 +85,9 @@ export class UserState {
    * The user id to user profile mapping
    */
   users: Record<string, UserProfile> = {}
-  /**
-   * All user registered yggdrasil api
-   */
-  yggdrasilServices: YggdrasilApi[] = []
 
-  clientToken = ''
-
-  userData(data: UserSchema) {
-    this.clientToken = data.clientToken
+  userData(data: { users: Record<string, UserProfile> }) {
     this.users = data.users
-    this.yggdrasilServices = data.yggdrasilServices
   }
 
   gameProfileUpdate({ profile, userId }: { userId: string; profile: (GameProfileAndTexture | GameProfile) }) {
@@ -127,29 +119,7 @@ export class UserState {
       this.users[user.id] = user
     }
   }
-
-  userGameProfileSelect({ userId, profileId }: { userId: string; profileId: string }) {
-    const user = this.users[userId]
-    if (user) {
-      user.selectedProfile = profileId
-    }
-  }
-
-  userYggdrasilServices(apis: YggdrasilApi[]) {
-    this.yggdrasilServices = apis
-  }
-
-  userYggdrasilServicePut(api: YggdrasilApi) {
-    const index = this.yggdrasilServices.findIndex((it) => it.url === api.url)
-    if (index >= 0) {
-      this.yggdrasilServices[index] = api
-    } else {
-      this.yggdrasilServices.push(api)
-    }
-  }
 }
-
-export const BUILTIN_USER_SERVICES = ['microsoft', 'mojang', 'offline']
 
 export interface UserService extends GenericEventEmitter<UserServiceEventMap> {
   getUserState(): Promise<MutableState<UserState>>
@@ -180,21 +150,15 @@ export interface UserService extends GenericEventEmitter<UserServiceEventMap> {
   /**
    * Remove the user profile. This will logout to the user
    */
-  removeUser(userId: string): Promise<void>
+  removeUser(userProfile: UserProfile): Promise<void>
   /**
-   * Put/Update a user profile into storage
+   * Select game profile of a user.
    */
-  putUser(userProfile: UserProfile): Promise<void>
+  selectUserGameProfile(userProfile: UserProfile, gameProfileId: string): Promise<void>
   /**
-   * Add a third-party account system satisfy the authlib-injector format
-   * @param url The account api url
+   * Remove the game profile of a user. This only supported for offline user currently.
    */
-  addYggdrasilService(url: string): Promise<void>
-  /**
-   * Remove a third-party account system satisfy the authlib-injector format
-   * @param url The account api url
-   */
-  removeYggdrasilService(url: string): Promise<void>
+  removeUserGameProfile(userProfile: UserProfile, gameProfileId: string): Promise<void>
   /**
    * Login new user account.
    */

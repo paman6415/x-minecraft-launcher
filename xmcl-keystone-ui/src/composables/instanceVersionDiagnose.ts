@@ -1,13 +1,13 @@
-import type { ResolvedVersion } from '@xmcl/core'
 import { InstallServiceKey, InstanceVersionServiceKey, LocalVersionHeader, RuntimeVersions, getExpectVersion } from '@xmcl/runtime-api'
-import { Ref, InjectionKey } from 'vue'
+import { InjectionKey, Ref } from 'vue'
+import { InstanceResolveVersion } from './instanceVersion'
 import { useInstanceVersionInstall } from './instanceVersionInstall'
-import { useService } from './service'
 import { LaunchMenuItem } from './launchButton'
+import { useService } from './service'
 
 export const kInstanceVersionDiagnose: InjectionKey<ReturnType<typeof useInstanceVersionDiagnose>> = Symbol('InstanceVersionDiagnose')
 
-export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolvedVersion: Ref<ResolvedVersion | undefined>, versions: Ref<LocalVersionHeader[]>) {
+export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolvedVersion: Ref<InstanceResolveVersion | undefined>, versions: Ref<LocalVersionHeader[]>) {
   const { diagnoseAssetIndex, diagnoseAssets, diagnoseJar, diagnoseLibraries, diagnoseProfile } = useService(InstanceVersionServiceKey)
   const issueItems = ref([] as LaunchMenuItem[])
   let operation = undefined as undefined | (() => Promise<void>)
@@ -18,22 +18,25 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
 
   const loading = ref(false)
 
-  async function update(version: ResolvedVersion | undefined) {
+  async function update(version: InstanceResolveVersion | undefined) {
+    if (!version) return
     abortController.abort()
     abortController = new AbortController()
+    console.log('update')
 
     const abortSignal = abortController.signal
 
     loading.value = true
-    if (!version) {
+    if ('requirements' in version) {
+      const runtime = version.requirements
       operation = async () => {
-        const version = await install(runtime.value)
+        const version = await install(runtime)
         if (version) {
           await installDependencies(version)
         }
       }
       issueItems.value = [{
-        title: t('diagnosis.missingVersion.name', { version: getExpectVersion(runtime.value) }),
+        title: t('diagnosis.missingVersion.name', { version: getExpectVersion(runtime) }),
         description: t('diagnosis.missingVersion.message'),
       }]
       loading.value = false
@@ -157,9 +160,6 @@ export function useInstanceVersionDiagnose(runtime: Ref<RuntimeVersions>, resolv
   }
 
   watch(resolvedVersion, update)
-  watch(runtime, () => {
-    update(resolvedVersion.value)
-  })
   onMounted(() => {
     update(resolvedVersion.value)
   })

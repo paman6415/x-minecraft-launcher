@@ -1,7 +1,8 @@
-import { EMPTY_VERSION, Instance, LocalVersionHeader, VersionServiceKey, getResolvedVersion } from '@xmcl/runtime-api'
+import { EMPTY_VERSION, Instance, LocalVersionHeader, RuntimeVersions, VersionServiceKey, getResolvedVersion } from '@xmcl/runtime-api'
 import useSWRV from 'swrv'
 import { Ref, InjectionKey } from 'vue'
 import { useService } from './service'
+import type { ResolvedVersion } from '@xmcl/core'
 
 function useInstanceVersionBase(instance: Ref<Instance>) {
   const minecraft = computed(() => instance.value.runtime.minecraft)
@@ -17,6 +18,16 @@ function useInstanceVersionBase(instance: Ref<Instance>) {
 }
 export const kInstanceVersion: InjectionKey<ReturnType<typeof useInstanceVersion>> = Symbol('InstanceVersion')
 
+export interface UnresolvedVersion {
+  requirements: RuntimeVersions
+}
+
+export type InstanceResolveVersion = UnresolvedVersion | ResolvedVersion
+
+export function isResolvedVersion(v?: InstanceResolveVersion): v is ResolvedVersion {
+  return !!v && 'id' in v
+}
+
 export function useInstanceVersion(instance: Ref<Instance>, local: Ref<LocalVersionHeader[]>) {
   const { resolveLocalVersion } = useService(VersionServiceKey)
   const versionHeader = computed(() => getResolvedVersion(local.value,
@@ -30,12 +41,13 @@ export function useInstanceVersion(instance: Ref<Instance>, local: Ref<LocalVers
 
   const { isValidating, mutate, data: resolvedVersion, error } = useSWRV(() => instance.value.path && `/instance/${instance.value.path}/version`, async () => {
     if (versionHeader.value === EMPTY_VERSION || !versionHeader.value.id) {
-      return undefined
+      return { requirements: instance.value.runtime }
     }
-    return await resolveLocalVersion(versionHeader.value.id)
+    const resolvedVersion = await resolveLocalVersion(versionHeader.value.id)
+    return resolvedVersion
   })
 
-  watch([versionHeader], () => {
+  watch(versionHeader, () => {
     mutate()
   })
 

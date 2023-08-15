@@ -83,7 +83,7 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
   }
 
   this.app.once('engine-ready', async () => {
-    const service = this.app.serviceManager.get(BaseService)
+    const service = await this.app.registry.get(BaseService)
     const state = await service.getSettings()
     const tray = new Tray(getTrayImage(darkTray, lightTray))
     if (this.app.platform.os === 'windows') {

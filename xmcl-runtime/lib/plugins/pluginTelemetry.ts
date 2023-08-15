@@ -1,112 +1,14 @@
-import { randomUUID } from 'crypto'
-import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
-import { LauncherAppPlugin } from '../app/LauncherApp'
-import { IS_DEV } from '../constant'
-import { kTelemtrySession, APP_INSIGHT_KEY } from '../entities/telemetry'
-import { LaunchService } from '../services/LaunchService'
-import { UserService } from '../services/UserService'
-import { BaseService } from '../services/BaseService'
-import { ResourceService } from '../services/ResourceService'
 import { Resource } from '@xmcl/runtime-api'
 import { Contracts } from 'applicationinsights'
-
-class _StackFrame {
-  // regex to match stack frames from ie/chrome/ff
-  // methodName=$2, fileName=$4, lineNo=$5, column=$6
-  public static regex = /^(\s+at)?(.*?)(@|\s\(|\s)([^(\n]+):(\d+):(\d+)(\)?)$/
-  public static baseSize = 58 // '{"method":"","level":,"assembly":"","fileName":"","line":}'.length
-  public sizeInBytes = 0
-  public level: number
-  public method: string
-  public assembly: string
-  public fileName = ''
-  public line = 0
-
-  constructor(frame: string, level: number) {
-    this.level = level
-    this.method = '<no_method>'
-    this.assembly = frame.trim()
-    const matches = frame.match(_StackFrame.regex)
-    if (matches && matches.length >= 5) {
-      this.method = (matches[2])?.trim() || this.method
-      this.fileName = (matches[4])?.trim() || '<no_filename>'
-      this.line = parseInt(matches[5]) || 0
-    }
-
-    this.sizeInBytes += this.method.length
-    this.sizeInBytes += this.fileName.length
-    this.sizeInBytes += this.assembly.length
-
-    // todo: these might need to be removed depending on how the back-end settles on their size calculation
-    this.sizeInBytes += _StackFrame.baseSize
-    this.sizeInBytes += this.level.toString().length
-    this.sizeInBytes += this.line.toString().length
-  }
-}
-
-const parseStack = (stack: any) => {
-  let parsedStack: _StackFrame[] | undefined
-  if (typeof stack === 'string') {
-    const frames = stack.split('\n')
-    parsedStack = []
-    let level = 0
-
-    let totalSizeInBytes = 0
-    for (let i = 0; i <= frames.length; i++) {
-      const frame = frames[i]
-      if (_StackFrame.regex.test(frame)) {
-        const parsedFrame = new _StackFrame(frames[i], level++)
-        totalSizeInBytes += parsedFrame.sizeInBytes
-        parsedStack.push(parsedFrame)
-      }
-    }
-
-    // DP Constraint - exception parsed stack must be < 32KB
-    // remove frames from the middle to meet the threshold
-    const exceptionParsedStackThreshold = 32 * 1024
-    if (totalSizeInBytes > exceptionParsedStackThreshold) {
-      let left = 0
-      let right = parsedStack.length - 1
-      let size = 0
-      let acceptedLeft = left
-      let acceptedRight = right
-
-      while (left < right) {
-        // check size
-        const lSize = parsedStack[left].sizeInBytes
-        const rSize = parsedStack[right].sizeInBytes
-        size += lSize + rSize
-
-        if (size > exceptionParsedStackThreshold) {
-          // remove extra frames from the middle
-          const howMany = acceptedRight - acceptedLeft + 1
-          parsedStack.splice(acceptedLeft, howMany)
-          break
-        }
-
-        // update pointers
-        acceptedLeft = left
-        acceptedRight = right
-
-        left++
-        right--
-      }
-    }
-  }
-
-  return parsedStack
-}
-
-function decorateError(e: Error) {
-  if (e.name === 'Error') {
-    if (e.message.startsWith('ECANCELED:')) {
-      e.name = 'FSWatchError'
-    } else if (e.message.startsWith('EPERM:')) {
-      e.name = 'FSPermError'
-    }
-  }
-}
+import { randomUUID } from 'crypto'
+import { LauncherAppPlugin } from '../app/LauncherApp'
+import { IS_DEV } from '../constant'
+import { kClientToken } from '../entities/clientToken'
+import { APP_INSIGHT_KEY, parseStack } from '../entities/telemetry'
+import { BaseService } from '../services/BaseService'
+import { LaunchService } from '../services/LaunchService'
+import { ResourceService } from '../services/ResourceService'
+import { UserService } from '../services/UserService'
 
 export const pluginTelemetry: LauncherAppPlugin = async (app) => {
   if (IS_DEV) {
@@ -115,19 +17,9 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
   const appInsight = await import('applicationinsights')
   const contract = new appInsight.Contracts.ContextTagKeys()
 
-  const clientSessionFile = join(app.appDataPath, 'client_session')
-  let clientSession = ''
-  try {
-    const session = await readFile(clientSessionFile).then(b => b.toString())
-    clientSession = session
-  } catch {
-    clientSession = randomUUID()
-    await writeFile(clientSessionFile, clientSession)
-  }
-
   const sessionId = randomUUID()
 
-  app.registry.register(kTelemtrySession, clientSession)
+  const clientSession = await app.registry.get(kClientToken)
 
   appInsight.setup(APP_INSIGHT_KEY)
     .setDistributedTracingMode(appInsight.DistributedTracingModes.AI_AND_W3C)
@@ -144,8 +36,8 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
   tags[contract.applicationVersion] = IS_DEV ? '0.0.0' : `${app.version}#${app.build}`
   tags[contract.operationParentId] = 'root'
 
-  app.on('engine-ready', () => {
-    const baseService = app.serviceManager.get(BaseService)
+  app.on('engine-ready', async () => {
+    const baseService = await app.registry.get(BaseService)
     process.on('uncaughtException', (e) => {
       if (baseService.state.disableTelemetry) return
       if (appInsight.defaultClient) {
@@ -164,8 +56,8 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
         })
       }
     })
-    app.serviceManager.get(LaunchService)
-      .on('minecraft-start', (options) => {
+    app.registry.get(LaunchService).then(service => {
+      service.on('minecraft-start', (options) => {
         if (baseService.state.disableTelemetry) return
         appInsight.defaultClient.trackEvent({
           name: 'minecraft-start',
@@ -191,6 +83,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
           })
         }
       })
+    })
 
     const createExceptionDetails = (msg?: string, name?: string, stack?: string) => {
       const d = new Contracts.ExceptionDetails()
@@ -232,37 +125,41 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
       })
     })
 
-    app.serviceManager.get(ResourceService).on('resourceAdd', (res: Resource) => {
-      if (baseService.state.disableTelemetry) return
-      appInsight.defaultClient.trackEvent({
-        name: 'resource-metadata',
-        properties: {
-          fileName: res.fileName,
-          domain: res.domain,
-          sha1: res.hash,
-          metadata: res.metadata,
-        },
-      })
-    }).on('resourceUpdate', (res: Resource) => {
-      if (baseService.state.disableTelemetry) return
-      appInsight.defaultClient.trackEvent({
-        name: 'resource-metadata',
-        properties: {
-          fileName: res.fileName,
-          domain: res.domain,
-          sha1: res.hash,
-          metadata: res.metadata,
-        },
+    app.registry.get(ResourceService).then((resourceService) => {
+      resourceService.on('resourceAdd', (res: Resource) => {
+        if (baseService.state.disableTelemetry) return
+        appInsight.defaultClient.trackEvent({
+          name: 'resource-metadata',
+          properties: {
+            fileName: res.fileName,
+            domain: res.domain,
+            sha1: res.hash,
+            metadata: res.metadata,
+          },
+        })
+      }).on('resourceUpdate', (res: Resource) => {
+        if (baseService.state.disableTelemetry) return
+        appInsight.defaultClient.trackEvent({
+          name: 'resource-metadata',
+          properties: {
+            fileName: res.fileName,
+            domain: res.domain,
+            sha1: res.hash,
+            metadata: res.metadata,
+          },
+        })
       })
     })
 
-    app.serviceManager.get(UserService).on('user-login', (authority) => {
-      if (baseService.state.disableTelemetry) return
-      appInsight.defaultClient.trackEvent({
-        name: 'user-login',
-        properties: {
-          authService: authority,
-        },
+    app.registry.get(UserService).then(service => {
+      service.on('user-login', (authority) => {
+        if (baseService.state.disableTelemetry) return
+        appInsight.defaultClient.trackEvent({
+          name: 'user-login',
+          properties: {
+            authService: authority,
+          },
+        })
       })
     })
   })

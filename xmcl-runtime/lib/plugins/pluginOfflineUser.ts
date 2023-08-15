@@ -3,25 +3,15 @@ import { LauncherAppPlugin } from '../app/LauncherApp'
 import { UserService } from '../services/UserService'
 import { AUTHORITY_DEV, UserProfile } from '@xmcl/runtime-api'
 import { kUserTokenStorage } from '../entities/userTokenStore'
+import { ImageStorage } from '../util/imageStore'
 
 export const pluginOffineUser: LauncherAppPlugin = (app) => {
   const OFFLINE_USER_ID = 'OFFLINE'
   app.on('engine-ready', async () => {
-    const userService = app.serviceManager.get(UserService)
-    await userService.initialize()
-    const userTokenStorage = app.registry.get(kUserTokenStorage)!
-    userService.registerAccountSystem('offline', {
-      getYggdrasilAuthHost: () => {
-        const address = app.server.address()
-        if (address) {
-          if (typeof address === 'string') {
-            return `http://localhost${address.substring(address.indexOf(':'))}/yggdrasil`
-          }
-          return `http://localhost:${address.port}/yggdrasil`
-        }
-        userService.error(new Error(`Unexpected state. The OfflineYggdrasilServer does not initialized? Listening: ${app.server.listening}`))
-        return ''
-      },
+    const userService = await app.registry.get(UserService)
+    const userTokenStorage = await app.registry.get(kUserTokenStorage)
+    const imageStore = await app.registry.get(ImageStorage)
+    userService.registerAccountSystem(AUTHORITY_DEV, {
       async login({ username, properties }) {
         const auth = offline(username, properties?.uuid)
         const existed = userService.state.users[OFFLINE_USER_ID]

@@ -3,6 +3,7 @@ import { Instance, Java, JavaRecord, JavaServiceKey, parseVersion } from '@xmcl/
 import useSWRV from 'swrv'
 import { InjectionKey, Ref } from 'vue'
 import { useService } from './service'
+import { InstanceResolveVersion, UnresolvedVersion } from './instanceVersion'
 
 export enum JavaCompatibleState {
   Matched,
@@ -25,10 +26,10 @@ export interface JavaRecommendation {
 
 export const kInstanceJava: InjectionKey<ReturnType<typeof useInstanceJava>> = Symbol('InstanceJava')
 
-export function useInstanceJava(instance: Ref<Instance>, version: Ref<ResolvedVersion | undefined>, all: Ref<JavaRecord[]>) {
+export function useInstanceJava(instance: Ref<Instance>, version: Ref<InstanceResolveVersion | undefined>, all: Ref<JavaRecord[]>) {
   const { resolveJava } = useService(JavaServiceKey)
 
-  const { data, mutate, isValidating, error } = useSWRV(() => instance.value.path && `/instance/${instance.value.path}/java-version?version=${version.value?.id}`, async () => {
+  const { data, mutate, isValidating, error } = useSWRV(() => instance.value.path && `/instance/${instance.value.path}/java-version?version=${version.value && 'id' in version.value ? version.value.id : undefined}`, async () => {
     return await computeJava(all.value, resolveJava, instance.value, version.value)
   })
 
@@ -80,10 +81,11 @@ function getSortedJava(allJava: JavaRecord[], { match, okay }: VersionPreference
   return [bad[0], JavaCompatibleState.VeryLikelyIncompatible] as const
 }
 
-async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Promise<Java | undefined>, instance: Instance, selectedVersion?: ResolvedVersion) {
+async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Promise<Java | undefined>, instance: Instance, selectedVersion?: InstanceResolveVersion) {
   const { minecraft, forge } = instance.runtime
   const javaPath = instance.java
-  let javaVersion = selectedVersion?.javaVersion
+  let javaVersion = selectedVersion && 'javaVersion' in selectedVersion ? selectedVersion?.javaVersion : undefined
+  const versionId = selectedVersion && 'id' in selectedVersion ? selectedVersion.id : undefined
   const resolvedMcVersion = parseVersion(minecraft)
   const minecraftMinor = resolvedMcVersion.minorVersion!
 
@@ -165,7 +167,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
         reason: 'missing',
         recommendedDownload: javaVersion,
         requirement: versionPref.requirement,
-        version: selectedVersion?.id || '',
+        version: versionId || '',
         minecraft,
         forge: forge ?? '',
       } as JavaRecommendation,
@@ -192,7 +194,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
           recommendedVersion: computedJava,
           recommendedLevel: resultQuality,
           requirement: versionPref.requirement,
-          version: selectedVersion?.id || '',
+          version: versionId || '',
           minecraft,
           forge: forge ?? '',
         } as JavaRecommendation,
@@ -225,7 +227,7 @@ async function computeJava(all: JavaRecord[], resolveJava: (path: string) => Pro
         recommendedDownload: javaVersion,
         recommendedVersion: computedJava,
         recommendedLevel: computedQuality,
-        version: selectedVersion?.id || '',
+        version: versionId || '',
         minecraft,
         forge: instance.runtime.forge || '',
         requirement: versionPref.requirement,

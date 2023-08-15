@@ -1,3 +1,3 @@
-export const AUTHORITY_MICROSOFT = 'microsoft://'
-export const AUTHORITY_MOJANG = 'mojang://'
-export const AUTHORITY_DEV = 'dev://'
+export const AUTHORITY_MICROSOFT = 'x://microsoft'
+export const AUTHORITY_MOJANG = 'x://mojang'
+export const AUTHORITY_DEV = 'x://dev'

@@ -104,8 +104,6 @@ export function useCurseforgeInstanceUpdate(props: {
 
   const { refresh: refreshCurrentResource, refreshing } = useRefreshable(async () => {
     const [resource] = await getResourcesByUris([getCurseforgeFileUri({ modId: props.upstream.modId, id: props.upstream.fileId })])
-    console.log(resource)
-    console.log(props.upstream)
     currentFileResource.value = resource
   })
 

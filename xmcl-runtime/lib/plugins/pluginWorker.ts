@@ -87,7 +87,7 @@ export const pluginWorker: LauncherAppPlugin = async (app) => {
   const encodingWorker: EncodingWorker = createLazyWorker(createEncodingWorker)
   app.registry.register(kEncodingWorker, encodingWorker)
 
-  app.waitEngineReady().then(async () => {
+  app.waitEngineReady().then(() => {
     checkUpdate(resourceWorkerPath)
     checkUpdate(encodingWorkerPath)
   })

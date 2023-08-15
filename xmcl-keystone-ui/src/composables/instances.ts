@@ -4,13 +4,15 @@ import { useService } from './service'
 import { useState } from './syncableState'
 import { DeepPartial } from '@xmcl/runtime-api/src/util/object'
 import { useSortedInstance } from './instanceSort'
+import { useLocalStorageCacheStringValue } from './cache'
 
 export const kInstances: InjectionKey<ReturnType<typeof useInstances>> = Symbol('Instances')
 
 /**
  * Hook of a view of all instances & some deletion/selection functions
  */
-export function useInstances(path: Ref<string>) {
+export function useInstances() {
+  const path = useLocalStorageCacheStringValue('selectedInstancePath', '' as string)
   const { createInstance, getSharedInstancesState, editInstance, deleteInstance } = useService(InstanceServiceKey)
   const { state, isValidating, error } = useState(getSharedInstancesState, class extends InstanceState {
     override instanceEdit(settings: DeepPartial<InstanceSchema> & { path: string }) {
@@ -64,6 +66,7 @@ export function useInstances(path: Ref<string>) {
     }
   })
   return {
+    selectedInstance: path,
     instances,
     setToPrevious,
     isValidating,

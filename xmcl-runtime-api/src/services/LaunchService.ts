@@ -108,24 +108,19 @@ export interface LaunchService extends GenericEventEmitter<LaunchServiceEventMap
   generateArguments(options: LaunchOptions): Promise<string[]>
   /**
    * Launch the current selected instance. This will return a boolean promise indicate whether launch is success.
-   * @returns Does this launch request success?
+   * @returns The process id. If the launch is failed, this will return undefined.
    */
-  launch(options: LaunchOptions): Promise<boolean>
+  launch(options: LaunchOptions): Promise<number | undefined>
+  /**
+   * Kill the Minecraft process
+   * @param pid The process id
+   */
+  kill(pid: number): Promise<void>
 }
 
 export type LaunchExceptions = {
   type: 'launchNoVersionInstalled'
-  /**
-   * The override version in options
-   */
-  override?: string
-  /**
-   * The version in instance
-   */
-  version?: string
-  minecraft: string
-  forge?: string
-  fabric?: string
+  options?: LaunchOptions
 } | {
   /**
    * Unknown error

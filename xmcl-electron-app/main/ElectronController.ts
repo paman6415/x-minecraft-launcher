@@ -5,7 +5,7 @@ import monitorPreload from '@preload/monitor'
 import browserWinUrl from '@renderer/browser.html'
 import loggerWinUrl from '@renderer/logger.html'
 import { BaseService, LauncherAppController, UserService } from '@xmcl/runtime'
-import { InstalledAppManifest } from '@xmcl/runtime-api'
+import { InstalledAppManifest, Settings } from '@xmcl/runtime-api'
 import { Logger } from '@xmcl/runtime/lib/util/log'
 import { BrowserWindow, DidCreateWindowDetails, Event, HandlerDetails, ProtocolRequest, ProtocolResponse, Session, Tray, WebContents, dialog, ipcMain, nativeTheme, protocol, session, shell } from 'electron'
 import { readFile } from 'fs/promises'
@@ -21,6 +21,7 @@ import { darkIcon } from './utils/icons'
 import { trackWindowSize } from './utils/windowSizeTracker'
 import { PromiseSignal, createPromiseSignal } from '@xmcl/runtime/lib/util/promiseSignal'
 import { Client } from '@xmcl/runtime/lib/engineBridge'
+import { kSettings } from '@xmcl/runtime/lib/entities/settings'
 
 export class ElectronController implements LauncherAppController {
   protected windowsVersion?: { major: number; minor: number; build: number }
@@ -45,6 +46,8 @@ export class ElectronController implements LauncherAppController {
   protected activatedManifest: InstalledAppManifest | undefined
 
   protected sharedSession: Session | undefined
+
+  private settings: Settings | undefined
 
   private windowOpenHandler: Parameters<WebContents['setWindowOpenHandler']>[0] = (detail: HandlerDetails) => {
     if (detail.frameName === 'browser' || detail.disposition === 'background-tab') {
@@ -106,9 +109,6 @@ export class ElectronController implements LauncherAppController {
       shell.openExternal(url)
     }
   }
-
-  private baseServiceSignal: PromiseSignal<void> | undefined
-  private isFirstLaunch = false
 
   constructor(protected app: ElectronLauncherApp) {
     plugins.forEach(p => p.call(this))
@@ -236,21 +236,23 @@ export class ElectronController implements LauncherAppController {
       cb({ responseHeaders: detail.responseHeaders })
     })
 
-    let userService: UserService | undefined
     restoredSession.webRequest.onBeforeSendHeaders((detail, cb) => {
-      if (!userService) userService = this.app.serviceManager.get(UserService)
       if (detail.requestHeaders) {
         detail.requestHeaders['User-Agent'] = this.app.networkManager.getUserAgent()
       }
       if (detail.url.startsWith('https://api.xmcl.app/modrinth') ||
         detail.url.startsWith('https://api.xmcl.app/curseforge')
       ) {
-        userService.getOfficialUserProfile().then(profile => {
-          if (profile && profile.accessToken) {
-            detail.requestHeaders.Authorization = `Bearer ${profile.accessToken}`
-          }
-          cb({ requestHeaders: detail.requestHeaders })
-        }).catch(() => {
+        this.app.registry.get(UserService).then(userService => {
+          userService.getOfficialUserProfile().then(profile => {
+            if (profile && profile.accessToken) {
+              detail.requestHeaders.Authorization = `Bearer ${profile.accessToken}`
+            }
+            cb({ requestHeaders: detail.requestHeaders })
+          }).catch(() => {
+            cb({ requestHeaders: detail.requestHeaders })
+          })
+        }).catch(e => {
           cb({ requestHeaders: detail.requestHeaders })
         })
       } else if (detail.url.startsWith('https://api.curseforge.com')) {
@@ -370,12 +372,9 @@ export class ElectronController implements LauncherAppController {
     const minWidth = man.minWidth ?? 800
     const minHeight = man.minHeight ?? 600
 
-    if (this.app.platform.os === 'linux') {
-      if (!this.isFirstLaunch) {
-        this.baseServiceSignal = createPromiseSignal()
-        this.baseServiceSignal.accept(this.app.serviceManager.get(BaseService).initialize())
-        await this.baseServiceSignal.promise.catch(() => { /* ignore */ })
-      }
+    // Ensure the settings is loaded
+    if (this.app.platform.os === 'linux' && !this.settings) {
+      this.settings = await this.app.registry.get(kSettings)
     }
 
     const browser = new BrowserWindow({
@@ -422,7 +421,7 @@ export class ElectronController implements LauncherAppController {
     trackWindowSize(browser, config, configPath)
 
     let url = man.url
-    if (await this.app.gamePathMissingSignal.promise) {
+    if (await this.app.isGameDataPathMissing()) {
       url += '?setup'
     }
     browser.loadURL(url)
@@ -482,10 +481,6 @@ export class ElectronController implements LauncherAppController {
   }
 
   async processFirstLaunch(): Promise<{ path: string; instancePath: string; locale: string }> {
-    this.isFirstLaunch = true
-    if (this.baseServiceSignal) {
-      this.baseServiceSignal.reject(new Error('Abort base service init waiting since this is first laucnh'))
-    }
     return new Promise<{ path: string; instancePath: string; locale: string }>((resolve) => {
       ipcMain.handleOnce('bootstrap', (_, path, instancePath, locale) => {
         resolve({ path, instancePath, locale })
@@ -495,7 +490,7 @@ export class ElectronController implements LauncherAppController {
 
   private getFrameOption() {
     if (this.app.platform.os === 'linux') {
-      return this.app.serviceManager.get(BaseService).state.linuxTitlebar
+      return this.settings?.linuxTitlebar
     } else {
       return true
     }
@@ -503,7 +498,7 @@ export class ElectronController implements LauncherAppController {
 
   private getTitlebarStyle() {
     return this.app.platform.os === 'linux' &&
-      this.app.serviceManager.get(BaseService).state.linuxTitlebar
+      this.settings?.linuxTitlebar
       ? 'default'
       : 'hidden'
   }

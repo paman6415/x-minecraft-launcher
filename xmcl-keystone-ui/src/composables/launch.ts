@@ -35,12 +35,12 @@ export function useLaunchOption() {
 
   async function generateLaunchOptions() {
     const ver = resolvedVersion.value
-    if (!ver) {
-      throw LaunchErrorCode.NO_JAVA
+    if (!ver || 'requirements' in ver) {
+      throw LaunchErrorCode.NO_VERSION
     }
     const javaRec = java.value
     if (!javaRec) {
-      throw LaunchErrorCode.NO_VERSION
+      throw LaunchErrorCode.NO_JAVA
     }
 
     let yggdrasilAgent: LaunchOptions['yggdrasilAgent']

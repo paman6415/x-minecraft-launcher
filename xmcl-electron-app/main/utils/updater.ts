@@ -19,6 +19,7 @@ import { promisify } from 'util'
 import ElectronLauncherApp from '../ElectronLauncherApp'
 import { DownloadAppInstallerTask } from './appinstaller'
 import { checksum } from './fs'
+import { kGFW } from '@xmcl/runtime/lib/entities/gfw'
 
 /**
  * Only download asar file update.
@@ -106,7 +107,8 @@ export class ElectronUpdater implements LauncherAppUpdater {
   private async getUpdateFromSelfHost(): Promise<ReleaseInfo> {
     const app = this.app
     app.log('Try get update from selfhost')
-    const { allowPrerelease, locale } = app.serviceManager.get(BaseService).state
+    const baseService = await app.registry.get(BaseService)
+    const { allowPrerelease, locale } = await baseService.getSettings()
     const url = `https://api.xmcl.app/latest?version=v${app.version}&prerelease=${allowPrerelease || false}`
     const response = await request(url, {
       headers: {
@@ -223,8 +225,9 @@ export class ElectronUpdater implements LauncherAppUpdater {
           }
         })
         this.logger.log(`Check update via ${autoUpdater.getFeedURL()}`)
+        const inGFW = await this.app.registry.get(kGFW)
         const info = await autoUpdater.checkForUpdates()
-        if (this.app.networkManager.isInGFW && !injectedUpdate) {
+        if (inGFW && !injectedUpdate) {
           injectedUpdate = true
           const provider: Provider<UpdateInfo> = (await (autoUpdater as any).clientPromise)
           const originalResolve = provider.resolveFiles

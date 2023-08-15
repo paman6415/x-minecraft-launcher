@@ -7,32 +7,34 @@ import { ControllerPlugin } from './plugin'
  */
 export const gameLaunch: ControllerPlugin = function (this: ElectronController) {
   this.app.once('engine-ready', () => {
-    this.app.serviceManager.get(LaunchService).on('minecraft-window-ready', ({ hideLauncher }) => {
-      if (this.mainWin && this.mainWin.isVisible()) {
-        this.mainWin.webContents.send('minecraft-window-ready')
+    this.app.registry.get(LaunchService).then((service) => {
+      service.on('minecraft-window-ready', ({ hideLauncher }) => {
+        if (this.mainWin && this.mainWin.isVisible()) {
+          this.mainWin.webContents.send('minecraft-window-ready')
 
-        if (hideLauncher) {
-          this.mainWin.hide()
+          if (hideLauncher) {
+            this.mainWin.hide()
+          }
         }
-      }
-    }).on('minecraft-start', ({ showLog }) => {
-      if (this.loggerWin === undefined && showLog) {
-        this.createMonitorWindow()
-      }
-    }).on('minecraft-exit', (status) => {
-      if (status.hideLauncher) {
-        if (this.mainWin) {
-          this.mainWin.show()
+      }).on('minecraft-start', ({ showLog }) => {
+        if (this.loggerWin === undefined && showLog) {
+          this.createMonitorWindow()
         }
-      }
-      this.app.controller.broadcast('minecraft-exit', status)
-      if (this.loggerWin) {
-        const launchServ = this.app.serviceManager.get(LaunchService)
-        if (launchServ.state.activeCount === 0) {
-          this.loggerWin.close()
-          this.loggerWin = undefined
+      }).on('minecraft-exit', (status) => {
+        if (status.hideLauncher) {
+          if (this.mainWin) {
+            this.mainWin.show()
+          }
         }
-      }
+        this.app.controller.broadcast('minecraft-exit', status)
+        if (this.loggerWin) {
+          const launchServ = this.app.serviceManager.get(LaunchService)
+          if (launchServ.state.activeCount === 0) {
+            this.loggerWin.close()
+            this.loggerWin = undefined
+          }
+        }
+      })
     })
   })
 }

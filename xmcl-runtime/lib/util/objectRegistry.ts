@@ -1,55 +1,65 @@
+import { Contracts } from 'applicationinsights'
+import { PromiseSignal, createPromiseSignal } from './promiseSignal'
+
 /**
  * The helper class to hold type to object map
  */
 export class ObjectFactory {
-  private injections: Map<Constructor | InjectionKey<any>, any> = new Map()
+  private signals: Map<Constructor | InjectionKey<any>, PromiseSignal<any>> = new Map()
 
   register<T>(type: Constructor<T> | InjectionKey<T>, value: T): this {
-    this.injections.set(type, value)
+    if (this.signals.has(type)) {
+      this.signals.get(type)!.resolve(value)
+    } else {
+      const signal = createPromiseSignal<T>()
+      signal.resolve(value)
+      this.signals.set(type, signal)
+    }
     return this
   }
 
   has<T>(Type: Constructor<T> | InjectionKey<T>): boolean {
-    return this.injections.has(Type)
+    return this.signals.has(Type)
   }
 
-  get<T>(Type: Constructor<T> | InjectionKey<T>): T | undefined {
-    if (this.injections.has(Type)) {
-      return this.injections.get(Type)
+  /**
+   * Get the type or key registered object. This won't trigger the creation of the object.
+   */
+  get<T>(Type: Constructor<T> | InjectionKey<T>): Promise<T> {
+    if (this.signals.has(Type)) {
+      return this.signals.get(Type)!.promise
     }
-    if (typeof Type === 'symbol') {
-      return undefined
-    }
-    const types = Reflect.get(Type, kParams)
-    const params: any[] = new Array(types?.length ?? 0)
+    const signal = createPromiseSignal<T>()
+    this.signals.set(Type, signal)
+    return signal.promise
+  }
 
-    let failed = false
-    if (types) {
-      for (let i = 0; i < types.length; i++) {
-        const type = types[i]
-        if (type) {
-          if (this.injections.has(type)) {
-            // inject object
-            params[i] = this.injections.get(type)
+  async getOrCreate<T>(Type: Constructor<T>): Promise<T> {
+    if (this.signals.has(Type)) {
+      return this.signals.get(Type)!.promise
+    }
+    const signal = createPromiseSignal<T>()
+    try {
+      const types = Reflect.get(Type, kParams)
+      const params: any[] = new Array(types?.length ?? 0)
+      if (types) {
+        for (let i = 0; i < types.length; i++) {
+          const type = types[i]
+          if (type) {
+            params[i] = await this.getOrCreate(type)
           } else {
-            const newCreated = this.get(type)
-            if (newCreated) {
-              params[i] = newCreated
-            } else {
-              failed = true
-            }
+            throw new Error(`Cannot create ${Type.name} because ${type.name} is not registered`)
           }
         }
       }
-    }
 
-    if (failed) {
-      return undefined
+      const service = new (Type as any)(...params)
+      signal.resolve(service)
+      return service
+    } catch (e) {
+      signal.reject(e)
+      throw e
     }
-
-    const service = new (Type as any)(...params)
-    this.register(Type, service)
-    return service
   }
 }
 

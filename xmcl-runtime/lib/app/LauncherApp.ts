@@ -57,11 +57,6 @@ export class LauncherApp extends EventEmitter {
   readonly appDataPath: string
 
   /**
-   * Store Minecraft data
-   */
-  readonly gameDataPath: string
-
-  /**
    * The .minecraft folder in Windows or minecraft folder in linux/mac
    */
   readonly minecraftDataPath: string
@@ -113,10 +108,6 @@ export class LauncherApp extends EventEmitter {
     })
   })
 
-  readonly gamePathReadySignal = createPromiseSignal()
-
-  readonly gamePathMissingSignal = createPromiseSignal<boolean>()
-
   /**
    * The controller is response to keep the communication between main process and renderer process
    */
@@ -137,7 +128,6 @@ export class LauncherApp extends EventEmitter {
     _plugins: LauncherAppPlugin[],
   ) {
     super()
-    this.gameDataPath = ''
     this.temporaryPath = ''
     const appData = host.getPath('appData')
 
@@ -162,7 +152,7 @@ export class LauncherApp extends EventEmitter {
 
     this.serviceManager = new ServiceManager(this, services)
     this.serviceStateManager = new ServiceStateManager(this)
-    this.networkManager = new NetworkManager(this, this.serviceManager, this.serviceStateManager)
+    this.networkManager = new NetworkManager(this)
 
     this.taskManager = new TaskManager(this)
     this.semaphoreManager = new SemaphoreManager(this)
@@ -181,6 +171,8 @@ export class LauncherApp extends EventEmitter {
   readonly registry: ObjectFactory = new ObjectFactory()
   private initialInstance = ''
   private preferredLocale = ''
+  private gamePathSignal = createPromiseSignal<string>()
+  private gamePathMissingSignal = createPromiseSignal<boolean>()
 
   readonly localhostServerPort: Promise<number>
 
@@ -194,6 +186,14 @@ export class LauncherApp extends EventEmitter {
 
   getPreferredLocale() {
     return this.preferredLocale
+  }
+
+  getGameDataPath() {
+    return this.gamePathSignal.promise
+  }
+
+  isGameDataPathMissing() {
+    return this.gamePathMissingSignal.promise
   }
 
   /**
@@ -271,9 +271,9 @@ export class LauncherApp extends EventEmitter {
     await ensureDir(this.appDataPath)
     await this.logManager.setOutputRoot(this.appDataPath)
 
+    let gameDataPath: string
     try {
-      const self = this as any
-      self.gameDataPath = await readFile(join(this.appDataPath, 'root')).then((b) => b.toString().trim())
+      gameDataPath = await readFile(join(this.appDataPath, 'root')).then((b) => b.toString().trim())
       this.gamePathMissingSignal.resolve(false)
     } catch (e) {
       if (isSystemError(e) && e.code === 'ENOENT') {
@@ -281,23 +281,25 @@ export class LauncherApp extends EventEmitter {
         this.gamePathMissingSignal.resolve(true)
         const { path, instancePath, locale } = await this.controller.processFirstLaunch()
         this.initialInstance = instancePath
-        this.preferredLocale = locale;
-        (this.gameDataPath as any) = path
-        await writeFile(join(this.appDataPath, 'root'), this.gameDataPath)
+        this.preferredLocale = locale
+        gameDataPath = (path)
+        await writeFile(join(this.appDataPath, 'root'), path)
       } else {
-        (this.gameDataPath as any) = this.appDataPath
+        this.gamePathMissingSignal.resolve(false)
+        gameDataPath = (this.appDataPath)
       }
     }
 
     try {
-      await ensureDir(this.gameDataPath)
+      await ensureDir(gameDataPath)
+      this.gamePathSignal.resolve(gameDataPath)
     } catch {
-      (this.gameDataPath as any) = this.appDataPath
-      await ensureDir(this.gameDataPath)
+      gameDataPath = this.appDataPath
+      await ensureDir(gameDataPath)
+      this.gamePathSignal.resolve(gameDataPath)
     }
-    this.gamePathReadySignal.resolve();
 
-    (this.temporaryPath as any) = join(this.gameDataPath, 'temp')
+    (this.temporaryPath as any) = join(gameDataPath, 'temp')
     await ensureDir(this.temporaryPath)
     await Promise.all(this.managers.map(m => m.setup()))
   }
@@ -368,7 +370,7 @@ export class LauncherApp extends EventEmitter {
     this.log(`Current launcher core version is ${this.version}.`)
     this.log('App booted')
 
-    await this.gamePathReadySignal.promise
+    await this.gamePathSignal.promise
     this.emit('engine-ready')
   }
 }

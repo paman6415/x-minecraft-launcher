@@ -18,7 +18,7 @@ import Particles from '@/components/Particles.vue'
 
 const props = defineProps<{
   value: boolean
-  authority: string
+  seed: number
 }>()
 
 const direction = ref('top')
@@ -27,5 +27,5 @@ function nextDirection() {
   const i = Math.round(Math.random() * dirs.length)
   direction.value = dirs[i]
 }
-watch(() => props.authority, () => { nextDirection() })
+watch(() => props.seed, () => { nextDirection() })
 </script>

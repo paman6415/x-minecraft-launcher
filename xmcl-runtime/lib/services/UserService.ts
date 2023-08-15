@@ -9,7 +9,9 @@ import {
   UserSchema,
   UserServiceKey,
   UserState,
+  normalizeUserId,
 } from '@xmcl/runtime-api'
+import debounce from 'lodash.debounce'
 import { Pool } from 'undici'
 import { UserAccountSystem } from '../accountSystems/AccountSystem'
 import { YggdrasilAccountSystem } from '../accountSystems/YggdrasilAccountSystem'
@@ -22,16 +24,13 @@ import { Inject } from '../util/objectRegistry'
 import { createSafeFile } from '../util/persistance'
 import { ensureLauncherProfile, preprocessUserData } from '../util/userData'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
-import debounce from 'lodash.debounce'
 
 @ExposeServiceKey(UserServiceKey)
 export class UserService extends StatefulService<UserState> implements IUserService {
   private userFile = createSafeFile(this.getAppDataPath('user.json'), UserSchema, this, [this.getPath('user.json')])
   private saveUserFile = debounce(async () => {
-    const userData: UserSchema = {
+    const userData = {
       users: this.state.users,
-      clientToken: this.state.clientToken,
-      yggdrasilServices: this.state.yggdrasilServices,
     }
     await this.userFile.write(userData)
   }, 1000)
@@ -42,19 +41,16 @@ export class UserService extends StatefulService<UserState> implements IUserServ
   private accountSystems: Record<string, UserAccountSystem | undefined> = {}
   private mojangSelectedUserId = ''
 
-  readonly yggdrasilAccountSystem: YggdrasilAccountSystem
-
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(kUserTokenStorage) private tokenStorage: UserTokenStorage) {
+    @Inject(kUserTokenStorage) private tokenStorage: UserTokenStorage,
+    @Inject(YggdrasilAccountSystem) private yggdrasilAccountSystem: YggdrasilAccountSystem) {
     super(app, () => new UserState(), async () => {
       const data = await this.userFile.read()
-      const userData: UserSchema = {
+      const userData = {
         users: {},
-        clientToken: '',
         yggdrasilServices: [],
       }
 
-      const shouldRefillData = data.yggdrasilServices.length === 0 && Object.keys(data.users).length === 0
       // This will fill the user data
       const { mojangSelectedUserId } = await preprocessUserData(userData, data, this.getMinecraftPath('launcher_profiles.json'), tokenStorage)
       this.mojangSelectedUserId = mojangSelectedUserId
@@ -64,46 +60,18 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       this.log(`Load ${Object.keys(userData.users).length} users`)
 
       this.state.userData(userData)
-
-      if (shouldRefillData) {
-        // Initialize the data
-        Promise.all([
-          loadYggdrasilApiProfile('https://littleskin.cn/api/yggdrasil').then(api => {
-            this.state.userYggdrasilServicePut(api)
-          }),
-          loadYggdrasilApiProfile('https://authserver.ely.by/api/authlib-injector').then(api => {
-            this.state.userYggdrasilServicePut(api)
-          }),
-        ])
-      }
     })
-
-    const dispatcher = this.networkManager.registerAPIFactoryInterceptor((origin, options) => {
-      const hosts = this.state.yggdrasilServices.map(v => new URL(v.url).hostname)
-      if (hosts.indexOf(origin.hostname) !== -1) {
-        return new Pool(origin, {
-          ...options,
-          pipelining: 1,
-          connections: 6,
-          keepAliveMaxTimeout: 60_000,
-        })
-      }
-    })
-
-    this.yggdrasilAccountSystem = new YggdrasilAccountSystem(
-      this,
-      dispatcher,
-      this.state,
-      tokenStorage,
-    )
 
     this.state.subscribeAll(() => {
       this.saveUserFile()
     })
+  }
 
-    app.protocol.registerHandler('authlib-injector', ({ request, response }) => {
-      this.addYggdrasilService(request.url.pathname)
-    })
+  async removeUserGameProfile(userProfile: UserProfile, gameProfileId: string): Promise<void> {
+    if (this.state.users[userProfile.id]) {
+      delete this.state.users[userProfile.id].profiles[gameProfileId]
+      this.state.userProfile(this.state.users[userProfile.id])
+    }
   }
 
   async getUserState(): Promise<MutableState<UserState>> {
@@ -115,47 +83,22 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     return this.mojangSelectedUserId
   }
 
-  async addYggdrasilService(url: string): Promise<void> {
-    if (url.startsWith('authlib-injector:')) url = url.substring('authlib-injector:'.length)
-    if (url.startsWith('yggdrasil-server:')) url = url.substring('yggdrasil-server:'.length)
-    url = decodeURIComponent(url)
-    const parsed = new URL(url)
-    const domain = parsed.host
-
-    this.log(`Add ${url} as yggdrasil (authlib-injector) api service ${domain}`)
-
-    const api = await loadYggdrasilApiProfile(url)
-    this.state.userYggdrasilServicePut(api)
-  }
-
-  async removeYggdrasilService(url: string): Promise<void> {
-    const all = this.state.yggdrasilServices
-    this.state.userYggdrasilServices(all.filter(a => a.url !== url))
-  }
-
   @Lock('login')
   async login(options: LoginOptions): Promise<UserProfile> {
-    const system = this.accountSystems[options.service] || this.yggdrasilAccountSystem
+    const system = this.accountSystems[options.authority] || this.yggdrasilAccountSystem
 
     this.loginController = new AbortController()
 
     const profile = await system.login(options, this.loginController.signal)
       .finally(() => { this.loginController = undefined })
 
+    profile.id = normalizeUserId(profile.id, profile.authority)
     this.state.userProfile(profile)
     return profile
   }
 
-  async putUser(userProfile: UserProfile): Promise<void> {
-    this.state.userProfile(userProfile)
-  }
-
-  registerAccountSystem(name: string, system: UserAccountSystem) {
-    this.accountSystems[name] = system
-  }
-
-  getClientToken() {
-    return this.state.clientToken
+  registerAccountSystem(authority: string, system: UserAccountSystem) {
+    this.accountSystems[authority] = system
   }
 
   @Lock('uploadSkin')
@@ -182,6 +125,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     const data = await sys.setSkin(user, gameProfile, options, this.setSkinController.signal).finally(() => {
       this.setSkinController = undefined
     })
+    data.id = normalizeUserId(data.id, data.authority)
     this.state.userProfile(data)
   }
 
@@ -215,22 +159,19 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       this.refreshController = undefined
     })
 
+    newUser.id = normalizeUserId(newUser.id, newUser.authority)
     this.state.userProfile(newUser)
   }
 
-  async selectGameProfile(userId: string, profileId: string) {
-    const user = this.state.users[userId]?.profiles?.[profileId]
-    if (!user) {
-      return
-    }
-
-    this.state.userGameProfileSelect({ userId, profileId })
+  async selectUserGameProfile(userProfile: UserProfile, gameProfileId: string): Promise<void> {
+    userProfile.selectedProfile = gameProfileId
+    this.state.userProfile(userProfile)
   }
 
-  @Singleton(id => id)
-  async removeUser(userId: string) {
-    requireString(userId)
-    this.state.userProfileRemove(userId)
+  @Singleton(p => p.id)
+  async removeUser(userProfile: UserProfile) {
+    requireObject(userProfile)
+    this.state.userProfileRemove(userProfile.id)
   }
 
   async getOfficialUserProfile(): Promise<(UserProfile & { accessToken: string | undefined }) | undefined> {

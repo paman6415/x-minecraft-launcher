@@ -50,10 +50,10 @@ const props = defineProps<{
   user: UserProfile
 }>()
 
-const { putUser } = useService(UserServiceKey)
+const { selectUserGameProfile, removeUserGameProfile } = useService(UserServiceKey)
 const offline = computed(() => props.user.authority === AUTHORITY_DEV)
 const selectGameProfile = (userProfile: UserProfile, id: string) => {
-  putUser({ ...userProfile, selectedProfile: id })
+  selectUserGameProfile(userProfile, id)
 }
 
 async function removeGameProfile(name: string): Promise<void> {
@@ -61,13 +61,9 @@ async function removeGameProfile(name: string): Promise<void> {
   if (builtin && builtin.authority === AUTHORITY_DEV) {
     const profile = Object.values(builtin.profiles).find(v => v.name === name || v.id === name)
     if (profile) {
-      delete builtin.profiles[profile.id]
-      if (profile?.id === builtin.selectedProfile) {
-        builtin.selectedProfile = Object.values(builtin.profiles)[0].id
-      }
+      removeUserGameProfile(builtin, profile.id)
     }
   }
-  putUser(builtin)
 }
 
 const container = ref(null)

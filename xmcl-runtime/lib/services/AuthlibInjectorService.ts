@@ -1,6 +1,6 @@
 import { LibraryInfo, MinecraftFolder } from '@xmcl/core'
 import { DownloadTask } from '@xmcl/installer'
-import { AuthlibInjectorServiceKey, AuthlibInjectorService as IAuthlibInjectorService } from '@xmcl/runtime-api'
+import { AuthlibInjectorServiceKey, AuthlibInjectorService as IAuthlibInjectorService, Settings } from '@xmcl/runtime-api'
 import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
@@ -10,6 +10,7 @@ import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
 import { AbstractService, ExposeServiceKey } from './Service'
 import { UserService } from './UserService'
+import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/settings'
 
 const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 
@@ -19,16 +20,15 @@ const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 @ExposeServiceKey(AuthlibInjectorServiceKey)
 export class AuthlibInjectorService extends AbstractService implements IAuthlibInjectorService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(BaseService) private baseService: BaseService,
-    @Inject(UserService) private userService: UserService,
+    @Inject(kSettings) private settings: Settings,
   ) {
     super(app)
 
     this.networkManager.registerDispatchInterceptor((options) => {
       const origin = options.origin instanceof URL ? options.origin : new URL(options.origin!)
       if (origin.hostname === 'authlib-injector.yushi.moe') {
-        if (baseService.shouldOverrideApiSet()) {
-          const api = baseService.state.apiSets.find(a => a.name === baseService.state.apiSetsPreference) || baseService.state.apiSets[0]
+        if (shouldOverrideApiSet(settings)) {
+          const api = settings.apiSets.find(a => a.name === settings.apiSetsPreference) || settings.apiSets[0]
           options.origin = new URL(api.url).origin
           options.path = `/mirrors/authlib-injector${options.path}`
         }
@@ -47,7 +47,7 @@ export class AuthlibInjectorService extends AbstractService implements IAuthlibI
       const path = mc.getLibraryByPath(info.path)
 
       const url = new URL(content.download_url)
-      const allSets = this.baseService.getApiSets()
+      const allSets = getApiSets(this.settings)
       const urls = allSets.map(s => new URL(url.pathname.startsWith('/mirrors') ? url.pathname : `/mirrors/authlib-injector${url.pathname}`, new URL(s.url).origin)).map(u => u.toString())
 
       if (urls.indexOf(url.toString()) === -1) {
