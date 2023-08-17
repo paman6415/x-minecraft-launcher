@@ -3,6 +3,7 @@ import { darkIcon, darkTray, lightIcon, lightTray } from '@/utils/icons'
 import { BaseService } from '@xmcl/runtime'
 import { app, Menu, shell, Tray, nativeTheme, nativeImage, MenuItemConstructorOptions } from 'electron'
 import { ControllerPlugin } from './plugin'
+import { kSettings } from '@xmcl/runtime/lib/entities/settings'
 
 export const trayPlugin: ControllerPlugin = function (this: ElectronController) {
   const { t } = this.i18n
@@ -13,7 +14,8 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
 
   //   }
   // })
-  const createMenu = (checkUpdate: () => void) => {
+  let checkUpdate: (() => void) | undefined
+  const createMenu = () => {
     const app = this.app
     const onBrowseAppClicked = () => {
       if (this.browserRef && !this.browserRef.isDestroyed()) {
@@ -33,7 +35,10 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
       {
         type: 'normal',
         label: t('checkUpdate'),
-        click: checkUpdate,
+        click: () => {
+          checkUpdate?.()
+        },
+        enabled: !!checkUpdate,
       },
       // {
       //   label: t('browseApps'),
@@ -50,6 +55,7 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
         label: t('showDiagnosis'),
         type: 'normal',
         click: diagnose,
+        role: 'toggleDevTools',
       },
       {
         label: t('quit'),
@@ -68,6 +74,7 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
         label: t('showLauncher'),
         type: 'normal',
         click: show,
+        role: 'front',
       })
     }
     return Menu.buildFromTemplate(options)
@@ -83,8 +90,19 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
   }
 
   this.app.once('engine-ready', async () => {
-    const service = await this.app.registry.get(BaseService)
-    const state = await service.getSettings()
+    this.app.registry.get(BaseService).then(service => {
+      checkUpdate = () => service.checkUpdate()
+    })
+    this.app.registry.get(kSettings).then(state => {
+      state.subscribe('config', () => {
+        tray.setToolTip(t('title'))
+        tray.setContextMenu(createMenu())
+      }).subscribe('localeSet', () => {
+        tray.setToolTip(t('title'))
+        tray.setContextMenu(createMenu())
+      })
+    })
+
     const tray = new Tray(getTrayImage(darkTray, lightTray))
     if (this.app.platform.os === 'windows') {
       tray.on('double-click', () => {
@@ -98,15 +116,8 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
     }
 
     tray.setToolTip(t('title'))
-    tray.setContextMenu(createMenu(() => service.checkUpdate()))
+    tray.setContextMenu(createMenu())
 
-    state.subscribe('config', () => {
-      tray.setToolTip(t('title'))
-      tray.setContextMenu(createMenu(() => service.checkUpdate()))
-    }).subscribe('localeSet', () => {
-      tray.setToolTip(t('title'))
-      tray.setContextMenu(createMenu(() => service.checkUpdate()))
-    })
     if (app.dock) {
       app.dock.setIcon(nativeTheme.shouldUseDarkColors ? darkIcon : lightIcon)
     }
