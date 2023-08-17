@@ -28,11 +28,10 @@ export const gameLaunch: ControllerPlugin = function (this: ElectronController) 
         }
         this.app.controller.broadcast('minecraft-exit', status)
         if (this.loggerWin) {
-          const launchServ = this.app.serviceManager.get(LaunchService)
-          if (launchServ.state.activeCount === 0) {
-            this.loggerWin.close()
-            this.loggerWin = undefined
-          }
+          // if (service.state.activeCount === 0) {
+          //   this.loggerWin.close()
+          //   this.loggerWin = undefined
+          // }
         }
       })
     })

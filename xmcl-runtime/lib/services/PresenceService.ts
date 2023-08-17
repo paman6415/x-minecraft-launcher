@@ -1,5 +1,5 @@
 import { Client, SetActivity } from '@xmcl/discord-rpc'
-import { PresenceService as IPresenceService, PresenceServiceKey } from '@xmcl/runtime-api'
+import { PresenceService as IPresenceService, MutableState, PresenceServiceKey, Settings } from '@xmcl/runtime-api'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { Inject } from '../util/objectRegistry'
@@ -13,9 +13,10 @@ export class PresenceService extends AbstractService implements IPresenceService
   }
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(BaseService) private baseService: BaseService) {
+    @Inject(Settings) private settings: MutableState<Settings>,
+  ) {
     super(app, async () => {
-      if (baseService.state.discordPresence) {
+      if (settings.discordPresence) {
         try {
           await this.discord.connect()
           this.discord.subscribe('ACTIVITY_JOIN')
@@ -39,7 +40,7 @@ export class PresenceService extends AbstractService implements IPresenceService
       }
     })
 
-    baseService.state.subscribe('discordPresenceSet', async (state) => {
+    settings.subscribe('discordPresenceSet', async (state) => {
       if (state) {
         await this.discord.connect().catch((e) => {
           this.warn('Fail to connect to discord. %o', e)
@@ -84,7 +85,7 @@ export class PresenceService extends AbstractService implements IPresenceService
   }
 
   async setActivity(activity: string): Promise<void> {
-    if (!this.baseService.state.discordPresence) {
+    if (!this.settings.discordPresence) {
       return
     }
     if (!this.discord.isConnected) {

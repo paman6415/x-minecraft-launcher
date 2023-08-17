@@ -20,7 +20,7 @@ export class InstanceUpdateService extends AbstractService implements IInstanceU
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstanceService) private instanceService: InstanceService,
-    @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(ResourceService) resourceService: ResourceService,
     @Inject(InstanceManifestService) private instanceManifestService: InstanceManifestService,
     @Inject(ModpackService) private modpackService: ModpackService,
   ) {

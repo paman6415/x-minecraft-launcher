@@ -1,6 +1,6 @@
 import { JavaVersion } from '@xmcl/core'
 import { fetchJavaRuntimeManifest, installJavaRuntimeTask, parseJavaVersion, resolveJava, scanLocalJava } from '@xmcl/installer'
-import { Java, JavaRecord, JavaSchema, JavaService as IJavaService, JavaServiceKey, JavaState, MutableState } from '@xmcl/runtime-api'
+import { JavaService as IJavaService, Java, JavaRecord, JavaSchema, JavaServiceKey, JavaState, MutableState, Settings } from '@xmcl/runtime-api'
 import { ensureFile } from 'fs-extra/esm'
 import { chmod, readFile } from 'fs/promises'
 import { dirname, join } from 'path'
@@ -11,16 +11,21 @@ import { JavaValidation, validateJavaPath } from '../entities/java'
 import { readdirIfPresent } from '../util/fs'
 import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { createSafeFile } from '../util/persistance'
+import { SafeFile, createSafeFile } from '../util/persistance'
 import { BaseService } from './BaseService'
 import { ExposeServiceKey, Singleton, StatefulService } from './Service'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
+import { getApiSets, shouldOverrideApiSet } from '../entities/settings'
+import { GFW } from '../entities/gfw'
 
 @ExposeServiceKey(JavaServiceKey)
 export class JavaService extends StatefulService<JavaState> implements IJavaService {
-  protected readonly config = createSafeFile(this.getAppDataPath('java.json'), JavaSchema, this, [this.getPath('java.json')])
+  protected readonly config: SafeFile<JavaSchema>
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(BaseService) private baseService: BaseService,
+    @Inject(Settings) private settings: Settings,
+    @Inject(GFW) private gfw: GFW,
+    @Inject(kGameDataPath) private getPath: PathResolver,
   ) {
     super(app, () => new JavaState(), async () => {
       const data = await this.config.read()
@@ -42,6 +47,7 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
         this.config.write(this.state)
       })
     })
+    this.config = createSafeFile(this.getAppDataPath('java.json'), JavaSchema, this, [getPath('java.json')])
   }
 
   async getJavaState(): Promise<MutableState<JavaState>> {
@@ -77,8 +83,8 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     const location = this.getInternalJavaLocation(target)
     this.log(`Try to install official java ${target} to ${location}`)
     let apiHost: string[] | undefined
-    if (this.baseService.shouldOverrideApiSet()) {
-      const apis = this.baseService.getApiSets()
+    if (shouldOverrideApiSet(this.settings, this.gfw.inside)) {
+      const apis = getApiSets(this.settings)
       apiHost = apis.map(a => new URL(a.url).hostname)
     }
     const manifest = await fetchJavaRuntimeManifest({
@@ -90,10 +96,10 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
     const dest = this.getPath('jre', target.component)
 
     if (!apiHost) {
-      const apis = this.baseService.getApiSets()
+      const apis = getApiSets(this.settings)
       apiHost = apis.map(a => new URL(a.url).hostname)
 
-      if (!this.baseService.shouldOverrideApiSet()) {
+      if (!shouldOverrideApiSet(this.settings, this.gfw.inside)) {
         apiHost.unshift('https://launcher.mojang.com')
       }
     }

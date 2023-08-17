@@ -10,7 +10,6 @@ import { URL } from 'url'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { assertErrorWithCache, kCacheKey } from '../dispatchers/cacheDispatcher'
-import { kGFW } from '../entities/gfw'
 import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/settings'
 import { AnyError } from '../util/error'
 import { Inject } from '../util/objectRegistry'
@@ -18,6 +17,8 @@ import { JavaService } from './JavaService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Lock, Singleton } from './Service'
 import { VersionService } from './VersionService'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
+import { GFW } from '../entities/gfw'
 
 /**
  * Version install service provide some functions to install Minecraft/Forge/Liteloader, etc. version
@@ -25,16 +26,16 @@ import { VersionService } from './VersionService'
 @ExposeServiceKey(InstallServiceKey)
 export class InstallService extends AbstractService implements IInstallService {
   private latestRelease = '1.20'
-  private inGFW = false
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(VersionService) private versionService: VersionService,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(JavaService) private javaService: JavaService,
+    @Inject(kGameDataPath) private getPath: PathResolver,
+    @Inject(GFW) private gfw: GFW,
     @Inject(kSettings) private settings: MutableState<Settings>,
   ) {
     super(app, async () => {
-      this.inGFW = await app.registry.get(kGFW)
       this.getFabricVersionList()
       this.getMinecraftVersionList()
       this.getOptifineVersionList()
@@ -46,26 +47,26 @@ export class InstallService extends AbstractService implements IInstallService {
       }
       const origin = options.origin instanceof URL ? options.origin : new URL(options.origin!)
       if (origin.host === 'meta.fabricmc.net') {
-        if (shouldOverrideApiSet(this.settings, this.inGFW)) {
+        if (shouldOverrideApiSet(this.settings, gfw.inside)) {
           const api = this.settings.apiSets.find(a => a.name === this.settings.apiSetsPreference) || this.settings.apiSets[0]
           const url = new URL(api.url + '/fabric-meta' + options.path)
           options.origin = url.origin
           options.path = url.pathname + url.search
         }
       } else if (origin.host === 'launchermeta.mojang.com') {
-        if (shouldOverrideApiSet(this.settings, this.inGFW)) {
+        if (shouldOverrideApiSet(this.settings, gfw.inside)) {
           const api = this.settings.apiSets.find(a => a.name === this.settings.apiSetsPreference) || this.settings.apiSets[0]
           options.origin = new URL(api.url).origin
         }
       } else if (origin.host === 'bmclapi2.bangbang93.com' || origin.host === 'bmclapi.bangbang93.com') {
         // bmclapi might have mirror
-        if (shouldOverrideApiSet(this.settings, this.inGFW)) {
+        if (shouldOverrideApiSet(this.settings, gfw.inside)) {
           const api = this.settings.apiSets.find(a => a.name === this.settings.apiSetsPreference) || this.settings.apiSets[0]
           options.origin = new URL(api.url).origin
         }
       } else if (origin.host === 'files.minecraftforge.net' && options.path.startsWith('/maven/net/minecraftforge/forge/') && options.path.endsWith('.html')) {
         const mcVersion = options.path.substring(options.path.lastIndexOf('_') + 1, options.path.lastIndexOf('.'))
-        if (shouldOverrideApiSet(this.settings, this.inGFW)) {
+        if (shouldOverrideApiSet(this.settings, gfw.inside)) {
           const api = this.settings.apiSets.find(a => a.name === this.settings.apiSetsPreference) || this.settings.apiSets[0]
           // Override to BCMLAPI
           options.origin = new URL(api.url).origin
@@ -303,7 +304,7 @@ export class InstallService extends AbstractService implements IInstallService {
 
     const allSets = getApiSets(this.settings)
 
-    if (!shouldOverrideApiSet(this.settings, this.inGFW)) {
+    if (!shouldOverrideApiSet(this.settings, this.gfw.inside)) {
       allSets.unshift({ name: 'mojang', url: '' })
     } else {
       allSets.push({ name: 'mojang', url: '' })
@@ -324,7 +325,7 @@ export class InstallService extends AbstractService implements IInstallService {
 
     const allSets = getApiSets(this.settings)
 
-    if (!shouldOverrideApiSet(this.settings, this.inGFW)) {
+    if (!shouldOverrideApiSet(this.settings, this.gfw.inside)) {
       allSets.unshift({ name: 'mojang', url: '' })
     } else {
       allSets.push({ name: 'mojang', url: '' })
@@ -620,7 +621,7 @@ export class InstallService extends AbstractService implements IInstallService {
         new InstallFabricTask(
           new URL('https://meta.fabricmc.net/v2/versions/loader/' + options.minecraft + '/' + options.loader),
           getApiSets(this.settings).map(a => a.url),
-          shouldOverrideApiSet(this.settings, this.inGFW),
+          shouldOverrideApiSet(this.settings, this.gfw.inside),
           path,
           options.minecraft,
         ))

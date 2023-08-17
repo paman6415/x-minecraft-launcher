@@ -4,8 +4,8 @@ import { randomUUID } from 'crypto'
 import { LauncherAppPlugin } from '../app/LauncherApp'
 import { IS_DEV } from '../constant'
 import { kClientToken } from '../entities/clientToken'
+import { kSettings } from '../entities/settings'
 import { APP_INSIGHT_KEY, parseStack } from '../entities/telemetry'
-import { BaseService } from '../services/BaseService'
 import { LaunchService } from '../services/LaunchService'
 import { ResourceService } from '../services/ResourceService'
 import { UserService } from '../services/UserService'
@@ -37,9 +37,9 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
   tags[contract.operationParentId] = 'root'
 
   app.on('engine-ready', async () => {
-    const baseService = await app.registry.get(BaseService)
+    const settings = await app.registry.get(kSettings)
     process.on('uncaughtException', (e) => {
-      if (baseService.state.disableTelemetry) return
+      if (settings.disableTelemetry) return
       if (appInsight.defaultClient) {
         appInsight.defaultClient.trackException({
           exception: e,
@@ -48,7 +48,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
       }
     })
     process.on('unhandledRejection', (e) => {
-      if (baseService.state.disableTelemetry) return
+      if (settings.disableTelemetry) return
       if (appInsight.defaultClient) {
         appInsight.defaultClient.trackException({
           exception: e as any, // the applicationinsights will convert it to error automatically
@@ -58,14 +58,14 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
     })
     app.registry.get(LaunchService).then(service => {
       service.on('minecraft-start', (options) => {
-        if (baseService.state.disableTelemetry) return
+        if (settings.disableTelemetry) return
         appInsight.defaultClient.trackEvent({
           name: 'minecraft-start',
           properties: options,
         })
       })
       .on('minecraft-exit', ({ code, signal, crashReport }) => {
-        if (baseService.state.disableTelemetry) return
+        if (settings.disableTelemetry) return
         const normalExit = code === 0
         const crashed = crashReport && crashReport.length > 0
         if (normalExit) {
@@ -112,7 +112,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
     })
 
     app.logManager.logBus.on('failure', (tag, message: string, e: Error) => {
-      if (baseService.state.disableTelemetry) return
+      if (settings.disableTelemetry) return
       appInsight.defaultClient.trackException({
         exception: e,
         properties: e ? { ...e } : undefined,
@@ -127,7 +127,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
 
     app.registry.get(ResourceService).then((resourceService) => {
       resourceService.on('resourceAdd', (res: Resource) => {
-        if (baseService.state.disableTelemetry) return
+        if (settings.disableTelemetry) return
         appInsight.defaultClient.trackEvent({
           name: 'resource-metadata',
           properties: {
@@ -138,7 +138,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
           },
         })
       }).on('resourceUpdate', (res: Resource) => {
-        if (baseService.state.disableTelemetry) return
+        if (settings.disableTelemetry) return
         appInsight.defaultClient.trackEvent({
           name: 'resource-metadata',
           properties: {
@@ -153,7 +153,7 @@ export const pluginTelemetry: LauncherAppPlugin = async (app) => {
 
     app.registry.get(UserService).then(service => {
       service.on('user-login', (authority) => {
-        if (baseService.state.disableTelemetry) return
+        if (settings.disableTelemetry) return
         appInsight.defaultClient.trackEvent({
           name: 'user-login',
           properties: {

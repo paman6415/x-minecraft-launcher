@@ -1,4 +1,4 @@
-import { YggdrasilApi } from '../entities/user.schema'
+import { YggdrasilApi } from '../entities/yggdrasil.schema'
 import { ServiceKey } from './Service'
 
 export interface YggdrasilService {

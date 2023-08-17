@@ -1,16 +1,15 @@
-import { GetManifestOptions, InstanceFile, InstanceManifest, InstanceManifestService as IInstanceManifestService, InstanceManifestServiceKey, Resource, ResourceDomain } from '@xmcl/runtime-api'
+import { GetManifestOptions, InstanceManifestService as IInstanceManifestService, InstanceFile, InstanceManifest, InstanceManifestServiceKey, Resource, ResourceDomain } from '@xmcl/runtime-api'
 import { task } from '@xmcl/task'
 import { stat } from 'fs/promises'
 import { join, relative } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
-import { kResourceWorker, ResourceWorker } from '../entities/resourceWorker'
+import { ResourceWorker, kResourceWorker } from '../entities/resourceWorker'
 import { readdirIfPresent } from '../util/fs'
 import { isNonnull } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { CurseForgeService } from './CurseForgeService'
 import { ResolveInstanceFileTask } from './InstanceInstallService'
-import { InstanceService } from './InstanceService'
 import { ModrinthService } from './ModrinthService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
@@ -18,7 +17,6 @@ import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 @ExposeServiceKey(InstanceManifestServiceKey)
 export class InstanceManifestService extends AbstractService implements IInstanceManifestService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(kResourceWorker) private worker: ResourceWorker,
     @Inject(CurseForgeService) private curseforgeService: CurseForgeService,

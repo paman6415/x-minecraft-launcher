@@ -6,7 +6,7 @@ import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { IS_DEV } from '../constant'
 import { kClientToken } from '../entities/clientToken'
-import { kGFW } from '../entities/gfw'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 import { kSettings } from '../entities/settings'
 import { isSystemError } from '../util/error'
 import { copyPassively } from '../util/fs'
@@ -18,7 +18,7 @@ import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 export class BaseService extends AbstractService implements IBaseService {
   constructor(
     @Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(kGFW) private inGFW: boolean,
+    @Inject(kGameDataPath) private getPath: PathResolver,
   ) {
     super(app, async () => {
       this.checkUpdate()

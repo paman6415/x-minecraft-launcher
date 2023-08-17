@@ -12,6 +12,7 @@ import { Inject } from '../util/objectRegistry'
 import { InstallService } from './InstallService'
 import { JavaService } from './JavaService'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
 
 @ExposeServiceKey(LaunchServiceKey)
 export class LaunchService extends AbstractService implements ILaunchService {
@@ -20,6 +21,7 @@ export class LaunchService extends AbstractService implements ILaunchService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstallService) private installService: InstallService,
     @Inject(JavaService) private javaService: JavaService,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(kUserTokenStorage) private userTokenStorage: UserTokenStorage,
     @Inject(kEncodingWorker) private encoder: EncodingWorker,
   ) {

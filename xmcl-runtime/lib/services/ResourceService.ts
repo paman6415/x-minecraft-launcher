@@ -24,6 +24,7 @@ import { isArrayEqual } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { PromiseSignal, createPromiseSignal } from '../util/promiseSignal'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 
 const EMPTY_RESOURCE_SHA1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
 
@@ -71,7 +72,9 @@ export class ResourceService extends AbstractService implements IResourceService
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ImageStorage) readonly imageStore: ImageStorage,
-    @Inject(kResourceWorker) private worker: ResourceWorker) {
+    @Inject(kResourceWorker) worker: ResourceWorker,
+    @Inject(kGameDataPath) private getPath: PathResolver,
+    ) {
     super(app, async () => {
       try {
         await this.context.snapshot.open()

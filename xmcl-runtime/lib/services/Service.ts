@@ -209,11 +209,6 @@ export abstract class AbstractService extends EventEmitter {
   protected getTempPath: (...args: string[]) => string = (...args) => join(this.app.temporaryPath, ...args)
 
   /**
-   * Return the path under game libraries/assets root
-   */
-  protected getPath: (...args: string[]) => string = (...args) => join(this.app.gameDataPath, ...args)
-
-  /**
    * Return the path under .minecraft folder
    */
   protected getMinecraftPath: (...args: string[]) => string = (...args) => join(this.app.minecraftDataPath, ...args)
@@ -229,7 +224,6 @@ export abstract class AbstractService extends EventEmitter {
    * If the service already initialized or initializing, it will wait the service initialization end.
    */
   async initialize(): Promise<void> {
-    await this.app.gamePathReadySignal.promise
     if (!this.initializeSignal) {
       this.initializeSignal = createPromiseSignal()
       if (this.initializer) {

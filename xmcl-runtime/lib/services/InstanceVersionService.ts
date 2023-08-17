@@ -9,11 +9,13 @@ import { kResourceWorker, ResourceWorker } from '../entities/resourceWorker'
 import { exists } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
 
 @ExposeServiceKey(InstanceVersionServiceKey)
 export class InstanceVersionService extends AbstractService implements IInstanceVersionService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(kResourceWorker) private worker: ResourceWorker,
+  @Inject(kGameDataPath) private getPath: PathResolver,
+  @Inject(kResourceWorker) private worker: ResourceWorker,
   ) {
     super(app)
   }

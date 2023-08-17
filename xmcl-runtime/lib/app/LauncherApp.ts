@@ -40,14 +40,17 @@ export interface LauncherApp {
   on(channel: 'app-booted', listener: (manifest: InstalledAppManifest) => void): this
   on(channel: 'window-all-closed', listener: () => void): this
   on(channel: 'engine-ready', listener: () => void): this
+  on(channel: 'root-migrated', listener: (newRoot: string) => void): this
 
   once(channel: 'app-booted', listener: (manifest: InstalledAppManifest) => void): this
   once(channel: 'window-all-closed', listener: () => void): this
   once(channel: 'engine-ready', listener: () => void): this
+  once(channel: 'root-migrated', listener: (newRoot: string) => void): this
 
   emit(channel: 'app-booted', manifest: InstalledAppManifest): this
   emit(channel: 'window-all-closed'): boolean
   emit(channel: 'engine-ready'): boolean
+  emit(channel: 'root-migrated', root: string): this
 }
 
 export class LauncherApp extends EventEmitter {
@@ -305,8 +308,10 @@ export class LauncherApp extends EventEmitter {
   }
 
   async migrateRoot(newRoot: string) {
-    (this.gameDataPath as any) = newRoot
+    this.gamePathSignal = createPromiseSignal<string>()
+    this.gamePathSignal.resolve(newRoot)
     await writeFile(join(this.appDataPath, 'root'), newRoot)
+    this.emit('root-migrated', newRoot)
   }
 
   protected async getStartupUrl() {

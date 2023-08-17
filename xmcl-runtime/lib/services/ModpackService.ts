@@ -1,13 +1,15 @@
 import { File, HashAlgo } from '@xmcl/curseforge'
-import { CurseforgeModpackManifest, EditInstanceOptions, ExportModpackOptions, ModpackService as IModpackService, InstanceFile, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackInstallProfile, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, isAllowInModrinthModpack } from '@xmcl/runtime-api'
+import { CurseforgeModpackManifest, ExportModpackOptions, ModpackService as IModpackService, InstanceFile, McbbsModpackManifest, ModpackException, ModpackFileInfoCurseforge, ModpackInstallProfile, ModpackServiceKey, ModrinthModpackManifest, ResourceDomain, ResourceMetadata, getCurseforgeModpackFromInstance, getInstanceConfigFromCurseforgeModpack, getInstanceConfigFromMcbbsModpack, getInstanceConfigFromModrinthModpack, getMcbbsModpackFromInstance, getModrinthModpackFromInstance, isAllowInModrinthModpack } from '@xmcl/runtime-api'
 import { open, openEntryReadStream, readAllEntries, readEntry } from '@xmcl/unzip'
 import { stat } from 'fs/promises'
 import { join } from 'path'
 import { Entry, ZipFile } from 'yauzl'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 import { ResourceWorker, kResourceWorker } from '../entities/resourceWorker'
 import { guessCurseforgeFileUrl } from '../util/curseforge'
+import { AnyError } from '../util/error'
 import { checksumFromStream } from '../util/fs'
 import { requireObject } from '../util/object'
 import { Inject } from '../util/objectRegistry'
@@ -18,7 +20,6 @@ import { InstanceInstallService } from './InstanceInstallService'
 import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
-import { AnyError } from '../util/error'
 
 export interface ModpackDownloadableFile {
   destination: string
@@ -50,6 +51,7 @@ export class ModpackService extends AbstractService implements IModpackService {
     @Inject(ResourceService) private resourceService: ResourceService,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(kResourceWorker) private worker: ResourceWorker,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(CurseForgeService) curseforgeService: CurseForgeService,
     @Inject(InstanceInstallService) private instanceInstallService: InstanceInstallService,
   ) {

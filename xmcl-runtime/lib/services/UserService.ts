@@ -21,13 +21,14 @@ import { loadYggdrasilApiProfile } from '../entities/user'
 import { UserTokenStorage, kUserTokenStorage } from '../entities/userTokenStore'
 import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { createSafeFile } from '../util/persistance'
+import { SafeFile, createSafeFile } from '../util/persistance'
 import { ensureLauncherProfile, preprocessUserData } from '../util/userData'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 
 @ExposeServiceKey(UserServiceKey)
 export class UserService extends StatefulService<UserState> implements IUserService {
-  private userFile = createSafeFile(this.getAppDataPath('user.json'), UserSchema, this, [this.getPath('user.json')])
+  private userFile: SafeFile<UserSchema>
   private saveUserFile = debounce(async () => {
     const userData = {
       users: this.state.users,
@@ -43,6 +44,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(kUserTokenStorage) private tokenStorage: UserTokenStorage,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(YggdrasilAccountSystem) private yggdrasilAccountSystem: YggdrasilAccountSystem) {
     super(app, () => new UserState(), async () => {
       const data = await this.userFile.read()
@@ -62,6 +64,7 @@ export class UserService extends StatefulService<UserState> implements IUserServ
       this.state.userData(userData)
     })
 
+    this.userFile = createSafeFile(this.getAppDataPath('user.json'), UserSchema, this, [this.getPath('user.json')])
     this.state.subscribeAll(() => {
       this.saveUserFile()
     })

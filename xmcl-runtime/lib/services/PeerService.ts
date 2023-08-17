@@ -25,6 +25,7 @@ import { Inject } from '../util/objectRegistry'
 import { NatService } from './NatService'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
 import { UserService } from './UserService'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
 
 const pBrotliDecompress = promisify(brotliDecompress)
 const pBrotliCompress = promisify(brotliCompress)
@@ -50,6 +51,7 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ImageStorage) private imageStorage: ImageStorage,
     @Inject(kResourceWorker) private worker: ResourceWorker,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(NatService) natService: NatService,
     @Inject(UserService) private userService: UserService,
   ) {

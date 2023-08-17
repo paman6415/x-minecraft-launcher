@@ -6,6 +6,11 @@ import { missing } from './fs'
 import { Logger } from './log'
 import { SafeJsonSerializer } from './serialize'
 
+export interface SafeFile<T> {
+  write(data: T): Promise<void>
+  read(): Promise<T>
+}
+
 /**
  * Create a mapped a json file to disk with type safe.
  * @param path The path of the file

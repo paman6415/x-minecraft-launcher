@@ -5,12 +5,12 @@ import { readFile, writeFile } from 'fs/promises'
 import { request } from 'undici'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
+import { GFW } from '../entities/gfw'
+import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/settings'
 import { validateSha256 } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
-import { BaseService } from './BaseService'
 import { AbstractService, ExposeServiceKey } from './Service'
-import { UserService } from './UserService'
-import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/settings'
 
 const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 
@@ -21,13 +21,15 @@ const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 export class AuthlibInjectorService extends AbstractService implements IAuthlibInjectorService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(kSettings) private settings: Settings,
+    @Inject(kGameDataPath) private getPath: PathResolver,
+    @Inject(GFW) gfw: GFW,
   ) {
     super(app)
 
     this.networkManager.registerDispatchInterceptor((options) => {
       const origin = options.origin instanceof URL ? options.origin : new URL(options.origin!)
       if (origin.hostname === 'authlib-injector.yushi.moe') {
-        if (shouldOverrideApiSet(settings)) {
+        if (shouldOverrideApiSet(settings, gfw.inside)) {
           const api = settings.apiSets.find(a => a.name === settings.apiSetsPreference) || settings.apiSets[0]
           options.origin = new URL(api.url).origin
           options.path = `/mirrors/authlib-injector${options.path}`

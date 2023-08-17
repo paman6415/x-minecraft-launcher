@@ -1,6 +1,6 @@
 import { Client } from 'undici'
 import { LauncherAppPlugin } from '../app/LauncherApp'
-import { kGFW } from '../entities/gfw'
+import { GFW } from '../entities/gfw'
 
 export const pluginGFW: LauncherAppPlugin = (app) => {
   const logger = app.logManager.getLogger('GFW')
@@ -21,10 +21,10 @@ export const pluginGFW: LauncherAppPlugin = (app) => {
         headersTimeout: 5000,
       }).then(() => false, () => true),
     ])
-    app.registry.register(kGFW, inGFW)
     logger.log(inGFW ? 'Detected current in China mainland.' : 'Detected current NOT in China mainland.')
     taobao.close()
     google.close()
+    return inGFW
   }
-  updateGFW()
+  app.registry.register(GFW, new GFW(updateGFW()))
 }

@@ -13,6 +13,7 @@ import { isDirectory, missing, readdirEnsured } from '../util/fs'
 import { isNonnull } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { ExposeServiceKey, Singleton, StatefulService } from './Service'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 
 /**
  * The local version service maintains the installed versions on disk
@@ -22,7 +23,8 @@ export class VersionService extends StatefulService<LocalVersions> implements IV
   private watcher: FSWatcher | undefined
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-    @Inject(kResourceWorker) private worker: ResourceWorker,
+  @Inject(kGameDataPath) private getPath: PathResolver,
+  @Inject(kResourceWorker) private worker: ResourceWorker,
   ) {
     super(app, () => new LocalVersions(), async () => {
       await this.refreshVersions()

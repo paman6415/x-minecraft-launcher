@@ -7,15 +7,16 @@ import { copyFile, readdir, rename, rm } from 'fs/promises'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 import { readLaunchProfile } from '../entities/launchProfile'
 import { ResourceWorker, kResourceWorker } from '../entities/resourceWorker'
 import { exists, isDirectory, isPathDiskRootPath, readdirEnsured } from '../util/fs'
 import { ImageStorage } from '../util/imageStore'
 import { assignShallow, requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
-import { createSafeFile, createSafeIO } from '../util/persistance'
+import { SafeFile, createSafeFile, createSafeIO } from '../util/persistance'
 import { InstallService } from './InstallService'
-import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
+import { ExposeServiceKey, Singleton, StatefulService } from './Service'
 
 const INSTANCES_FOLDER = 'instances'
 
@@ -24,12 +25,13 @@ const INSTANCES_FOLDER = 'instances'
  */
 @ExposeServiceKey(InstanceServiceKey)
 export class InstanceService extends StatefulService<InstanceState> implements IInstanceService {
-  protected readonly instancesFile = createSafeFile(this.getAppDataPath('instances.json'), InstancesSchema, this, [this.getPath('instances.json')])
+  protected readonly instancesFile: SafeFile<InstancesSchema>
   protected readonly instanceFile = createSafeIO(InstanceSchema, this)
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstallService) private installService: InstallService,
     @Inject(kResourceWorker) private worker: ResourceWorker,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(ImageStorage) private imageStore: ImageStorage,
   ) {
     super(app, () => new InstanceState(), async () => {
@@ -94,6 +96,8 @@ export class InstanceService extends StatefulService<InstanceState> implements I
           this.log(`Saved instance ${path}`)
         })
     })
+
+    this.instancesFile = createSafeFile(this.getAppDataPath('instances.json'), InstancesSchema, this, [this.getPath('instances.json')])
   }
 
   async getSharedInstancesState(): Promise<MutableState<InstanceState>> {

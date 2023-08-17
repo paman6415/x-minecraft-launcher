@@ -19,7 +19,7 @@ import { promisify } from 'util'
 import ElectronLauncherApp from '../ElectronLauncherApp'
 import { DownloadAppInstallerTask } from './appinstaller'
 import { checksum } from './fs'
-import { kGFW } from '@xmcl/runtime/lib/entities/gfw'
+import { GFW } from '@xmcl/runtime/lib/entities/gfw'
 
 /**
  * Only download asar file update.
@@ -225,9 +225,9 @@ export class ElectronUpdater implements LauncherAppUpdater {
           }
         })
         this.logger.log(`Check update via ${autoUpdater.getFeedURL()}`)
-        const inGFW = await this.app.registry.get(kGFW)
+        const gfw = await this.app.registry.get(GFW)
         const info = await autoUpdater.checkForUpdates()
-        if (inGFW && !injectedUpdate) {
+        if (await gfw.signal && !injectedUpdate) {
           injectedUpdate = true
           const provider: Provider<UpdateInfo> = (await (autoUpdater as any).clientPromise)
           const originalResolve = provider.resolveFiles

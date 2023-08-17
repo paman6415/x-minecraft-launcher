@@ -1,3 +1,8 @@
-import { InjectionKey } from '../util/objectRegistry'
 
-export const kGFW: InjectionKey<boolean> = Symbol('gfw')
+export class GFW {
+  inside = false
+
+  constructor(readonly signal: Promise<boolean>) {
+    signal.then(inside => { this.inside = inside })
+  }
+}

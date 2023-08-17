@@ -11,6 +11,7 @@ import { AbstractService, ExposeServiceKey, Lock } from './Service'
 import { readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { linkWithTimeoutOrCopy } from '../util/fs'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 
 /**
  * Provide the abilities to import resource pack and resource packs files to instance
@@ -19,6 +20,7 @@ import { linkWithTimeoutOrCopy } from '../util/fs'
 export class InstanceResourcePackService extends AbstractService implements IInstanceResourcePacksService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(InstanceService) private instanceService: InstanceService,
     @Inject(InstanceOptionsService) gameSettingService: InstanceOptionsService,
   ) {

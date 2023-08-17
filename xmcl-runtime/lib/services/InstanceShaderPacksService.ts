@@ -10,11 +10,13 @@ import { Inject } from '../util/objectRegistry'
 import { InstanceService } from './InstanceService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Lock } from './Service'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
 
 @ExposeServiceKey(InstanceShaderPacksServiceKey)
 export class InstanceShaderPacksService extends AbstractService implements IInstanceShaderPacksServic {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(InstanceService) private instanceService: InstanceService,
   ) {
     super(app)

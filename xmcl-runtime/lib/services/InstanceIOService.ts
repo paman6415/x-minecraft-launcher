@@ -7,12 +7,12 @@ import { tmpdir } from 'os'
 import { basename, join, resolve } from 'path'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
+import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
 import { copyPassively, exists, isDirectory, isFile } from '../util/fs'
 import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { ZipTask } from '../util/zip'
 import { InstanceService } from './InstanceService'
-import { InstanceVersionService } from './InstanceVersionService'
 import { AbstractService, ExposeServiceKey } from './Service'
 import { VersionService } from './VersionService'
 
@@ -23,6 +23,7 @@ import { VersionService } from './VersionService'
 export class InstanceIOService extends AbstractService implements IInstanceIOService {
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(InstanceService) private instanceService: InstanceService,
+    @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(VersionService) private versionService: VersionService,
   ) {
     super(app)
