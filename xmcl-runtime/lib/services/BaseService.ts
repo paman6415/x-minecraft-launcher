@@ -13,6 +13,7 @@ import { copyPassively } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { ZipTask } from '../util/zip'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
+import { kLogRoot } from '../entities/log'
 
 @ExposeServiceKey(BaseServiceKey)
 export class BaseService extends AbstractService implements IBaseService {
@@ -23,6 +24,10 @@ export class BaseService extends AbstractService implements IBaseService {
     super(app, async () => {
       this.checkUpdate()
     })
+  }
+
+  getGameDataDirectory(): Promise<string> {
+    return this.app.getGameDataPath()
   }
 
   async getSettings(): Promise<MutableState<Settings>> {
@@ -122,7 +127,7 @@ export class BaseService extends AbstractService implements IBaseService {
 
   async reportItNow(options: { destination: string }): Promise<void> {
     const task = new ZipTask(options.destination)
-    const logsDir = this.logManager.getLogRoot()
+    const logsDir = await this.app.registry.get(kLogRoot)
     const files = await readdir(logsDir)
 
     for (const file of files) {
@@ -164,8 +169,6 @@ export class BaseService extends AbstractService implements IBaseService {
       }
       await rm(destination, { recursive: true, force: true })
     }
-
-    await this.serviceManager.dispose()
 
     const renameOrCopy = async () => {
       try {

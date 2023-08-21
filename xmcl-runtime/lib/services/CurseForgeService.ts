@@ -11,6 +11,9 @@ import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
+import { NetworkInterface, kNetworkInterface } from '../entities/networkInterface'
+import { kDownloadOptions } from '../entities/downloadOptions'
+import { DownloadBaseOptions } from '@xmcl/file-transfer'
 
 @ExposeServiceKey(CurseForgeServiceKey)
 export class CurseForgeService extends AbstractService implements ICurseForgeService {
@@ -18,10 +21,12 @@ export class CurseForgeService extends AbstractService implements ICurseForgeSer
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(ResourceService) private resourceService: ResourceService,
+    @Inject(kNetworkInterface) networkInterface: NetworkInterface,
+    @Inject(kDownloadOptions) private downloadOptions: DownloadBaseOptions,
   ) {
     super(app)
 
-    const dispatcher = this.networkManager.registerAPIFactoryInterceptor((origin, options) => {
+    const dispatcher = networkInterface.registerAPIFactoryInterceptor((origin, options) => {
       if (origin.host === 'api.curseforge.com') {
         return new Client(origin, {
           ...options,
@@ -59,7 +64,7 @@ export class CurseForgeService extends AbstractService implements ICurseForgeSer
 
     this.log(`Try install file ${file.displayName}(${file.downloadUrl}) in type ${type}`)
     const resourceService = this.resourceService
-    const networkManager = this.networkManager
+    const downloadOptions = await this.app.registry.get(kDownloadOptions)
     const destination = join(this.app.temporaryPath, file.fileName)
 
     const domain = typeToDomain[type] ?? ResourceDomain.Unclassified
@@ -69,7 +74,7 @@ export class CurseForgeService extends AbstractService implements ICurseForgeSer
       this.log(`The curseforge file ${file.displayName}(${file.downloadUrl}) existed in cache!`)
     } else {
       const task = new DownloadTask({
-        ...networkManager.getDownloadBaseOptions(),
+        ...downloadOptions,
         url: downloadUrls,
         destination,
       }).setName('installCurseforgeFile', { fileId: file.id })

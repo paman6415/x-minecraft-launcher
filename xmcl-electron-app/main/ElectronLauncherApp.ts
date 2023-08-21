@@ -89,7 +89,7 @@ export default class ElectronLauncherApp extends LauncherApp {
     )
   }
 
-  windowsUtils = getWindowsUtils(this)
+  windowsUtils = getWindowsUtils(this, this.logger)
 
   getAppInstallerStartUpUrl(): string {
     if (this.windowsUtils) {

@@ -22,7 +22,7 @@
       hover
     >
       <v-list-item
-        v-for="(a, i) of container"
+        v-for="(a, i) of items || []"
         :key="i"
       >
         <v-list-item-content>
@@ -61,21 +61,23 @@
 </template>
 <script setup lang="ts">
 import { useService } from '@/composables'
-import { kUserContext } from '@/composables/user'
+import { kYggdrasilServices } from '@/composables/yggrasil'
 import { injection } from '@/util/inject'
-import { UserServiceKey, YggdrasilApi } from '@xmcl/runtime-api'
+import { YggdrasilApi, YggdrasilServiceKey } from '@xmcl/runtime-api'
+import { Ref } from 'vue'
 
-const { addYggdrasilService, removeYggdrasilService } = useService(UserServiceKey)
-const { yggdrasilServices: services } = injection(kUserContext)
-const container = ref([...services.value.map(s => ({ ...s }))] as (YggdrasilApi & { new?: boolean })[])
-watch(services, (newVal) => {
-  container.value = [...newVal.map(s => ({ ...s }))]
+const { data: services, mutate } = injection(kYggdrasilServices)
+const items: Ref<(YggdrasilApi &{ new?: boolean })[]> = ref([])
+watch(services, (s) => {
+  if (!s) return
+  items.value = s.map(api => ({ ...api, new: false }))
 })
+const { addYggdrasilService, removeYggdrasilService } = useService(YggdrasilServiceKey)
 const { t } = useI18n()
 
 const addNew = () => {
-  if (container.value.every(v => !v.new)) {
-    container.value.push({ url: '', new: true })
+  if (items.value?.every(v => !v.new)) {
+    items.value.push({ url: '', new: true })
   }
 }
 
@@ -90,10 +92,12 @@ const urlsRules = [
   (v: string | undefined) => v && isValidUrl(v),
 ]
 
-const save = (api: YggdrasilApi) => {
-  addYggdrasilService(api.url)
+const save = async (api: YggdrasilApi) => {
+  await addYggdrasilService(api.url)
+  mutate()
 }
-const remove = (api: YggdrasilApi) => {
-  removeYggdrasilService(api.url)
+const remove = async (api: YggdrasilApi) => {
+  await removeYggdrasilService(api.url)
+  mutate()
 }
 </script>

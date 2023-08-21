@@ -19,7 +19,7 @@ export interface InstallAppOptions {
 }
 
 export class LauncherAppManager extends Manager implements AppsHost {
-  private logger = this.app.logManager.getLogger('LauncherAppManager')
+  private logger = this.app.getLogger('LauncherAppManager')
 
   constructor(app: LauncherApp) {
     super(app)

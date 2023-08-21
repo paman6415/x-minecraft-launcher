@@ -164,19 +164,13 @@ export abstract class AbstractService extends EventEmitter {
 
   constructor(readonly app: LauncherApp, private initializer?: () => Promise<void>) {
     super()
-    const loggers = app.logManager.getLogger(Object.getPrototypeOf(this).constructor.name)
+    const loggers = app.getLogger(Object.getPrototypeOf(this).constructor.name)
     this.log = loggers.log
     this.warn = loggers.warn
     this.error = loggers.error
   }
 
-  get networkManager() { return this.app.networkManager }
-
-  get serviceManager() { return this.app.serviceManager }
-
   get taskManager() { return this.app.taskManager }
-
-  get logManager() { return this.app.logManager }
 
   get storeManager() { return this.app.serviceStateManager }
 
@@ -242,8 +236,6 @@ export abstract class AbstractService extends EventEmitter {
     await this.initializeSignal.promise
   }
 
-  async dispose(): Promise<void> { }
-
   log = (m: any, ...a: any[]) => {
   }
 
@@ -270,9 +262,8 @@ export abstract class StatefulService<M extends State<M>> extends AbstractServic
     const state = createState()
     this.state = app.serviceStateManager.register(getServiceKey(Object.getPrototypeOf(this).constructor), state, () => { })
     app.serviceStateManager.ref(this.state)
-  }
-
-  async dispose(): Promise<void> {
-    this.app.serviceStateManager.deref(this.state)
+    app.registryDisposer(async () => {
+      this.app.serviceStateManager.deref(this.state)
+    })
   }
 }

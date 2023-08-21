@@ -37,7 +37,7 @@ class MutableStateImpl {
 }
 
 export default class ServiceStateManager extends Manager {
-  private logger = this.app.logManager.getLogger('ServiceStateManager')
+  private logger = this.app.getLogger('ServiceStateManager')
 
   private containers: Record<string, ServiceStateContainer> = {}
 

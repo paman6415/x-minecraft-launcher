@@ -101,6 +101,7 @@ export class InstanceService extends StatefulService<InstanceState> implements I
   }
 
   async getSharedInstancesState(): Promise<MutableState<InstanceState>> {
+    await this.initialize()
     return this.state
   }
 

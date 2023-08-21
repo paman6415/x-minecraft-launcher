@@ -9,7 +9,7 @@ import { PeerService } from '../services/PeerService'
 import { UserService } from '../services/UserService'
 
 export const pluginYggdrasilHandler: LauncherAppPlugin = (app) => {
-  const logger = app.logManager.getLogger('YggdrasilServer')
+  const logger = app.getLogger('YggdrasilServer')
 
   const getProfile = async (name: string) => {
     const userService = await app.registry.get(UserService)

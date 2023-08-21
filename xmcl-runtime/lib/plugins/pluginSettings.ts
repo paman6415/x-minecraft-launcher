@@ -8,7 +8,7 @@ import { kGameDataPath } from '../entities/gameDataPath'
 
 export const pluginSettings: LauncherAppPlugin = (app) => {
   const state = app.serviceStateManager.register('settings', new Settings(), () => { })
-  const logger = app.logManager.getLogger('Settings')
+  const logger = app.getLogger('Settings')
   app.registry.get(kGameDataPath).then(getPath => {
     const settingFile = createSafeFile(join(app.appDataPath, 'setting.json'), SettingSchema, logger, [getPath('setting.json')])
     const saver = new AggregateExecutor<void, void>(() => { }, () => settingFile.write({

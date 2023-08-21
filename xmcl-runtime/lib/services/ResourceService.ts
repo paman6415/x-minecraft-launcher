@@ -79,7 +79,12 @@ export class ResourceService extends AbstractService implements IResourceService
       try {
         await this.context.snapshot.open()
       } catch (e) {
-        if ((e as any).code === 'LEVEL_DATABASE_NOT_OPEN') {
+        const err = (e as any)
+        if (err.code === 'LEVEL_DATABASE_NOT_OPEN') {
+          if (err.cause && err.cause.code === 'LEVEL_LOCKED') {
+            // Another process or instance has opened the database
+            this.warn('Another process or instance has opened the database. Try to repair the database.')
+          }
           await ClassicLevel.repair(this.getAppDataPath('resources-v2'))
         }
       }
@@ -112,6 +117,12 @@ export class ResourceService extends AbstractService implements IResourceService
       })
     })
     this.context = createResourceContext(this.getAppDataPath('resources-v2'), imageStore, this, this, worker)
+    app.registryDisposer(async () => {
+      for (const watcher of Object.values(this.watchers)) {
+        watcher?.close()
+      }
+      await this.context.level.close()
+    })
   }
 
   async getResourceMetadataByHash(sha1: string): Promise<ResourceMetadata | undefined> {
@@ -398,12 +409,5 @@ export class ResourceService extends AbstractService implements IResourceService
     }
 
     await installer(resource, instancePath)
-  }
-
-  async dispose(): Promise<void> {
-    for (const watcher of Object.values(this.watchers)) {
-      watcher?.close()
-    }
-    await this.context.level.close()
   }
 }

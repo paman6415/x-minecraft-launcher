@@ -3,7 +3,7 @@ import { LauncherAppPlugin } from '../app/LauncherApp'
 import { GFW } from '../entities/gfw'
 
 export const pluginGFW: LauncherAppPlugin = (app) => {
-  const logger = app.logManager.getLogger('GFW')
+  const logger = app.getLogger('GFW')
   async function updateGFW() {
     const taobao = new Client('https://npm.taobao.org')
     const google = new Client('https://www.google.com')

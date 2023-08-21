@@ -5,6 +5,7 @@ import { unlink } from 'fs/promises'
 import { basename, join } from 'path'
 import { LauncherApp } from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
+import { kDownloadOptions } from '../entities/downloadOptions'
 import { Inject } from '../util/objectRegistry'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
@@ -35,12 +36,13 @@ export class ModrinthService extends AbstractService implements IModrinthService
         }
       }
 
-      let resource = (await this.resourceService.getResourcesByUris(urls)).reduce((a, b) => a || b, undefined)
+    const downloadOptions = await this.app.registry.get(kDownloadOptions)
+    let resource = (await this.resourceService.getResourcesByUris(urls)).reduce((a, b) => a || b, undefined)
       if (resource) {
         this.log(`The modrinth file ${file.filename}(${file.url}) existed in cache!`)
       } else {
         const task = new DownloadTask({
-          ...this.networkManager.getDownloadBaseOptions(),
+          ...downloadOptions,
           url: file.url,
           destination,
           validator: {
@@ -53,7 +55,7 @@ export class ModrinthService extends AbstractService implements IModrinthService
           filename: file.filename,
         })
 
-        await this.taskManager.submit(task)
+        await this.submit(task)
         const metadata = {
           modrinth: version
             ? {

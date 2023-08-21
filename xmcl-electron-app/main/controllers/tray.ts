@@ -29,7 +29,7 @@ export const trayPlugin: ControllerPlugin = function (this: ElectronController) 
       this.activeWindow?.webContents.openDevTools()
     }
     const showLogs = () => {
-      shell.openPath(this.app.logManager.getLogRoot())
+      // shell.openPath(this.app.logManager.getLogRoot())
     }
     const options: MenuItemConstructorOptions[] = [
       {

@@ -101,12 +101,12 @@ export class ElectronUpdater implements LauncherAppUpdater {
   private logger: Logger
 
   constructor(private app: ElectronLauncherApp) {
-    this.logger = app.logManager.getLogger('ElectronUpdater')
+    this.logger = app.getLogger('ElectronUpdater')
   }
 
   private async getUpdateFromSelfHost(): Promise<ReleaseInfo> {
     const app = this.app
-    app.log('Try get update from selfhost')
+    this.logger.log('Try get update from selfhost')
     const baseService = await app.registry.get(BaseService)
     const { allowPrerelease, locale } = await baseService.getSettings()
     const url = `https://api.xmcl.app/latest?version=v${app.version}&prerelease=${allowPrerelease || false}`
@@ -130,7 +130,7 @@ export class ElectronUpdater implements LauncherAppUpdater {
     const platformString = app.platform.os === 'windows' ? 'win' : app.platform.os === 'osx' ? 'mac' : 'linux'
     const version = updateInfo.name.startsWith('v') ? updateInfo.name.substring(1) : updateInfo.name
     updateInfo.incremental = updateInfo.files.some(f => f.name === `app-${version}-${platformString}.asar`)
-    app.log(`Got incremental=${updateInfo.incremental} update from selfhost`)
+    this.logger.log(`Got incremental=${updateInfo.incremental} update from selfhost`)
 
     return updateInfo
   }

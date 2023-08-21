@@ -23,8 +23,8 @@ export class VersionService extends StatefulService<LocalVersions> implements IV
   private watcher: FSWatcher | undefined
 
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
-  @Inject(kGameDataPath) private getPath: PathResolver,
-  @Inject(kResourceWorker) private worker: ResourceWorker,
+    @Inject(kGameDataPath) private getPath: PathResolver,
+    @Inject(kResourceWorker) private worker: ResourceWorker,
   ) {
     super(app, () => new LocalVersions(), async () => {
       await this.refreshVersions()
@@ -60,14 +60,13 @@ export class VersionService extends StatefulService<LocalVersions> implements IV
         }
       })
     })
+    this.app.registryDisposer(async () => {
+      this.watcher?.close()
+    })
   }
 
   async getLocalVersions(): Promise<MutableState<LocalVersions>> {
     return this.state
-  }
-
-  async dispose() {
-    this.watcher?.close()
   }
 
   /**
@@ -88,7 +87,7 @@ export class VersionService extends StatefulService<LocalVersions> implements IV
       ])
     })
     Reflect.set(copyTask, '_from', mcPath)
-    await this.taskManager.submit(copyTask)
+    await this.submit(copyTask)
   }
 
   private getHeader(ver: ResolvedVersion): LocalVersionHeader {

@@ -22,6 +22,7 @@ import { trackWindowSize } from './utils/windowSizeTracker'
 import { PromiseSignal, createPromiseSignal } from '@xmcl/runtime/lib/util/promiseSignal'
 import { Client } from '@xmcl/runtime/lib/engineBridge'
 import { kSettings } from '@xmcl/runtime/lib/entities/settings'
+import { kUserAgent } from '@xmcl/runtime/lib/entities/userAgent'
 
 export class ElectronController implements LauncherAppController {
   protected windowsVersion?: { major: number; minor: number; build: number }
@@ -123,7 +124,7 @@ export class ElectronController implements LauncherAppController {
       }
     })
 
-    this.logger = this.app.logManager.getLogger('Controller')
+    this.logger = this.app.getLogger('Controller')
 
     protocol.registerSchemesAsPrivileged([{
       scheme: 'image',
@@ -164,23 +165,19 @@ export class ElectronController implements LauncherAppController {
   }
 
   private setupBrowserLogger(ref: BrowserWindow, name: string) {
-    const stream = this.app.logManager.openWindowLog(name)
-    const logBus = this.app.logManager.logBus
-    const levels = ['', 'INFO', 'WARN', 'ERROR']
+    const logger = this.app.getLogger('All', name)
     const tagName = `renderer-${name}`
     ref.webContents.on('console-message', (e, level, message, line, id) => {
       if (level === 1) {
-        logBus.emit('log', tagName, message)
+        logger.log(tagName, message)
       } else if (level === 2) {
-        logBus.emit('warn', tagName, message)
+        logger.warn(tagName, message)
       } else if (level === 3) {
-        logBus.emit('failure', tagName, message)
+        logger.warn(tagName, message)
       }
-      stream.write(`[${levels[level]}] [${new Date().toUTCString()}] [${id}]: ${message}\n`)
     })
     ref.once('close', () => {
       ref.webContents.removeAllListeners('console-message')
-      this.app.logManager.closeWindowLog(name)
     })
   }
 
@@ -214,13 +211,13 @@ export class ElectronController implements LauncherAppController {
     }
   }
 
-  private getSharedSession() {
+  private getSharedSession(userAgent: string) {
     if (this.sharedSession) {
       return this.sharedSession
     }
 
     const restoredSession = session.fromPartition('persist:main')
-    restoredSession.setUserAgent(this.app.networkManager.getUserAgent())
+    restoredSession.setUserAgent(userAgent)
 
     for (const e of session.defaultSession.getAllExtensions()) {
       restoredSession.loadExtension(e.path)
@@ -238,7 +235,7 @@ export class ElectronController implements LauncherAppController {
 
     restoredSession.webRequest.onBeforeSendHeaders((detail, cb) => {
       if (detail.requestHeaders) {
-        detail.requestHeaders['User-Agent'] = this.app.networkManager.getUserAgent()
+        detail.requestHeaders['User-Agent'] = userAgent
       }
       if (detail.url.startsWith('https://api.xmcl.app/modrinth') ||
         detail.url.startsWith('https://api.xmcl.app/curseforge')
@@ -368,7 +365,8 @@ export class ElectronController implements LauncherAppController {
       y: typeof configData.y === 'number' ? configData.y as number : null,
     }
 
-    const restoredSession = this.getSharedSession()
+    const ua = await this.app.registry.get(kUserAgent)
+    const restoredSession = this.getSharedSession(ua)
     const minWidth = man.minWidth ?? 800
     const minHeight = man.minHeight ?? 600
 

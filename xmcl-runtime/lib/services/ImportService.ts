@@ -13,6 +13,7 @@ import { Inject } from '../util/objectRegistry'
 import { ZipTask } from '../util/zip'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { kDownloadOptions } from '../entities/downloadOptions'
 
 @ExposeServiceKey(ImportServiceKey)
 export class ImportService extends AbstractService implements IImportService {
@@ -125,8 +126,9 @@ export class ImportService extends AbstractService implements IImportService {
           }
           const destination = this.getTempPath(createHash('sha1').update(url).digest('hex'), fileName)
           await ensureFile(destination)
+          const downloadOptions = await this.app.registry.get(kDownloadOptions)
           await this.submit(new DownloadTask({
-            ...this.networkManager.getDownloadBaseOptions(),
+            ...downloadOptions,
             url,
             validator: typeof md5 === 'string'
               ? {

@@ -61,14 +61,12 @@ export function useUserContext() {
   const userProfile: Ref<UserProfile> = computed(() => state.value?.users[selectedUserId.value] ?? NO_USER_PROFILE)
   const gameProfile: Ref<GameProfileAndTexture> = computed(() => userProfile.value.profiles[userProfile.value.selectedProfile] ?? NO_GAME_PROFILE)
   const users = computed(() => Object.values(state.value?.users || {}))
-  const yggdrasilServices = computed(() => state.value?.yggdrasilServices || [])
   const select = (id: string) => {
     selectedUserId.value = id
   }
 
   return {
     users,
-    yggdrasilServices,
     isValidating,
     error,
     select,

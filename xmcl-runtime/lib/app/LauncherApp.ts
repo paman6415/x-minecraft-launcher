@@ -1,5 +1,5 @@
 import { getPlatform } from '@xmcl/core'
-import { InstalledAppManifest, Platform } from '@xmcl/runtime-api'
+import { AppManifest, InstalledAppManifest, Platform } from '@xmcl/runtime-api'
 import { EventEmitter } from 'events'
 import { ensureDir } from 'fs-extra/esm'
 import { readFile, writeFile } from 'fs/promises'
@@ -11,15 +11,13 @@ import { setTimeout } from 'timers/promises'
 import { URL } from 'url'
 import { IS_DEV, LAUNCHER_NAME } from '../constant'
 import { Manager } from '../managers'
-import LogManager from '../managers/LogManager'
-import NetworkManager from '../managers/NetworkManager'
 import SemaphoreManager from '../managers/SemaphoreManager'
-import ServiceManager from '../managers/ServiceManager'
 import ServiceStateManager from '../managers/ServiceStateManager'
 import TaskManager from '../managers/TaskManager'
 import { plugins } from '../plugins'
 import { ServiceConstructor } from '../services/Service'
 import { isSystemError } from '../util/error'
+import { Logger } from '../util/log'
 import { ObjectFactory } from '../util/objectRegistry'
 import { createPromiseSignal } from '../util/promiseSignal'
 import { listen } from '../util/server'
@@ -28,12 +26,12 @@ import { LauncherAppController } from './LauncherAppController'
 import { LauncherAppManager } from './LauncherAppManager'
 import { LauncherAppUpdater } from './LauncherAppUpdater'
 import { LauncherProtocolHandler } from './LauncherProtocolHandler'
+import { SecretStorage } from './SecretStorage'
 import { Shell } from './Shell'
 import { LauncherAppKey } from './utils'
-import { SecretStorage } from './SecretStorage'
 
 export interface LauncherAppPlugin {
-  (app: LauncherApp): void
+  (app: LauncherApp, manifest: AppManifest, services: ServiceConstructor[]): void
 }
 
 export interface LauncherApp {
@@ -53,6 +51,16 @@ export interface LauncherApp {
   emit(channel: 'root-migrated', root: string): this
 }
 
+export interface LogEmitter extends EventEmitter {
+  on(channel: 'info', listener: (destination: string, tag: string, message: string, ...options: any[]) => void): this
+  on(channel: 'warn', listener: (destination: string, tag: string, message: string, ...options: any[]) => void): this
+  on(channel: 'failure', listener: (destination: string, tag: string, error: Error) => void): this
+
+  emit(channel: 'info', destination: string, tag: string, message: string, ...options: any[]): boolean
+  emit(channel: 'warn', destination: string, tag: string, message: string, ...options: any[]): boolean
+  emit(channel: 'failure', destination: string, tag: string, error: Error): boolean
+}
+
 export class LauncherApp extends EventEmitter {
   /**
    * Launcher %APPDATA%/xmcl path
@@ -69,13 +77,11 @@ export class LauncherApp extends EventEmitter {
    */
   readonly temporaryPath: string
 
-  readonly networkManager: NetworkManager
-  readonly logManager: LogManager
-  readonly serviceManager: ServiceManager
   readonly serviceStateManager: ServiceStateManager
   readonly taskManager: TaskManager
   readonly semaphoreManager: SemaphoreManager
   readonly launcherAppManager: LauncherAppManager
+  readonly logEmitter: LogEmitter = new EventEmitter()
 
   readonly platform: Platform
 
@@ -120,6 +126,15 @@ export class LauncherApp extends EventEmitter {
    */
   readonly updater: LauncherAppUpdater
 
+  readonly registry: ObjectFactory = new ObjectFactory()
+  private initialInstance = ''
+  private preferredLocale = ''
+  private gamePathSignal = createPromiseSignal<string>()
+  private gamePathMissingSignal = createPromiseSignal<boolean>()
+  protected logger: Logger = this.getLogger('App')
+
+  readonly localhostServerPort: Promise<number>
+
   constructor(
     readonly host: Host,
     readonly shell: Shell,
@@ -143,41 +158,23 @@ export class LauncherApp extends EventEmitter {
     this.appDataPath = join(appData, LAUNCHER_NAME)
     this.minecraftDataPath = join(appData, this.platform.os === 'osx' ? 'minecraft' : '.minecraft')
 
-    this.logManager = new LogManager(this)
     this.registry.register(LauncherAppKey, this)
-
-    for (const plugin of plugins.concat(_plugins)) {
-      plugin(this)
-    }
-
     this.controller = getController(this)
     this.updater = getUpdater(this)
 
-    this.serviceManager = new ServiceManager(this, services)
     this.serviceStateManager = new ServiceStateManager(this)
-    this.networkManager = new NetworkManager(this)
-
     this.taskManager = new TaskManager(this)
     this.semaphoreManager = new SemaphoreManager(this)
     this.launcherAppManager = new LauncherAppManager(this)
 
-    this.managers = [this.networkManager, this.taskManager, this.serviceStateManager, this.serviceManager, this.semaphoreManager, this.launcherAppManager, this.logManager]
+    for (const plugin of plugins.concat(_plugins)) {
+      plugin(this, builtinAppManifest, services)
+    }
 
-    const logger = this.logManager.getLogger('App')
-    this.log = logger.log
-    this.warn = logger.warn
-    this.error = logger.error
+    this.managers = [this.taskManager, this.serviceStateManager, this.semaphoreManager, this.launcherAppManager]
 
     this.localhostServerPort = listen(this.server, 25555, (cur) => cur + 7)
   }
-
-  readonly registry: ObjectFactory = new ObjectFactory()
-  private initialInstance = ''
-  private preferredLocale = ''
-  private gamePathSignal = createPromiseSignal<string>()
-  private gamePathMissingSignal = createPromiseSignal<boolean>()
-
-  readonly localhostServerPort: Promise<number>
 
   getAppInstallerStartUpUrl(): string {
     return ''
@@ -199,16 +196,35 @@ export class LauncherApp extends EventEmitter {
     return this.gamePathMissingSignal.promise
   }
 
+  getLogger(tag: string, destination = 'main'): Logger {
+    return {
+      log: (message: any, ...options: any[]) => {
+        this.logEmitter.emit('info', destination, tag, message, ...options)
+      },
+      warn: (message: any, ...options: any[]) => {
+        this.logEmitter.emit('warn', destination, tag, message, ...options)
+      },
+      error: (e: Error, scope?: string) => {
+        this.logEmitter.emit('failure', destination, tag, e)
+      },
+    }
+  }
+
+  private disposers: (() => Promise<void>)[] = []
+  registryDisposer(disposer: () => Promise<void>) {
+    this.disposers.push(disposer)
+  }
+
   /**
    * Quit the app gently.
    */
   async quit() {
-    this.log('Try to gently close the app')
+    this.logger.log('Try to gently close the app')
 
     try {
       await Promise.race([
         setTimeout(10000).then(() => false),
-        Promise.all(this.managers.map(m => m.dispose())).then(() => true),
+        Promise.all(this.disposers.map(m => m())).then(() => true),
       ])
     } finally {
       this.host.quit()
@@ -227,12 +243,6 @@ export class LauncherApp extends EventEmitter {
   }
 
   relaunch(): void { this.host.relaunch() }
-
-  log = (message: any, ...options: any[]) => { }
-
-  warn = (message: any, ...options: any[]) => { }
-
-  error = (message: any, ...options: any[]) => { }
 
   // setup code
 
@@ -259,20 +269,19 @@ export class LauncherApp extends EventEmitter {
       return
     }
 
-    this.log(`Boot from ${this.appDataPath}`)
+    this.logger.log(`Boot from ${this.appDataPath}`)
 
     // register xmcl protocol
     if (!this.host.isDefaultProtocolClient('xmcl')) {
       const result = this.host.setAsDefaultProtocolClient('xmcl')
       if (result) {
-        this.log('Successfully register the xmcl protocol')
+        this.logger.log('Successfully register the xmcl protocol')
       } else {
-        this.log('Fail to register the xmcl protocol')
+        this.logger.log('Fail to register the xmcl protocol')
       }
     }
 
     await ensureDir(this.appDataPath)
-    await this.logManager.setOutputRoot(this.appDataPath)
 
     let gameDataPath: string
     try {
@@ -304,7 +313,6 @@ export class LauncherApp extends EventEmitter {
 
     (this.temporaryPath as any) = join(gameDataPath, 'temp')
     await ensureDir(this.temporaryPath)
-    await Promise.all(this.managers.map(m => m.setup()))
   }
 
   async migrateRoot(newRoot: string) {
@@ -316,7 +324,7 @@ export class LauncherApp extends EventEmitter {
 
   protected async getStartupUrl() {
     if (!IS_DEV && process.platform === 'win32') {
-      this.log(`Try to check the start up url: ${process.argv.join(' ')}`)
+      this.logger.log(`Try to check the start up url: ${process.argv.join(' ')}`)
       if (process.argv.length > 1) {
         const urlOption = process.argv.find(a => a.startsWith('--url='))
         if (urlOption) {
@@ -325,7 +333,7 @@ export class LauncherApp extends EventEmitter {
             return url
           }
         }
-        this.log('Didn\'t find --url options')
+        this.logger.log('Didn\'t find --url options')
         const protocolOption = process.argv.find(a => a.startsWith('xmcl://'))
         if (protocolOption) {
           const u = new URL(protocolOption)
@@ -333,23 +341,23 @@ export class LauncherApp extends EventEmitter {
             return u.searchParams.get('url')
           }
         }
-        this.log('Didn\'t find xmcl:// protocol')
+        this.logger.log('Didn\'t find xmcl:// protocol')
       }
     }
-    this.log('Didn\'t find the start up url, try to load from config file.')
+    this.logger.log('Didn\'t find the start up url, try to load from config file.')
     const { default: url } = JSON.parse(await readFile(join(this.launcherAppManager.root, 'apps.json'), 'utf-8'))
 
     return url
   }
 
   protected async onEngineReady() {
-    this.log(`cwd: ${process.cwd()}`)
+    this.logger.log(`cwd: ${process.cwd()}`)
 
     // start the app
     let app: InstalledAppManifest
     try {
       const url = await this.getStartupUrl()
-      this.log(`Try to use start up url ${url}`)
+      this.logger.log(`Try to use start up url ${url}`)
       const existedApp = await this.launcherAppManager.tryGetInstalledApp(url)
       if (existedApp) {
         app = existedApp
@@ -357,12 +365,12 @@ export class LauncherApp extends EventEmitter {
         app = await this.launcherAppManager.installApp(url)
       }
     } catch (e) {
-      this.warn('Fail to use start up url:')
-      this.warn(e)
+      this.logger.warn('Fail to use start up url:')
+      this.logger.warn(e)
       try {
         const startUp = this.getAppInstallerStartUpUrl()
         if (startUp) {
-          this.log(`Try to use appinstaller startup url: "${startUp}"`)
+          this.logger.log(`Try to use appinstaller startup url: "${startUp}"`)
           app = await this.launcherAppManager.installApp(startUp)
         } else {
           app = this.builtinAppManifest
@@ -372,8 +380,8 @@ export class LauncherApp extends EventEmitter {
       }
     }
     await this.controller.activate(app)
-    this.log(`Current launcher core version is ${this.version}.`)
-    this.log('App booted')
+    this.logger.log(`Current launcher core version is ${this.version}.`)
+    this.logger.log('App booted')
 
     await this.gamePathSignal.promise
     this.emit('engine-ready')

@@ -1,4 +1,5 @@
 import { MinecraftFolder, ResolvedLibrary, ResolvedVersion, Version } from '@xmcl/core'
+import { DownloadBaseOptions } from '@xmcl/file-transfer'
 import { parse as parseForge } from '@xmcl/forge-site-parser'
 import { DEFAULT_FORGE_MAVEN, DEFAULT_RESOURCE_ROOT_URL, DEFAULT_VERSION_MANIFEST_URL, DownloadTask, FabricArtifactVersion, InstallForgeOptions, InstallJarTask, InstallProfile, LiteloaderVersion, MinecraftVersion, MinecraftVersionList, Options, QuiltArtifactVersion, installAssetsTask, installByProfileTask, installFabric, installForgeTask, installLibrariesTask, installLiteloaderTask, installOptifineTask, installQuiltVersion, installResolvedAssetsTask, installResolvedLibrariesTask, installVersionTask } from '@xmcl/installer'
 import { Asset, FabricVersions, ForgeVersion, GetQuiltVersionListOptions, InstallService as IInstallService, InstallFabricOptions, InstallOptifineOptions, InstallQuiltOptions, InstallServiceKey, InstallableLibrary, LiteloaderVersions, LockKey, MinecraftVersions, MutableState, OptifineVersion, ResourceDomain, Settings, InstallForgeOptions as _InstallForgeOptions, isFabricLoaderLibrary, isForgeLibrary } from '@xmcl/runtime-api'
@@ -10,6 +11,10 @@ import { URL } from 'url'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
 import { assertErrorWithCache, kCacheKey } from '../dispatchers/cacheDispatcher'
+import { kDownloadOptions } from '../entities/downloadOptions'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
+import { GFW } from '../entities/gfw'
+import { NetworkInterface, kNetworkInterface } from '../entities/networkInterface'
 import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/settings'
 import { AnyError } from '../util/error'
 import { Inject } from '../util/objectRegistry'
@@ -17,8 +22,6 @@ import { JavaService } from './JavaService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Lock, Singleton } from './Service'
 import { VersionService } from './VersionService'
-import { kGameDataPath, PathResolver } from '../entities/gameDataPath'
-import { GFW } from '../entities/gfw'
 
 /**
  * Version install service provide some functions to install Minecraft/Forge/Liteloader, etc. version
@@ -34,6 +37,8 @@ export class InstallService extends AbstractService implements IInstallService {
     @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(GFW) private gfw: GFW,
     @Inject(kSettings) private settings: MutableState<Settings>,
+    @Inject(kNetworkInterface) networkInterface: NetworkInterface,
+    @Inject(kDownloadOptions) private downloadOptions: DownloadBaseOptions,
   ) {
     super(app, async () => {
       this.getFabricVersionList()
@@ -41,7 +46,7 @@ export class InstallService extends AbstractService implements IInstallService {
       this.getOptifineVersionList()
     })
 
-    this.app.networkManager.registerDispatchInterceptor((options) => {
+    networkInterface.registerDispatchInterceptor((options) => {
       if (options.skipOverride) {
         return
       }
@@ -297,7 +302,7 @@ export class InstallService extends AbstractService implements IInstallService {
 
   protected getForgeInstallOptions(): InstallForgeOptions {
     const options: InstallForgeOptions = {
-      ...this.networkManager.getDownloadBaseOptions(),
+      ...this.downloadOptions,
       java: this.javaService.getPreferredJava()?.path,
       skipRevalidate: true,
     }
@@ -318,7 +323,7 @@ export class InstallService extends AbstractService implements IInstallService {
   protected getInstallOptions(): Options {
     const option: Options = {
       assetsDownloadConcurrency: 16,
-      ...this.networkManager.getDownloadBaseOptions(),
+      ...this.downloadOptions,
       side: 'client',
       skipRevalidate: true,
     }
@@ -668,7 +673,7 @@ export class InstallService extends AbstractService implements IInstallService {
     const optifineVersion = `${options.type}_${options.patch}`
     const version = `${options.mcversion}_${optifineVersion}`
     const path = new MinecraftFolder(this.getPath()).getLibraryByPath(`/optifine/OptiFine/${version}/OptiFine-${version}-universal.jar`)
-    const downloadOptions = this.networkManager.getDownloadBaseOptions()
+    const downloadOptions = await this.app.registry.get(kDownloadOptions)
 
     this.log(`Install optifine ${version} on ${options.inheritFrom ?? options.mcversion}`)
 

@@ -53,7 +53,7 @@
         <v-btn
           outlined
           text
-          @click="showRootDir"
+          @click="showGameDirectory()"
         >
           {{ t("setting.showRoot") }}
         </v-btn>
@@ -226,13 +226,10 @@
 <script lang="ts" setup>
 import { BaseServiceKey } from '@xmcl/runtime-api'
 import { useDialog } from '../composables/dialog'
-import { useSettings } from '../composables/setting'
+import { useGameDirectory, useSettings } from '../composables/setting'
 import { useService } from '@/composables'
 
-const { openDirectory } = useService(BaseServiceKey)
-
 const {
-  root,
   proxy, httpProxyEnabled, apiSets,
   developerMode,
   apiSetsPreference,
@@ -264,12 +261,7 @@ const apiSetItems = computed(() =>
 const locales = computed(() => rawLocales.value.map(({ locale, name }) => ({ text: name, value: locale })))
 
 const { show } = useDialog('migration')
-
-function showRootDir() {
-  if (root.value) {
-    openDirectory(root.value)
-  }
-}
+const { root, showGameDirectory } = useGameDirectory()
 async function browseRootDir() {
   show()
 }

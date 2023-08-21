@@ -1,9 +1,7 @@
 import { useLocalStorageCache, useLocalStorageCacheStringValue } from '@/composables/cache'
 import { AUTHORITY_DEV, AUTHORITY_MICROSOFT, AUTHORITY_MOJANG, YggdrasilApi } from '@xmcl/runtime-api'
-import { DialogKey } from './dialog'
 import { Ref } from 'vue'
-import { injection } from '@/util/inject'
-import { kUserContext } from './user'
+import { DialogKey } from './dialog'
 
 export function useAccountSystemHistory() {
   const authority = useLocalStorageCacheStringValue('loginLastAuthAuthority', AUTHORITY_MICROSOFT as string, 'last-auth-service')

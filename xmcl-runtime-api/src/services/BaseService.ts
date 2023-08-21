@@ -78,7 +78,11 @@ export interface BaseService {
    */
   reportItNow(options: { destination: string }): Promise<void>
   /**
-   * Migrate the launcher data root to another directory
+   * Get the game data directory folder.
+   */
+  getGameDataDirectory(): Promise<string>
+  /**
+   * Migrate the launcher game data root to another directory
    * @param options The migration options
    */
   migrate(options: MigrateOptions): Promise<void>

@@ -36,6 +36,7 @@ import { kColorTheme, useColorTheme } from '@/composables/colorTheme'
 import { kBackground, useBackground } from '@/composables/background'
 import { kLaunchStatus, useLaunchStatus } from '@/composables/launch'
 import { vuetify } from '@/vuetify'
+import { kYggdrasilServices, useYggdrasilServices } from '@/composables/yggrasil'
 
 export default defineComponent({
   setup(props, ctx) {
@@ -112,6 +113,7 @@ export default defineComponent({
     provide(kImageDialog, useImageDialog())
     provide(kMarketRoute, useMarketRoute())
     provide(kFilterCombobox, useFilterComboboxData())
+    provide(kYggdrasilServices, useYggdrasilServices())
 
     return () => ctx.slots.default?.()
   },

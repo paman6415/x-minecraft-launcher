@@ -10,6 +10,7 @@ import { kClientToken } from '../entities/clientToken'
 import { UserTokenStorage, kUserTokenStorage } from '../entities/userTokenStore'
 import { loadYggdrasilApiProfile } from '../entities/user'
 import { createSafeFile } from '../util/persistance'
+import { kNetworkInterface, NetworkInterface } from '../entities/networkInterface'
 
 @ExposeServiceKey(YggdrasilServiceKey)
 export class YggdrasilService extends AbstractService implements IYggdrasilService {
@@ -29,13 +30,14 @@ export class YggdrasilService extends AbstractService implements IYggdrasilServi
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(kClientToken) clientToken: string,
     @Inject(kUserTokenStorage) tokenStorage: UserTokenStorage,
+    @Inject(kNetworkInterface) networkInterface: NetworkInterface,
   ) {
     super(app, async () => {
       const apis = await this.yggdrasilFile.read()
       this.yggdrasilServices.push(...apis.yggdrasilServices)
     })
 
-    const dispatcher = this.networkManager.registerAPIFactoryInterceptor((origin, options) => {
+    const dispatcher = networkInterface.registerAPIFactoryInterceptor((origin, options) => {
       const hosts = this.yggdrasilServices.map(v => new URL(v.url).hostname)
       if (hosts.indexOf(origin.hostname) !== -1) {
         return new Pool(origin, {

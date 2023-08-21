@@ -9,7 +9,7 @@ import createResourceWorker, { path as resourceWorkerPath } from '../workers/res
 import createEncodingWorker, { path as encodingWorkerPath } from '../workers/encodingWorkerEntry?worker'
 
 export const pluginWorker: LauncherAppPlugin = async (app) => {
-  const logger = app.logManager.getLogger('WorkerManager')
+  const logger = app.getLogger('WorkerManager')
   const checkUpdate = async (path: string) => {
     if (!IS_DEV) {
       logger.log('Try to update worker js as this is PROD')

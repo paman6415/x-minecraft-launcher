@@ -12,19 +12,18 @@ import {
   normalizeUserId,
 } from '@xmcl/runtime-api'
 import debounce from 'lodash.debounce'
-import { Pool } from 'undici'
 import { UserAccountSystem } from '../accountSystems/AccountSystem'
 import { YggdrasilAccountSystem } from '../accountSystems/YggdrasilAccountSystem'
 import LauncherApp from '../app/LauncherApp'
 import { LauncherAppKey } from '../app/utils'
-import { loadYggdrasilApiProfile } from '../entities/user'
+import { kDownloadOptions } from '../entities/downloadOptions'
+import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 import { UserTokenStorage, kUserTokenStorage } from '../entities/userTokenStore'
 import { requireObject, requireString } from '../util/object'
 import { Inject } from '../util/objectRegistry'
 import { SafeFile, createSafeFile } from '../util/persistance'
 import { ensureLauncherProfile, preprocessUserData } from '../util/userData'
 import { ExposeServiceKey, Lock, Singleton, StatefulService } from './Service'
-import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 
 @ExposeServiceKey(UserServiceKey)
 export class UserService extends StatefulService<UserState> implements IUserService {
@@ -140,7 +139,8 @@ export class UserService extends StatefulService<UserState> implements IUserServ
     requireString(options.url)
     requireString(options.path)
     const { path, url } = options
-    await new DownloadTask({ url, destination: path, ...this.networkManager.getDownloadBaseOptions() }).startAndWait()
+    const downloadOptions = await this.app.registry.get(kDownloadOptions)
+    await new DownloadTask({ url, destination: path, ...downloadOptions }).startAndWait()
   }
 
   /**

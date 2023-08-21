@@ -5,6 +5,7 @@ import { InjectionKey, Ref } from 'vue'
 import { useLocalStorageCacheBool } from './cache'
 import { useState } from './syncableState'
 import { useEnvironment } from './environment'
+import useSWRV from 'swrv'
 
 export function useUpdateSettings() {
   const { checkUpdate } = useService(BaseServiceKey)
@@ -67,6 +68,30 @@ export function useGlobalSettings() {
     setGlobalSettings,
   }
 }
+export function useGameDirectory() {
+  const { getGameDataDirectory, migrate, openDirectory } = useService(BaseServiceKey)
+  const root = ref('')
+  onMounted(() => {
+    getGameDataDirectory().then((r) => {
+      root.value = r
+    })
+  })
+  const setGameDirectory = async (value: string) => {
+    root.value = value
+    await migrate({ destination: value })
+  }
+
+  function showGameDirectory() {
+    if (root.value) {
+      openDirectory(root.value)
+    }
+  }
+  return {
+    root,
+    setGameDirectory,
+    showGameDirectory,
+  }
+}
 
 export function useSettings() {
   const hideNews = useLocalStorageCacheBool('hideNews', false)
@@ -88,7 +113,6 @@ export function useSettings() {
     }
   }
 
-  const root = computed(() => state.value?.root ?? '')
   const locales = computed(() => state.value?.locales || [])
   const selectedLocale = computed({
     get: () => locales.value.find(l => l.locale === state.value?.locale)?.locale || 'en',
@@ -161,7 +185,6 @@ export function useSettings() {
   })
 
   return {
-    root,
     developerMode,
     httpProxyEnabled,
     enableDiscord,

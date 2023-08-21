@@ -4,10 +4,10 @@ import VueI18n from 'vue-i18n'
 import { castToVueI18n, createI18n } from 'vue-i18n-bridge'
 import App from './App.vue'
 import { baseService } from './baseService'
-import vuetify from './vuetify'
 import { usePreferDark } from '@/composables'
 import { kVuetify } from '@/composables/vuetify'
 import messages from '@intlify/unplugin-vue-i18n/messages'
+import { vuetify } from '@/vuetify'
 
 Vue.use(VueI18n, { bridge: true })
 

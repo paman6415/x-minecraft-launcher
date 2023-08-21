@@ -28,6 +28,7 @@ import { PeerService } from './PeerService'
 import { ResourceService } from './ResourceService'
 import { AbstractService, ExposeServiceKey, Singleton } from './Service'
 import { AnyError } from '../util/error'
+import { kDownloadOptions } from '../entities/downloadOptions'
 
 type RequiredPick<T, K extends keyof T> = T & Required<Pick<T, K>>
 
@@ -302,10 +303,11 @@ export class InstanceInstallService extends AbstractService implements IInstance
         }
       }
 
+      const downloadOptions = await this.app.registry.get(kDownloadOptions)
       if (supportHttp) {
         // Prefer HTTP download than peer download
         return new DownloadTask({
-          ...this.networkManager.getDownloadBaseOptions(),
+          ...downloadOptions,
           url: file.downloads.filter(u => u.startsWith('http')),
           destination,
           pendingFile: pending,

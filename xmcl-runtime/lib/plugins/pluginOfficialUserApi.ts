@@ -11,12 +11,14 @@ import { isSystemError } from '../util/error'
 import { toRecord } from '../util/object'
 import { normalizeGameProfile } from '../entities/user'
 import { kClientToken } from '../entities/clientToken'
+import { kNetworkInterface } from '../entities/networkInterface'
 
 const CLIENT_ID = '1363d629-5b06-48a9-a5fb-c65de945f13e'
 
 export const pluginOfficialUserApi: LauncherAppPlugin = (app) => {
   app.once('engine-ready', async () => {
-    const dispatcher = app.networkManager.registerAPIFactoryInterceptor((origin, opts) => {
+    const networkInterface = await app.registry.get(kNetworkInterface)
+    const dispatcher = networkInterface.registerAPIFactoryInterceptor((origin, opts) => {
       if (origin.hostname === 'api.minecraftservices.com' || origin.hostname === 'api.mojang.com') {
         // keep alive for a long time
         return new Client(origin, { ...opts, pipelining: 6 })
@@ -33,7 +35,7 @@ export const pluginOfficialUserApi: LauncherAppPlugin = (app) => {
     const userTokenStorage = await app.registry.get(kUserTokenStorage)
     const clientToken = await app.registry.get(kClientToken)
 
-    const logger = app.logManager.getLogger('OfficialUserSystem')
+    const logger = app.getLogger('OfficialUserSystem')
 
     const userService = await app.registry.get(UserService)
     const system = new MicrosoftAccountSystem(logger,

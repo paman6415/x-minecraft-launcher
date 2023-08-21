@@ -40,10 +40,11 @@ import { LoginDialog } from '@/composables/login'
 import { kUserContext, useUserExpired } from '@/composables/user'
 import { UserSkinRenderPaused } from '@/composables/userSkin'
 import { injection } from '@/util/inject'
-import { UserServiceKey } from '@xmcl/runtime-api'
+import { AUTHORITY_DEV, AUTHORITY_MICROSOFT, UserServiceKey } from '@xmcl/runtime-api'
 import UserMenu from './UserMenu.vue'
+import { kYggdrasilServices } from '@/composables/yggrasil'
 
-const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile, yggdrasilServices } = injection(kUserContext)
+const { users, select, userProfile: selectedUser, gameProfile: selectedUserGameProfile } = injection(kUserContext)
 const { abortRefresh, refreshUser, removeUser } = useService(UserServiceKey)
 const { show: showLoginDialog } = useDialog(LoginDialog)
 const isShown = ref(false)
@@ -62,6 +63,7 @@ watch(isShown, (show) => {
 
 const refreshing = ref(false)
 
+const { data: yggdrasilServices } = injection(kYggdrasilServices)
 function onRefresh() {
   if (users.value.length === 0) {
     showLoginDialog()
@@ -70,8 +72,8 @@ function onRefresh() {
     })
   } else if (selectedUser.value?.id || selectedUser.value.invalidated || expired.value) {
     const authority = selectedUser.value?.authority
-    if (yggdrasilServices.value.every((e) => new URL(e.url).host !== authority) && authority !== 'microsoft' && authority !== 'offline') {
-      
+    if (yggdrasilServices.value?.every((e) => e.url !== authority) && authority !== AUTHORITY_MICROSOFT && authority !== AUTHORITY_DEV) {
+
     } else {
       refreshing.value = true
       refreshUser(selectedUser.value.id).catch((e) => {

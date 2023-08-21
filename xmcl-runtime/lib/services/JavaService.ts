@@ -17,6 +17,7 @@ import { ExposeServiceKey, Singleton, StatefulService } from './Service'
 import { PathResolver, kGameDataPath } from '../entities/gameDataPath'
 import { getApiSets, shouldOverrideApiSet } from '../entities/settings'
 import { GFW } from '../entities/gfw'
+import { kDownloadOptions } from '../entities/downloadOptions'
 
 @ExposeServiceKey(JavaServiceKey)
 export class JavaService extends StatefulService<JavaState> implements IJavaService {
@@ -87,9 +88,10 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
       const apis = getApiSets(this.settings)
       apiHost = apis.map(a => new URL(a.url).hostname)
     }
+    const downloadOptions = await this.app.registry.get(kDownloadOptions)
     const manifest = await fetchJavaRuntimeManifest({
       apiHost,
-      ...this.networkManager.getDownloadBaseOptions(),
+      ...downloadOptions,
       target: target.component,
     })
     this.log(`Install jre runtime ${target.component} (${target.majorVersion}) ${manifest.version.name} ${manifest.version.released}`)
@@ -108,7 +110,7 @@ export class JavaService extends StatefulService<JavaState> implements IJavaServ
       manifest,
       apiHost,
       destination: dest,
-      ...this.networkManager.getDownloadBaseOptions(),
+      ...downloadOptions,
     }).setName('installJre')
     await ensureFile(location)
     await this.submit(task)

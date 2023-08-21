@@ -125,23 +125,23 @@ export class PeerService extends StatefulService<PeerState> implements IPeerServ
     })
 
     if (IS_DEV) {
-      const logger = this.logManager.openLogger('wrtc')
+      const logger = this.app.getLogger('wrtc', 'wrtc')
       initLogger('Verbose', (level, message) => {
         if (level === 'Info' || level === 'Debug' || level === 'Verbose') {
           logger.log(message)
         } else if (level === 'Fatal' || level === 'Error') {
-          logger.error(message)
+          logger.warn(message)
         } else if (level === 'Warning') {
           logger.warn(message)
         }
       })
     } else {
-      const logger = this.logManager.openLogger('wrtc')
+      const logger = this.app.getLogger('wrtc', 'wrtc')
       initLogger('Info', (level, message) => {
         if (level === 'Info' || level === 'Debug' || level === 'Verbose') {
           logger.log(message)
         } else if (level === 'Fatal' || level === 'Error') {
-          logger.error(message)
+          logger.warn(message)
         } else if (level === 'Warning') {
           logger.warn(message)
         }

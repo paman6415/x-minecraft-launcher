@@ -137,6 +137,7 @@ import { useAccountSystemHistory, useAuthorityItems } from '../composables/login
 import { kUserContext, useLoginValidation } from '../composables/user'
 import AppLoginDialogAccountSystemSelect from './AppLoginDialogAccountSystemSelect.vue'
 import { kSettingsState } from '@/composables/setting'
+import { kYggdrasilServices } from '@/composables/yggrasil'
 
 const props = defineProps<{
   inside: boolean
@@ -171,8 +172,8 @@ const getUserServiceAccount = (serv: string) => {
 }
 
 // Authority items
-const { yggdrasilServices } = injection(kUserContext)
-const items = useAuthorityItems(computed(() => setting.value?.developerMode || isMicrosoft.value), yggdrasilServices)
+const { data: services } = injection(kYggdrasilServices)
+const items = useAuthorityItems(computed(() => setting.value?.developerMode || isMicrosoft.value), computed(() => services.value || []))
 
 const { authority, history } = useAccountSystemHistory()
 
@@ -180,7 +181,7 @@ const { authority, history } = useAccountSystemHistory()
 const signUpLink = computed(() => {
   if (authority.value === AUTHORITY_MICROSOFT) return 'https://account.live.com/registration'
   if (authority.value === AUTHORITY_MOJANG) return 'https://my.minecraft.net/en-us/store/minecraft/#register'
-  const api = yggdrasilServices.value.find(a => a.url === authority.value)
+  const api = services.value?.find(a => a.url === authority.value)
   const url = api?.authlibInjector?.meta.links.register
   return url || ''
 })

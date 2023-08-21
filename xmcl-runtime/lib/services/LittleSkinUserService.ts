@@ -9,6 +9,7 @@ import { Inject } from '../util/objectRegistry'
 import { BaseService } from './BaseService'
 import { AbstractService, ExposeServiceKey } from './Service'
 import { UserService } from './UserService'
+import { kNetworkInterface, NetworkInterface } from '../entities/networkInterface'
 
 const LITTLE_SKIN_HOST = 'littleskin.cn'
 
@@ -19,10 +20,11 @@ export class LittleSkinUserService extends AbstractService implements ILittleSki
   constructor(@Inject(LauncherAppKey) app: LauncherApp,
     @Inject(UserService) private userService: UserService,
     @Inject(BaseService) private baseService: BaseService,
-    @Inject(kUserTokenStorage) private cache: UserTokenStorage) {
+    @Inject(kNetworkInterface) networkInterface: NetworkInterface,
+    ) {
     super(app)
 
-    const dispatcher = this.networkManager.registerAPIFactoryInterceptor((origin, options) => {
+    const dispatcher = networkInterface.registerAPIFactoryInterceptor((origin, options) => {
       if (origin.hostname === LITTLE_SKIN_HOST) {
         return new Pool(origin, {
           ...options,

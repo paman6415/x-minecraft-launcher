@@ -11,6 +11,8 @@ import { getApiSets, kSettings, shouldOverrideApiSet } from '../entities/setting
 import { validateSha256 } from '../util/fs'
 import { Inject } from '../util/objectRegistry'
 import { AbstractService, ExposeServiceKey } from './Service'
+import { NetworkInterface, kNetworkInterface } from '../entities/networkInterface'
+import { kDownloadOptions } from '../entities/downloadOptions'
 
 const AUTHLIB_ORG_NAME = 'org.to2mbn:authlibinjector'
 
@@ -23,10 +25,11 @@ export class AuthlibInjectorService extends AbstractService implements IAuthlibI
     @Inject(kSettings) private settings: Settings,
     @Inject(kGameDataPath) private getPath: PathResolver,
     @Inject(GFW) gfw: GFW,
+    @Inject(kNetworkInterface) networkInterface: NetworkInterface,
   ) {
     super(app)
 
-    this.networkManager.registerDispatchInterceptor((options) => {
+    networkInterface.registerDispatchInterceptor((options) => {
       const origin = options.origin instanceof URL ? options.origin : new URL(options.origin!)
       if (origin.hostname === 'authlib-injector.yushi.moe') {
         if (shouldOverrideApiSet(settings, gfw.inside)) {
@@ -56,6 +59,7 @@ export class AuthlibInjectorService extends AbstractService implements IAuthlibI
         urls.unshift(url.toString())
       }
 
+      const downloadOptions = await this.app.registry.get(kDownloadOptions)
       await this.submit(new DownloadTask({
         url: urls,
         validator: {
@@ -63,7 +67,7 @@ export class AuthlibInjectorService extends AbstractService implements IAuthlibI
           hash: content.checksums.sha256,
         },
         destination: path,
-        ...this.networkManager.getDownloadBaseOptions(),
+        ...downloadOptions,
       }).setName('installAuthlibInjector'))
 
       return path
