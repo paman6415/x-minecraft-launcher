@@ -17,7 +17,7 @@ export default function createRendererPlugin(): Plugin {
           contents:
           build.initialOptions.plugins!.find(v => v.name === 'dev')
             ? `export default "http://localhost:3000/${basename(clean)}"`
-            : `import { join } from 'path'; import { pathToFileURL } from 'url'; export default pathToFileURL(join(__dirname, 'renderer', ${JSON.stringify(clean)})).toString();`,
+            : `export default "http://xmcl/${basename(clean)}"`,
           resolveDir: outDir,
         }
       })

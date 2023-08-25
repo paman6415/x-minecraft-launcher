@@ -4,8 +4,11 @@ import indexPreload from '@preload/index'
 import monitorPreload from '@preload/monitor'
 import browserWinUrl from '@renderer/browser.html'
 import loggerWinUrl from '@renderer/logger.html'
-import { BaseService, LauncherAppController, UserService } from '@xmcl/runtime'
+import { LauncherAppController, UserService } from '@xmcl/runtime'
 import { InstalledAppManifest, Settings } from '@xmcl/runtime-api'
+import { Client } from '@xmcl/runtime/lib/engineBridge'
+import { kSettings } from '@xmcl/runtime/lib/entities/settings'
+import { kUserAgent } from '@xmcl/runtime/lib/entities/userAgent'
 import { Logger } from '@xmcl/runtime/lib/util/log'
 import { BrowserWindow, DidCreateWindowDetails, Event, HandlerDetails, ProtocolRequest, ProtocolResponse, Session, Tray, WebContents, dialog, ipcMain, nativeTheme, protocol, session, shell } from 'electron'
 import { readFile } from 'fs/promises'
@@ -19,10 +22,6 @@ import zh from './locales/zh-CN.yaml'
 import { createI18n } from './utils/i18n'
 import { darkIcon } from './utils/icons'
 import { trackWindowSize } from './utils/windowSizeTracker'
-import { PromiseSignal, createPromiseSignal } from '@xmcl/runtime/lib/util/promiseSignal'
-import { Client } from '@xmcl/runtime/lib/engineBridge'
-import { kSettings } from '@xmcl/runtime/lib/entities/settings'
-import { kUserAgent } from '@xmcl/runtime/lib/entities/userAgent'
 
 export class ElectronController implements LauncherAppController {
   protected windowsVersion?: { major: number; minor: number; build: number }
@@ -86,29 +85,11 @@ export class ElectronController implements LauncherAppController {
   private onWebContentCreateWindow = (window: BrowserWindow,
     details: DidCreateWindowDetails) => {
     window.webContents.setWindowOpenHandler(this.windowOpenHandler)
-    window.webContents.on('will-navigate', this.onWebContentWillNavigate)
     window.webContents.on('did-create-window', this.onWebContentCreateWindow)
     window.once('ready-to-show', () => {
       window.show()
     })
     this.logger.log(`Try to open window ${details.url}`)
-    window.loadURL(details.url).then(() => {
-      this.logger.log(`Opened window ${details.url}`)
-      window.webContents.reload()
-    }, (e) => {
-      this.logger.log(`Fail to open window ${details.url}`, e)
-      window.webContents.reload()
-    })
-  }
-
-  private onWebContentWillNavigate = (event: Event, url: string) => {
-    if (!IS_DEV) {
-      event.preventDefault()
-      shell.openExternal(url)
-    } else if (!url.startsWith('http://localhost')) {
-      event.preventDefault()
-      shell.openExternal(url)
-    }
   }
 
   constructor(protected app: ElectronLauncherApp) {
@@ -287,6 +268,20 @@ export class ElectronController implements LauncherAppController {
       })
     }
 
+    if (!IS_DEV) {
+      restoredSession.protocol.interceptFileProtocol('http', (request, callback) => {
+        // intercept only requests to "http://xmcl"
+        const url = new URL(request.url)
+        if (url.host === 'xmcl') {
+          const pathname = url.pathname
+          callback(join(__dirname, 'renderer', pathname))
+        } else {
+          // otherwise, let the HTTP request behave like normal.
+          callback({ url: request.url })
+        }
+      })
+    }
+
     this.app.protocol.onRegistered = (protocol) => {
       if (!wellKnown.includes(protocol)) {
         this.logger.log(`Register custom protocol ${protocol} to electron`)
@@ -410,7 +405,6 @@ export class ElectronController implements LauncherAppController {
       browser.show()
       browser.focus()
     })
-    browser.webContents.on('will-navigate', this.onWebContentWillNavigate)
     browser.webContents.on('did-create-window', this.onWebContentCreateWindow)
     browser.webContents.setWindowOpenHandler(this.windowOpenHandler)
 
