@@ -111,7 +111,7 @@ export default class ElectronLauncherApp extends LauncherApp {
 
   relaunch() {
     app.relaunch()
-    app.exit(0)
+    app.quit()
   }
 
   protected async setup() {
