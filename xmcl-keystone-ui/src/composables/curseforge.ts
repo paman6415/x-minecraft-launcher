@@ -172,10 +172,29 @@ export function useCurseforgeProjectFiles(projectId: Ref<number>, gameVersion: R
 export const kCurseforgeFiles: InjectionKey<Ref<File[]>> = Symbol('CurseforgeFiles')
 
 export function useCurseforgeProjectDescription(props: { project: number }) {
-  const { mutate: refresh, isValidating: refreshing, error, data: description } = useSWRV(
+  const { mutate: refresh, isValidating: refreshing, error, data } = useSWRV(
     computed(() => `/curseforge/${props.project}/description`), async () => {
       return await clientCurseforgeV1.getModDescription(props.project)
     }, inject(kSWRVConfig))
+
+  const description = computed(() => {
+    const html = data.value
+    if (!html) return ''
+    const dom = document.createElement('div')
+    dom.innerHTML = html
+    const allLinks = dom.getElementsByTagName('a')
+    for (const link of allLinks) {
+      if (link.href) {
+        const parsed = new URL(link.href)
+        const remoteUrl = parsed.searchParams.get('remoteUrl')
+        if (remoteUrl) {
+          link.href = decodeURIComponent(remoteUrl)
+        }
+      }
+      link.target = '_blank'
+    }
+    return dom.innerHTML
+  })
 
   return { description, refreshing, refresh, error }
 }
